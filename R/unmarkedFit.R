@@ -122,7 +122,7 @@ setMethod("summary", "unmarkedFitDS",
 
 
 
-                                        # Compute linear combinations of estimates in unmarkedFit objects.
+# Compute linear combinations of estimates in unmarkedFit objects.
 
 setMethod("linearComb",
           signature(obj = "unmarkedFit", coefficients = "matrixOrVector"),
@@ -225,13 +225,19 @@ setMethod("predict", "unmarkedFitColExt",
             switch(type, 
                 psi = {
                   X <- designMats$W
-                  #offset <- designMats$W.offset
+                  offset <- designMats$W.offset
                 },
-                col = X <- designMats$X.gam,
-                ext = X <- designMats$X.eps,                
+                col = {
+                    X <- designMats$X.gam
+                    offset <- designMats$X.gam.offset
+                    },
+                ext = {
+                    X <- designMats$X.eps
+                    offset <- designMats$X.eps.offset
+                    },
                 det = {
                   X <- designMats$V
-                  #offset <- designMats$V.offset
+                  offset <- designMats$V.offset
                 })
             },
         data.frame = {
@@ -248,28 +254,28 @@ setMethod("predict", "unmarkedFitColExt",
                 psi = {
                   mf <- model.frame(psiformula, newdata)
                   X <- model.matrix(psiformula, mf)
-                  #offset <- model.offset(mf)
+                  offset <- model.offset(mf)
                 },
                 col = {
                   mf <- model.frame(gamformula, newdata)
                   X <- model.matrix(gamformula, mf)
-                  #offset <- model.offset(mf)
+                  offset <- model.offset(mf)
                 },
                 ext = {
                   mf <- model.frame(epsformula, newdata)
                   X <- model.matrix(epsformula, mf)
-                  #offset <- model.offset(mf)
+                  offset <- model.offset(mf)
                 },               
                 
                 det = {
                   mf <- model.frame(detformula, newdata)
                   X <- model.matrix(detformula, mf)
-                  #offset <- model.offset(mf)
+                  offset <- model.offset(mf)
                 })
             })
         out <- data.frame(matrix(NA, nrow(X), 2, 
             dimnames=list(NULL, c("Predicted", "SE"))))
-        lc <- linearComb(object, X, type)#, offset = offset)
+        lc <- linearComb(object, X, type, offset = offset)
         if(backTransform) lc <- backTransform(lc)
         out$Predicted <- coef(lc)
         out$SE <- SE(lc)
@@ -508,16 +514,28 @@ setMethod("fitted", "unmarkedFitColExt",
                                 gammaformula=object@gamformula,
                                 epsilonformula=object@epsformula,
                                 pformula=object@detformula)
-            designMats <- getDesign(object@data, formlist = formulaList)
+            designMats <- getDesign(object@data, formula = object@formula)
             V.itj <- designMats$V
+            V.offset <- designMats$V.offset
+            if(is.null(V.offset))
+                V.offset <- rep(0, nrow(V.itjk))  
             X.it.gam <- designMats$X.gam
+            X.gam.offset <- designMats$X.gam.offset
+            if(is.null(X.gam.offset))
+                X.gam.offset <- rep(0, nrow(X.it.gam))
             X.it.eps <- designMats$X.eps
+            X.eps.offset <- designMats$X.eps.offset
+            if(is.null(X.eps.offset))
+                X.eps.offset <- rep(0, nrow(X.it.eps))
             W.i <- designMats$W
-            
-            psiP <- plogis(W.i %*% psiParms)
-            detP <- plogis(V.itj %*% detParms)
-            colP <- plogis(X.it.gam  %*% colParms)
-            extP <- plogis(X.it.eps %*% extParms)
+            W.offset <- designMats$W.offset
+            if(is.null(W.offset))
+                W.offset <- rep(0, nrow(W.i))
+    
+            psiP <- plogis(W.i %*% psiParms + W.offset)
+            detP <- plogis(V.itj %*% detParms + V.offset)
+            colP <- plogis(X.it.gam  %*% colParms + X.gam.offset)
+            extP <- plogis(X.it.eps %*% extParms + X.eps.offset)
             
             detP <- array(detP, c(J, nY, M))
             colP <- matrix(colP, M, nY, byrow = TRUE)
@@ -1065,21 +1083,32 @@ setMethod("simulate", "unmarkedFitColExt",
                                 gammaformula=object@gamformula,
                                 epsilonformula=object@epsformula,
                                 pformula=object@detformula)
-            designMats <- getDesign(object@data, formlist = formulaList)
+            designMats <- getDesign(object@data, formula = object@formula)
             V.itj <- designMats$V
+            V.offset <- designMats$V.offset
+            if(is.null(V.offset))
+                V.offset <- rep(0, nrow(V.itjk))  
             X.it.gam <- designMats$X.gam
+            X.gam.offset <- designMats$X.gam.offset
+            if(is.null(X.gam.offset))
+                X.gam.offset <- rep(0, nrow(X.it.gam))
             X.it.eps <- designMats$X.eps
+            X.eps.offset <- designMats$X.eps.offset
+            if(is.null(X.eps.offset))
+                X.eps.offset <- rep(0, nrow(X.it.eps))
             W.i <- designMats$W
-            y <- designMats$y
-
+            W.offset <- designMats$W.offset
+            if(is.null(W.offset))
+                W.offset <- rep(0, nrow(W.i))
+    
             M <- nrow(y)	# M <- nrow(X.it)
             nY <- data@numPrimary
             J <- obsNum(data)/nY
 
-            psiP <- plogis(W.i %*% psiParms)
-            detP <- plogis(V.itj %*% detParms)
-            colP <- plogis(X.it.gam  %*% colParms)
-            extP <- plogis(X.it.eps %*% extParms)
+            psiP <- plogis(W.i %*% psiParms + W.offset)
+            detP <- plogis(V.itj %*% detParms + V.offset)
+            colP <- plogis(X.it.gam  %*% colParms + X.gam.offset)
+            extP <- plogis(X.it.eps %*% extParms + X.eps.offset)
             
             detP <- array(detP, c(J, nY, M))
             detP <- aperm(detP, c(3, 1, 2))

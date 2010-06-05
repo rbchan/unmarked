@@ -106,12 +106,20 @@ colext.fit <- function(formula, data, J,
     formula = as.formula(paste(unlist(formula), collapse=" ")))
   V.itjk <- designMats$V
   V.offset <- designMats$V.offset
+  if(is.null(V.offset))
+    V.offset <- rep(0, nrow(V.itjk))  
   X.it.gam <- designMats$X.gam
   X.gam.offset <- designMats$X.gam.offset
+  if(is.null(X.gam.offset))
+    X.gam.offset <- rep(0, nrow(X.it.gam))
   X.it.eps <- designMats$X.eps
   X.eps.offset <- designMats$X.eps.offset
+  if(is.null(X.eps.offset))
+    X.eps.offset <- rep(0, nrow(X.it.eps))
   W.i <- designMats$W
   W.offset <- designMats$W.offset
+  if(is.null(W.offset))
+    W.offset <- rep(0, nrow(W.i))
   
   detParms <- colnames(V.itjk)
   gamParms <- colnames(X.it.gam)
@@ -127,9 +135,9 @@ colext.fit <- function(formula, data, J,
   
   ## remove final year from X.it
   X.it.gam <- as.matrix(X.it.gam[-seq(nY,M*nY,by=nY),])
-  X.gam.offset <- as.matrix(X.gam.offset[-seq(nY,M*nY,by=nY),])
+  X.gam.offset <- as.matrix(X.gam.offset[-seq(nY,M*nY,by=nY)])
   X.it.eps <- as.matrix(X.it.eps[-seq(nY,M*nY,by=nY),])
-  X.eps.offset <- as.matrix(X.eps.offset[-seq(nY,M*nY,by=nY),])
+  X.eps.offset <- as.matrix(X.eps.offset[-seq(nY,M*nY,by=nY)])
     
   nDP <- length(detParms)
   nGP <- length(gamParms)
@@ -157,7 +165,7 @@ colext.fit <- function(formula, data, J,
   
   V.arr <- array(t(V.itjk), c(nDP, nDMP, J, nY, M))
   V.arr <- aperm(V.arr, c(2,1,5,4,3))
-  V.arr.offset <- array(t(V.offset), c(nDP, nDMP, J, nY, M))
+  V.arr.offset <- array(t(V.offset), c(nDP, nDMP, J, nY, M)) #vec transpose works
   V.arr.offset <- aperm(V.arr.offset, c(2,1,5,4,3))
   
   y.arr <- array(y.itj, c(J, nY, M))
@@ -214,7 +222,9 @@ colext.fit <- function(formula, data, J,
   }
 
   X.gam <- X.it.gam %x% c(-1,1)
+  X.gam.offset <- X.gam.offset %x% c(-1,1) ## Double check
   X.eps <- X.it.eps %x% c(-1,1)
+  X.eps.offset <- X.eps.offset %x% c(-1,1) ## Double check
   phis <- array(NA, c(2,2,nY-1,M))
   nll <- function(params) {
     psis <- plogis(W.i %*% params[1:nSP] + W.offset)
