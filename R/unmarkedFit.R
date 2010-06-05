@@ -518,7 +518,7 @@ setMethod("fitted", "unmarkedFitColExt",
             V.itj <- designMats$V
             V.offset <- designMats$V.offset
             if(is.null(V.offset))
-                V.offset <- rep(0, nrow(V.itjk))  
+                V.offset <- rep(0, nrow(V.itj))  
             X.it.gam <- designMats$X.gam
             X.gam.offset <- designMats$X.gam.offset
             if(is.null(X.gam.offset))
@@ -1087,7 +1087,7 @@ setMethod("simulate", "unmarkedFitColExt",
             V.itj <- designMats$V
             V.offset <- designMats$V.offset
             if(is.null(V.offset))
-                V.offset <- rep(0, nrow(V.itjk))  
+                V.offset <- rep(0, nrow(V.itj))  
             X.it.gam <- designMats$X.gam
             X.gam.offset <- designMats$X.gam.offset
             if(is.null(X.gam.offset))
@@ -1101,9 +1101,11 @@ setMethod("simulate", "unmarkedFitColExt",
             if(is.null(W.offset))
                 W.offset <- rep(0, nrow(W.i))
     
-            M <- nrow(y)	# M <- nrow(X.it)
-            nY <- data@numPrimary
-            J <- obsNum(data)/nY
+            y <- getY(data)
+            J <- numY(data) / data@numPrimary
+  
+            M <- nrow(y)
+            nY <- ncol(y)/J
 
             psiP <- plogis(W.i %*% psiParms + W.offset)
             detP <- plogis(V.itj %*% detParms + V.offset)
