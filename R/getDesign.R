@@ -113,6 +113,7 @@ setMethod("handleNA", "unmarkedFrame", function(umf, X, X.offset, V, V.offset)
 	y <- matrix(y.long, M, J, byrow = TRUE)
 	sites.to.remove <- apply(y, 1, function(x) all(is.na(x)))
 	
+	## TODO: check for NAs in offsets not present in sites.to.remove
 	num.to.remove <- sum(sites.to.remove)
 	if(num.to.remove > 0) {
 		y <- y[!sites.to.remove, ,drop = FALSE]
@@ -171,11 +172,22 @@ setMethod("getDesign", "unmarkedMultFrame",
         sC <- umf@siteCovs[rep(1:M, each = nY),,drop=FALSE]
         yearlySiteCovs <- cbind(yearlySiteCovs, sC)
         }
+    
+    # gamma
     X.mf.gam <- model.frame(gamformula, yearlySiteCovs, na.action = NULL)
     X.gam <- model.matrix(gamformula, X.mf.gam)
+    X.gam.offset <- as.vector(model.offset(X.mf.gam))
+    if(!is.null(X.gam.offset)) 
+        X.gam.offset[is.na(X.gam.offset)] <- 0
+    
+    # epsilon
     X.mf.eps <- model.frame(epsformula, yearlySiteCovs, na.action = NULL)
     X.eps <- model.matrix(epsformula, X.mf.eps)
+    X.eps.offset <- as.vector(model.offset(X.mf.eps))
+    if(!is.null(X.eps.offset)) 
+        X.eps.offset[is.na(X.eps.offset)] <- 0
   
+    
     ## Compute site-level design matrix for psi
     if(is.null(siteCovs(umf))) {
         siteCovs <- data.frame(placeHolder = rep(1, M))
@@ -184,6 +196,9 @@ setMethod("getDesign", "unmarkedMultFrame",
     }
     W.mf <- model.frame(psiformula, siteCovs, na.action = NULL)
     W <- model.matrix(psiformula, W.mf)
+    W.offset <- as.vector(model.offset(W.mf))
+    if(!is.null(W.offset)) 
+        W.offset[is.na(W.offset)] <- 0
 
     #  ## impute missing yearlySiteCovs across years as average
     #  X <- t(apply(X, 1, function(x) {
@@ -209,17 +224,23 @@ setMethod("getDesign", "unmarkedMultFrame",
 	
 	V.mf <- model.frame(detformula, obsCovs, na.action = NULL)
 	V <- model.matrix(detformula, V.mf)
+    V.offset <- as.vector(model.offset(V.mf))
+    if(!is.null(V.offset)) 
+        V.offset[is.na(V.offset)] <- 0
 	
 	if(na.rm)
-		out <- handleNA(umf, X.gam, X.eps, W, V)
+		out <- handleNA(umf=umf, X.gam=X.gam, X.gam.offset=X.gam.offset, 
+            X.eps=X.eps, X.eps.offset=X.eps.offset, 
+            W=W, W.offset=W.offset, V=V, V.offset=V.offset)
 	else
-		out <- list(y=getY(umf), X.gam=X.gam, X.eps=X.eps,
-                            W=W,V=V,
-				removed.sites=integer(0))
+		out <- list(y=getY(umf), X.gam=X.gam, X.gam.offset=X.gam.offset, 
+            X.eps=X.eps, X.eps.offset=X.eps.offset, W=W, W.offset=W.offset, 
+            V=V, V.offset=V.offset, removed.sites=integer(0))
 	
-	return(list(y = out$y, X.eps = out$X.eps, X.gam = out$X.gam,
-                    W = out$W, V = out$V,
-                    removed.sites = out$removed.sites))
+	return(list(y = out$y, X.eps = out$X.eps, X.eps.offset = out$X.eps.offset, 
+        X.gam = out$X.gam, X.gam.offset = out$X.gam.offset,
+        W = out$W, W.offset = out$W.offset, V = out$V, V.offset = out$V.offset,
+        removed.sites = out$removed.sites))
 })
 
 
@@ -227,7 +248,9 @@ setMethod("getDesign", "unmarkedMultFrame",
 
 
 
-setMethod("handleNA", "unmarkedMultFrame", function(umf, X.gam, X.eps, W, V) 
+setMethod("handleNA", "unmarkedMultFrame", 
+    function(umf, X.gam, X.gam.offset, X.eps, X.eps.offset, W, W.offset, 
+        V, V.offset) 
     {
 	obsToY <- obsToY(umf)
 	if(is.null(obsToY)) stop("obsToY cannot be NULL to clean data.")
@@ -273,12 +296,21 @@ setMethod("handleNA", "unmarkedMultFrame", function(umf, X.gam, X.eps, W, V)
 	if(num.to.remove > 0) {
 		y <- y[!sites.to.remove, ,drop = FALSE]
 		X.gam <- X.gam[!sites.to.remove[rep(1:M, each = J)], ,drop = FALSE]
-                X.eps <- X.eps[!sites.to.remove[rep(1:M, each = J)], ,drop = FALSE]
-                W <- X[!sites.to.remove, drop = FALSE]
+        X.gam.offset <- X.gam.offset[!sites.to.remove[rep(1:M, each = J)], , 
+            drop = FALSE]
+        X.eps <- X.eps[!sites.to.remove[rep(1:M, each = J)], ,drop = FALSE]
+        X.eps.offset <- X.eps.offset[!sites.to.remove[rep(1:M, each = J)], , 
+            drop = FALSE]        
+        # BUG???
+        #W <- X[!sites.to.remove, drop = FALSE]
+        W <- W[!sites.to.remove, drop = FALSE]
+        W.offset <- W.offset[!sites.to.remove, drop = FALSE]        
 		V <- V[!sites.to.remove[rep(1:M, each = R)], ,drop = FALSE]
-		warning(paste(num.to.remove,"sites have been discarded because of missing data."))
+		V.offset <- V.offset[!sites.to.remove[rep(1:M, each = R)], ,drop = FALSE]
+        
+        warning(paste(num.to.remove,"sites have been discarded because of missing data."), call.=FALSE)
 	}
-	list(y = y, X.gam = X.gam, X.eps = X.eps, W = W,
-             V = V,
-             removed.sites = which(sites.to.remove))
+	list(y=y, X.gam=X.gam, X.gam.offset=X.gam.offset, X.eps=X.eps, 
+        X.eps.offset=X.eps.offset, W=W, W.offset=W.offset, V=V, V.offset=V.offset,
+        removed.sites = which(sites.to.remove))
     })

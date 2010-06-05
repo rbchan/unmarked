@@ -105,9 +105,13 @@ colext.fit <- function(formula, data, J,
   designMats <- getDesign(data, 
     formula = as.formula(paste(unlist(formula), collapse=" ")))
   V.itjk <- designMats$V
+  V.offset <- designMats$V.offset
   X.it.gam <- designMats$X.gam
+  X.gam.offset <- designMats$X.gam.offset
   X.it.eps <- designMats$X.eps
+  X.eps.offset <- designMats$X.eps.offset
   W.i <- designMats$W
+  W.offset <- designMats$W.offset
   
   detParms <- colnames(V.itjk)
   gamParms <- colnames(X.it.gam)
@@ -123,8 +127,10 @@ colext.fit <- function(formula, data, J,
   
   ## remove final year from X.it
   X.it.gam <- as.matrix(X.it.gam[-seq(nY,M*nY,by=nY),])
+  X.gam.offset <- as.matrix(X.gam.offset[-seq(nY,M*nY,by=nY),])
   X.it.eps <- as.matrix(X.it.eps[-seq(nY,M*nY,by=nY),])
-  
+  X.eps.offset <- as.matrix(X.eps.offset[-seq(nY,M*nY,by=nY),])
+    
   nDP <- length(detParms)
   nGP <- length(gamParms)
   nEP <- length(epsParms)
@@ -151,6 +157,8 @@ colext.fit <- function(formula, data, J,
   
   V.arr <- array(t(V.itjk), c(nDP, nDMP, J, nY, M))
   V.arr <- aperm(V.arr, c(2,1,5,4,3))
+  V.arr.offset <- array(t(V.offset), c(nDP, nDMP, J, nY, M))
+  V.arr.offset <- aperm(V.arr.offset, c(2,1,5,4,3))
   
   y.arr <- array(y.itj, c(J, nY, M))
   y.arr <- aperm(y.arr, c(3:1))
@@ -162,11 +170,12 @@ colext.fit <- function(formula, data, J,
     negloglike <- 0
     psiSite <- matrix(c(1-psis,psis), K + 1, M, byrow = TRUE)
     
-    mp <- array(V.itjk %*% detParms, c(nDMP, J, nY, M))
+    mp <- array(V.itjk %*% detParms + V.offset, c(nDMP, J, nY, M))
     for(t in 1:nY) {
       storage.mode(t) <- "integer"
-      detVecs <- .Call("getDetVecs", y.arr, mp, J.it[seq(from = t,to = length(J.it)-nY+t, by=nY)], t, K,
-                       PACKAGE = "unmarked")
+      detVecs <- .Call("getDetVecs", y.arr, mp, 
+        J.it[seq(from = t,to = length(J.it)-nY+t, by=nY)], t, K,
+        PACKAGE = "unmarked")
       psiSite <- psiSite * detVecs
       if(storeAlpha) alpha[,t,] <<- psiSite[,]
       if(t < nY) {
@@ -191,8 +200,9 @@ colext.fit <- function(formula, data, J,
         detVec <- rep(1, K + 1)
         for (j in 1:J) {
           if(y.arr[i,t,j] != 99) {
-            mp <- V.arr[,,i,t,j] %*% detParams
-            detVecObs <- .Call("getSingleDetVec", y.arr[i,t,j], mp, K, PACKAGE = "unmarked")
+            mp <- V.arr[,,i,t,j] %*% detParams + V.arr.offset[,,i,t,j]
+            detVecObs <- .Call("getSingleDetVec", y.arr[i,t,j], mp, K, 
+                PACKAGE = "unmarked")
             detVec <- detVec * detVecObs
           }
         }
@@ -205,9 +215,9 @@ colext.fit <- function(formula, data, J,
 
   X.gam <- X.it.gam %x% c(-1,1)
   X.eps <- X.it.eps %x% c(-1,1)
-  phis <- array(NA,c(2,2,nY-1,M))
+  phis <- array(NA, c(2,2,nY-1,M))
   nll <- function(params) {
-    psis <- plogis(W.i %*% params[1:nSP])
+    psis <- plogis(W.i %*% params[1:nSP] + W.offset)
     colParams <- params[(nSP + 1) : (nSP + nGP)]
     extParams <- params[(nSP + nGP + 1) : (nSP + nGP + nEP)]
     detParams <- params[(nSP + nGP + nEP + 1) : nP]
@@ -216,8 +226,8 @@ colext.fit <- function(formula, data, J,
 #    extParams <- params[(2 + nPhiP) : (1 + 2*nPhiP)]
 #    detParams <- params[(2 + 2*nPhiP) : nP]
 
-    phis[,1,,] <- plogis(X.gam %*% colParams) # these are in site-major, year-minor order
-    phis[,2,,] <- plogis(X.eps %*% -extParams)
+    phis[,1,,] <- plogis(X.gam %*% colParams + X.gam.offset) # these are in site-major, year-minor order
+    phis[,2,,] <- plogis(X.eps %*% -extParams + X.eps.offset)
     
     forward(detParams, phis, psis) + 0.001*sqrt(sum(params^2))
   }
@@ -226,14 +236,14 @@ colext.fit <- function(formula, data, J,
   fm <- optim(starts, nll, method=method,hessian = getHessian,	control=control)
   mle <- fm$par
 
-  psis <- plogis(W.i %*% mle[1:nSP])
+  psis <- plogis(W.i %*% mle[1:nSP] + W.offset)
   colParams <- mle[(nSP + 1) : (nSP + nGP)]
   extParams <- mle[(nSP + nGP + 1) : (nSP + nGP + nEP)]
   detParams <- mle[(nSP + nGP + nEP + 1) : nP]
 
   ## computed projected estimates
-  phis[,1,,] <- plogis(X.gam %*% colParams)
-  phis[,2,,] <- plogis(X.eps %*% -extParams)
+  phis[,1,,] <- plogis(X.gam %*% colParams + X.gam.offset)
+  phis[,2,,] <- plogis(X.eps %*% -extParams + X.eps.offset)
   
   projected <- array(NA, c(2, nY, M))
   projected[1,1,] <- 1 - psis
@@ -262,8 +272,8 @@ colext.fit <- function(formula, data, J,
 
   parm.names <- c(psiParms, gamParms, epsParms, detParms)
   mle.df <- data.frame(names = parm.names, value = mle)
-  rownames(mle.df) <- paste(c(rep("psi", nSP), rep("col", nGP), rep("ext", nEP), rep("det", nDP)),
-                            c(1:nSP,1:nGP,1:nEP, 1:nDP))
+  rownames(mle.df) <- paste(c(rep("psi", nSP), rep("col", nGP), rep("ext", nEP), 
+    rep("det", nDP)), c(1:nSP,1:nGP,1:nEP, 1:nDP))
   
   list(mle = mle.df, opt=fm, nP = nP, M = M, nDP = nDP, nGP = nGP,
        nEP = nEP, nSP = nSP,
