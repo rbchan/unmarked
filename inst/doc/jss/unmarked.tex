@@ -877,15 +877,15 @@ List of 2
 \end{Sinput}
 \begin{Soutput}
       [,1] [,2] [,3] [,4]
- [1,]    0    0    0    0
- [2,]    1    2    0    0
- [3,]    0    1    0    0
- [4,]    0    0    0    0
- [5,]    1    0    0    0
+ [1,]    0    1    0    0
+ [2,]    0    0    0    0
+ [3,]    2    0    0    0
+ [4,]    3    0    0    0
+ [5,]    2    0    1    0
  [6,]    0    0    0    0
  [7,]    0    0    0    0
- [8,]    1    0    0    0
- [9,]    0    0    0    0
+ [8,]    1    1    0    0
+ [9,]    1    0    0    0
 [10,]    0    0    0    0
 \end{Soutput}
 \begin{Sinput}
@@ -893,16 +893,16 @@ List of 2
 \end{Sinput}
 \begin{Soutput}
      site   ufp  trba
-49 FCW175 30.07  77.5
-38 FCW065  8.59 107.5
+11 CAT068  9.37  85.0
+67 FCW441  8.20 100.0
+6  CAT023 23.43 107.5
+34 CAT293  4.29 155.0
+46 FCW131 17.18  77.5
+35 CAT346  5.85 135.0
+42 FCW085 25.39  80.0
 20 CAT129  9.76 145.0
-62 FCW373 26.95  85.0
-68 FCW450 11.71 145.0
-55 FCW265 16.01  87.5
-19 CAT122 15.62 125.0
-17 CAT100  3.90 115.0
-12 CAT071 25.78  97.5
-15 CAT090  7.81 145.0
+31 CAT264 24.21 117.5
+60 FCW299 16.01  95.0
 \end{Soutput}
 \end{Schunk}
 
@@ -988,6 +988,29 @@ the point count model.
 +     data = mallardUMF)
 > summary(fm.mallard.1)
 \end{Sinput}
+\begin{Soutput}
+Call:
+pcount(formula = ~date + I(date^2) ~ elev + forest, data = mallardUMF)
+
+Abundance (log-scale):
+            Estimate    SE     z  P(>|z|)
+(Intercept)   -1.853 0.236 -7.87 3.62e-15
+elev          -1.232 0.234 -5.27 1.36e-07
+forest        -0.756 0.165 -4.60 4.32e-06
+
+Detection (logit-scale):
+            Estimate     SE       z P(>|z|)
+(Intercept)   0.3071 0.2149  1.4290 0.15301
+date         -0.4091 0.1482 -2.7612 0.00576
+I(date^2)    -0.0077 0.0853 -0.0903 0.92801
+
+AIC: 521.2001 
+Number of sites: 235
+Sites removed: 12 69 118 146
+optim convergence code: 0
+optim iterations: 37 
+Bootstrap iterations: 0 
+\end{Soutput}
 \end{Schunk}
 
 %%%% This interpretation comes before model results are presented
@@ -1002,6 +1025,23 @@ linear detection model.
 > fm.mallard.2 <- pcount(~date ~ elev + forest, data = mallardUMF)
 > fm.mallard.2
 \end{Sinput}
+\begin{Soutput}
+Call:
+pcount(formula = ~date ~ elev + forest, data = mallardUMF)
+
+Abundance:
+            Estimate    SE     z  P(>|z|)
+(Intercept)   -1.857 0.232 -7.99 1.37e-15
+elev          -1.236 0.230 -5.38 7.59e-08
+forest        -0.756 0.164 -4.60 4.23e-06
+
+Detection:
+            Estimate    SE     z  P(>|z|)
+(Intercept)    0.298 0.188  1.58 0.113983
+date          -0.401 0.114 -3.51 0.000449
+
+AIC: 519.2081 
+\end{Soutput}
 \end{Schunk}
 
 This seems to be a better model according to both the Wald p-value and
@@ -1033,6 +1073,22 @@ and average basal tree area (\code{trba}).
 > fm.oven.1 <- multinomPois(~1 ~ ufp + trba, ovenFrame)
 > fm.oven.1
 \end{Sinput}
+\begin{Soutput}
+Call:
+multinomPois(formula = ~1 ~ ufp + trba, data = ovenFrame)
+
+Abundance:
+            Estimate    SE      z P(>|z|)
+(Intercept)    0.102 0.119  0.864   0.388
+ufp            0.100 0.126  0.794   0.427
+trba          -0.171 0.135 -1.262   0.207
+
+Detection:
+ Estimate    SE    z P(>|z|)
+    0.288 0.233 1.24   0.217
+
+AIC: 326.1387 
+\end{Soutput}
 \end{Schunk}
 
 \subsection{Examining model fits}
@@ -1194,9 +1250,9 @@ Detection (logit-scale):
     0.288 0.233 1.24   0.217
 
 AIC: 326.1387 
-Sample size: 70
+Number of sites: 70
 optim convergence code: 0
-optim iterations: 30 
+optim iterations: 33 
 Bootstrap iterations: 100 
 \end{Soutput}
 \end{Schunk}
@@ -1207,6 +1263,26 @@ Additional bootstrap samples can be drawn by calling \code{nonparboot} again.
 > fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
 > summary(fm.oven.1)
 \end{Sinput}
+\begin{Soutput}
+Call:
+multinomPois(formula = ~1 ~ ufp + trba, data = ovenFrame)
+
+Abundance (log-scale):
+            Estimate    SE      z P(>|z|)
+(Intercept)    0.102 0.119  0.864   0.388
+ufp            0.100 0.126  0.794   0.427
+trba          -0.171 0.135 -1.262   0.207
+
+Detection (logit-scale):
+ Estimate    SE    z P(>|z|)
+    0.288 0.233 1.24   0.217
+
+AIC: 326.1387 
+Number of sites: 70
+optim convergence code: 0
+optim iterations: 33 
+Bootstrap iterations: 200 
+\end{Soutput}
 \end{Schunk}
 
 Confidence intervals can be requested for the coefficients at either
@@ -1235,6 +1311,11 @@ profile limit.
 > ci <- confint(fm.oven.1, type = "state", level = 0.95, 
 +     method = "profile")
 \end{Sinput}
+\begin{Soutput}
+Profiling parameter 1 of 3 ... done.
+Profiling parameter 2 of 3 ... done.
+Profiling parameter 3 of 3 ... done.
+\end{Soutput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
@@ -1411,12 +1492,12 @@ other relevant information such as Nagelkerke's
 > modSel(fmList, nullmod = "Null")
 \end{Sinput}
 \begin{Soutput}
-     model  n nPars    AIC deltaAIC   AICwt      Rsq cumltvAICwt
-4     trba 70     3 324.77  0.00000 0.34565 0.049418     0.34565
-3      ufp 70     3 325.73  0.96248 0.21362 0.036118     0.55927
-2 additive 70     4 326.14  1.36966 0.17427 0.058030     0.73354
-5     Null 70     2 326.28  1.51126 0.16236 0.000000     0.89590
-1   Global 70     5 327.17  2.40020 0.10410 0.071125     1.00000
+          n nPars    AIC delta AICwt cumltvWt   Rsq
+trba     70     3 324.77  0.00  0.35     0.35 0.049
+ufp      70     3 325.73  0.96  0.21     0.56 0.036
+additive 70     4 326.14  1.37  0.17     0.73 0.058
+Null     70     2 326.28  1.51  0.16     0.90 0.000
+Global   70     5 327.17  2.40  0.10     1.00 0.071
 \end{Soutput}
 \end{Schunk}
 
@@ -1465,23 +1546,36 @@ statistic, with the default being the sum of squared residuals.
 \begin{Schunk}
 \begin{Sinput}
 > set.seed(1234)
-> pb <- parboot(fm.oven.1, statistic = SSE, nsim = 200)
+> pb <- parboot(fm.oven.1, statistic = SSE, nsim = 20)
 \end{Sinput}
+\begin{Soutput}
+t0 = 72.24217 
+76.2, 97.5
+65.1, 89.7
+49.9, 77.3
+56.6, 60
+88, 76.9
+78.3, 83.5
+79.5, 73.4
+76.4, 85.1
+77.4, 68.3
+85.6, 76
+\end{Soutput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
 > pb
 \end{Sinput}
 \begin{Soutput}
-Call: parboot(object = fm1, statistic = SSE, nsim = 200)
+Call: parboot(object = fm.oven.1, statistic = SSE, nsim = 20)
 
 Parametric Bootstrap Statistics:
       t0 mean(t0 - t_B) StdDev(t0 - t_B) Pr(t_B > t0)
-SSE 72.2          -2.89             11.2        0.617
+SSE 72.2          -3.80             11.6        0.714
 
 t_B quantiles:
     0% 2.5% 25% 50% 75% 97.5% 100%
-SSE 49   53  68  75  82    98  109
+SSE 50   53  72  77  84    94   97
 
 t0 = Original statistic compuated from data
 t_B = Vector of bootstrap samples
