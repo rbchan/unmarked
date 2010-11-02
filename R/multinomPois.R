@@ -60,6 +60,9 @@ function(formula, data, starts, method = "BFGS", control = list(), se = TRUE)
 	nDP <- ncol(V)
 	nAP <- ncol(X)
 	nP <- nDP + nAP
+	if(!missing(starts) && length(starts) != nP)
+	   stop(paste("The number of starting values should be", nP))
+	
 	yvec <- as.numeric(y)
 	navec <- is.na(yvec)
 

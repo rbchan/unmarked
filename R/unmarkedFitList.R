@@ -58,6 +58,43 @@ setMethod("summary", "unmarkedFitList", function(object) {
     for(i in 1:length(fits))
         summary(fits[[i]])
     })
+    
+    
+setMethod("coef", "unmarkedFitList", function(object) 
+{
+    fits <- object@fits
+    coef.list <- lapply(fits, coef)
+    coef.names <- unique(unlist(lapply(coef.list, names)))
+    coef.out <- matrix(NA, length(fits), length(coef.names))
+    colnames(coef.out) <- coef.names
+    if(!is.null(names(fits)))
+        rownames(coef.out) <- names(fits)
+    for(i in 1:length(coef.list))
+        coef.out[i, names(coef.list[[i]])] <- coef.list[[i]]
+    return(coef.out)
+})
+
+
+setMethod("SE", "unmarkedFitList", function(obj) 
+{
+    fits <- obj@fits
+    se.list <- lapply(fits, function(x) {
+        tr <- try(SE(x))
+        if(class(tr)[1] == "try-error")
+            return(rep(NA, length(coef(x))))
+        else
+            return(tr)
+        })
+    se.names <- unique(unlist(lapply(se.list, names)))
+    se.out <- matrix(NA, length(fits), length(se.names))
+    colnames(se.out) <- se.names
+    if(!is.null(names(fits)))
+        rownames(se.out) <- names(fits)
+    for(i in 1:length(se.list))
+        se.out[i, names(se.list[[i]])] <- se.list[[i]]
+    return(se.out)
+})
+    
 
 
 
@@ -75,6 +112,8 @@ setMethod("predict", "unmarkedFitList", function(object, type, newdata=NULL,
         parav <- as.numeric(E %*% wts)
         seav <- as.numeric((SE + (E - parav)^2) %*% wts) # Double check this
         out <- data.frame(Predicted = parav, SE = seav)
+        out$lower <- out$Predicted - 1.96*out$SE
+        out$upper <- out$Predicted - 1.96*out$SE
         if(appendData) {
             if(missing(newdata))
                 newdata <- getData(object@fits[[1]])
@@ -90,8 +129,13 @@ setMethod("predict", "unmarkedFitList", function(object, type, newdata=NULL,
 
 # Condition number
 cn <- function(object) {
-   	ev <- eigen(hessian(object))$value
-   	max(ev) / min(ev)
+    h <- hessian(object)
+    if(is.null(h)) return(NA)
+    if(any(is.na(h))) return(NA)
+        else {
+   	        ev <- eigen(h)$value
+   	        return(max(ev) / min(ev))
+   	        }
    	}
 
 
@@ -133,7 +177,9 @@ setMethod("modSel", "unmarkedFitList",
         }
     fits <- object@fits
     estList <- lapply(fits, coef, altNames=TRUE)
-    seList <- lapply(fits, function(x) sqrt(diag(vcov(x, altNames=TRUE))))
+    seList <- lapply(fits, function(x) 
+        if(any(is.na(x@opt$hessian))) rep(NA, length(coef(x))) 
+            else sqrt(diag(vcov(x, altNames=TRUE))))
     eNames <- sort(unique(unlist(sapply(estList, names))))
     seNames <- paste("SE", eNames, sep="")
     eseNames <- character(l <- length(c(eNames, seNames)))
@@ -158,8 +204,8 @@ setMethod("modSel", "unmarkedFitList",
     out$nPars <- sapply(fits, function(x) length(coef(x)))
     out$n <- sapply(fits, function(x) sampleSize(x))
     out$AIC <- sapply(fits, function(x) x@AIC)
-    out$deltaAIC <- out$AIC - min(out$AIC)
-    out$AICwt <- exp(-out$deltaAIC / 2)
+    out$delta <- out$AIC - min(out$AIC)
+    out$AICwt <- exp(-out$delta / 2)
     out$AICwt <- out$AICwt / sum(out$AICwt)
     out$Rsq <- NA
     if(!is.null(nullmod)) {
@@ -170,7 +216,7 @@ setMethod("modSel", "unmarkedFitList",
           out$Rsq <- sapply(fits, nagR2, nullmod)
         }
     out <- out[order(out$AIC),]
-    out$cumltvAICwt <- cumsum(out$AICwt)
+    out$cumltvWt <- cumsum(out$AICwt)
     msout <- new("unmarkedModSel", Full = out, 
         Names = rbind(Coefs = eNames, SEs = seNames))
     return(msout)
@@ -189,9 +235,10 @@ setAs("unmarkedModSel", "data.frame", function(from) {
 setMethod("show", "unmarkedModSel", function(object) 
 {
     out <- as(object, "data.frame")
-    out <- out[,c('model', 'n', 'nPars', 'AIC', 'deltaAIC', 'AICwt', 'Rsq', 
-        'cumltvAICwt')]
-    print(out, digits=5)
+    rownames(out) <- out$model
+    out <- out[,c('n', 'nPars', 'AIC', 'delta', 'AICwt', 'cumltvWt', 'Rsq')]
+    if (all(is.na(out$Rsq))) out$Rsq <- NULL
+    print(format(out, digits=2, nsmall=2))
 })
 
 

@@ -38,9 +38,12 @@
 \alias{unmarkedFramePCount-class}
 \alias{unmarkedFrameDS-class}
 \alias{unmarkedMultFrame-class}
+\alias{unmarkedFrameGMM-class}
 \alias{show,unmarkedFrame-method}
+\alias{show,unmarkedMultFrame-method}
 \alias{summary,unmarkedFrame-method}
 \alias{summary,unmarkedFrameDS-method}
+\alias{summary,unmarkedMultFrame-method}
 
 \title{Class "unmarkedFrame" }
 \description{Methods for manipulating, summarizing and viewing unmarkedFrames}
@@ -109,7 +112,7 @@ mallardUMF <- unmarkedFramePCount(mallard.y, siteCovs = mallard.site,
 
 
 # Vizualize it
-plot(mallardUMF, addgrid=FALSE, col=heat.colors)
+plot(mallardUMF)
 
 mallardUMF
 

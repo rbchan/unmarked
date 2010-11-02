@@ -16,10 +16,10 @@ options(continue=" ")
 \fvset{listparameters={\setlength{\topsep}{0pt}}}
 \renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
 
-%%\VignetteIndexEntry{Overview}
+%%\VignetteIndexEntry{Overview of unmarked}
 
 \title{Overview of Unmarked:\\
-An R Package for the Analysis of Wildlife Data}
+An R Package for the Analysis of Data from Unmarked Animals}
 \author{Ian Fiske and Richard Chandler}
 
 
@@ -27,18 +27,15 @@ An R Package for the Analysis of Wildlife Data}
 
 \maketitle
 
-\abstract{Unmarked aims to be a complete environment for the
-  statistical analysis of wildlife data. Currently, the focus is on
-  2-level hierarchical models that separately model a latent state and
-  an observation process. Unmarked uses S4 classes to help the user
-  both explore their data and analyze in a transparent manner.}
+\abstract{Unmarked aims to be a complete environment for the statistical analysis of data from surveys of unmarked animals. Currently, the focus is on hierarchical models that separately model a latent state (or states) and an observation process. Unmarked uses S4 classes to help the user explore and analyze their data in a transparent manner.}
 
 
 \section{Overview of unmarked}
 
-Occupancy and abundance data are often associated with metadata related to the design of the study. For example, in distance sampling, the study design (line- or point-transect), distance class break points, transect lengths, and units of measurement need to be accounted for in the analysis. Unmarked uses S4 classes to store data and metadata in a way that allows for easy data manipulation, summarization, and model specification. Table 1 lists the currently implemented models and their associated fitting functions and data classes.
+Unmarked provides methods to estimate site occupancy, abundance, and density of animals (or possibly other oganisms/objects) that cannot be detected with certainty. Numerous models are available that correspond to specialized survey methods such as temporally replicated surveys, distance sampling, removal sampling, and double observer sampling. These data are often associated with metadata related to the design of the study. For example, in distance sampling, the study design (line- or point-transect), distance class break points, transect lengths, and units of measurement need to be accounted for in the analysis. Unmarked uses S4 classes to store data and metadata in a way that allows for easy data manipulation, summarization, and model specification. Table 1 lists the currently implemented models and their associated fitting functions and data classes.
 
-\begin{table} \footnotesize
+\begin{table}[!h] %%\footnotesize
+\centering
 \begin{tabular}{c|ccc}
 Model & Fitting Function & Data & Citation \\ \hline
 Occupancy & occu & unmarkedFrameOccu & \citep{mackenzie_estimating_2002} \\
@@ -46,7 +43,8 @@ Royle-Nichols & occuRN & unmarkedFrameOccu & \citep{royle_estimating_2003} \\
 Point Count & pcount & unmarkedFramePCount & \citep{royle_n-mixture_2004} \\
 Distance-sampling & distsamp & unmarkedFrameDS & \citep{royle_modeling_2004} \\
 Arbitrary multinomial-Poisson & multinomPois & unmarkedFrameMPois & \citep{royle_generalized_2004} \\
-Colonization-extinction & colext & unmarkedMultFrame & \citep{mackenzie_estimating_2003}
+Colonization-extinction & colext & unmarkedMultFrame & \citep{mackenzie_estimating_2003} \\
+Generalized multinomial-mixture & gmultmix & unmarkedFrameGMM & \citep{royle_generalized_2004}
 \end{tabular}
 \caption{Models handled by unmarked.}
 \label{tab:models}
@@ -55,6 +53,7 @@ Colonization-extinction & colext & unmarkedMultFrame & \citep{mackenzie_estimati
 Each data class can be created with a call to the constructor function
 of the same name as described in the examples below.
 
+%%\newpage
 
 \section{Typical unmarked session}
 
@@ -67,8 +66,8 @@ wt <- read.csv(system.file("csv","widewt.csv", package="unmarked"))
 head(wt)
 y <- wt[,2:4]
 siteCovs <-  wt[,c("elev", "forest", "length")]
-obsCovs <- reshape(wt[,c("date.1", "date.2", "date.3",  "ivel.1",  "ivel.2", "ivel.3")], varying=1:6, direction="long")
-obsCovs <- obsCovs[order(obsCovs$id, obsCovs$time),c(2:3)]
+obsCovs <- list(date=wt[,c("date.1", "date.2", "date.3")],  
+    ivel=wt[,c("ivel.1",  "ivel.2", "ivel.3")])
 wt <- unmarkedFrameOccu(y = y, siteCovs = siteCovs, obsCovs = obsCovs)
 summary(wt)
 @
@@ -159,7 +158,7 @@ Parametric bootstrapping can be used to check the adequacy of model fit.
 
 <<fig=TRUE>>=
 	pcru.pb <- parboot(fm2, statistic=SSE, nsim=50, report=5)
-	plot(pcru.pb, main="")
+	plot(pcru.pb)
 @
 
 This example suggests an adequate fit.

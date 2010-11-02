@@ -4,8 +4,8 @@
 occuRN <-
 function(formula, data, K = 25, starts, method = "BFGS", control = list(), se = TRUE)
 {
-	if(!is(data, "unmarkedFrameOccu")) stop("Data is not an unmarkedFrameOccu object.")
-	
+	if(!is(data, "unmarkedFrameOccu")) 
+    stop("Data is not an unmarkedFrameOccu object.")	
 	
 	designMats <- getDesign(data, formula)
 	X <- designMats$X; V <- designMats$V; y <- designMats$y
@@ -28,6 +28,9 @@ function(formula, data, K = 25, starts, method = "BFGS", control = list(), se = 
   nOP <- ncol(X)
 
   nP <- nDP + nOP
+  if(!missing(starts) && length(starts) != nP)
+	   stop(paste("The number of starting values should be", nP))
+  
   y.ji <- as.vector(y)
   navec <- is.na(y.ji)
   n <- 0:K
@@ -36,7 +39,8 @@ function(formula, data, K = 25, starts, method = "BFGS", control = list(), se = 
   {
 
     ## compute individual level detection probabilities
-    r.ij <- matrix(plogis(V %*% parms[(nOP + 1) : nP] + V.offset), M, J, byrow = TRUE)
+    r.ij <- matrix(plogis(V %*% parms[(nOP + 1) : nP] + V.offset), M, J, 
+      byrow = TRUE)
 
     ## compute list of detection probabilities along N
     p.ij.list <- lapply(n, function(k) 1 - (1 - r.ij)^k)

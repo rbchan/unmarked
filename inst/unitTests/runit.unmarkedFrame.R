@@ -2,6 +2,10 @@ test.emptyframe <- function() {
   checkException(umf <- unmarkedFrame())
 }
 
+test.onecol <- function() {
+    checkException(umf <- unmarkedFrame(y=matrix(1)))
+    }
+
 test.frame <- function() {
   M <- 10
   J <- 3

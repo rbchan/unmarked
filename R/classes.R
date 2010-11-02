@@ -30,6 +30,7 @@ setGeneric("fitted")
 setGeneric("simulate")
 setGeneric("residuals")
 setGeneric("hist")
+setGeneric("logLik")
 
 
 # Compute linear combinations of parameters.
@@ -46,6 +47,10 @@ setGeneric("backTransform",
 
 
 setGeneric("hessian",	function(object) standardGeneric("hessian"))
+
+
+setGeneric("LRT", function(m1, m2) standardGeneric("LRT"))
+
 
 # TODO: make parent class unmarkedEstimate
 # TODO: make binomial detection child class

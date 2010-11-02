@@ -1,38 +1,39 @@
 
-genFixedNLL <- function(nll, whichFixed, fixedValues) {
-  function(params) {
-    params[whichFixed] <- fixedValues
-    do.call(nll, list(params))
-  }
+genFixedNLL <- function(nll, whichFixed, fixedValues) 
+{
+    function(params) {
+        params[whichFixed] <- fixedValues
+        do.call(nll, list(params))
+        }
 }
 
 # nll the original negative log likelihood function
 # MLE the full vector of MLE values
-profileCI <- function(nll, whichPar, MLE, interval, level){
-  stopifnot(length(whichPar) == 1)
-  MLEnll <- nll(MLE)
-  nPar <- length(MLE)
+profileCI <- function(nll, whichPar, MLE, interval, level)
+{
+    stopifnot(length(whichPar) == 1)
+    MLEnll <- nll(MLE)
+    nPar <- length(MLE)
 	chsq <- qchisq(level, 1)/2
-  f <- function(value) {
-    fixedNLL <- genFixedNLL(nll, whichPar, value)
-		mleRestricted <- optim(MLE, fixedNLL)$value
-    mleRestricted - MLEnll - chsq
-  }
-  lower <- tryCatch(uniroot(f, c(interval[1],MLE[whichPar]))$root,
-                    error = function(e) {
-                      warning("Lower endpoint of profile confidence interval is on the boundary.",
-                              call. = FALSE)
-                      -Inf
-                    })
-           
-  upper <- tryCatch(upper <- uniroot(f, c(MLE[whichPar], interval[2]))$root,
-                    error = function(e) {
-                      warning("Upper endpoint of profile confidence interval is on the boundary.",
-                              call. = FALSE)
-                      Inf
-                    })
+    f <- function(value) {
+        fixedNLL <- genFixedNLL(nll, whichPar, value)
+            mleRestricted <- optim(MLE, fixedNLL)$value
+        mleRestricted - MLEnll - chsq
+        }
+    lower <- tryCatch(uniroot(f, c(interval[1],MLE[whichPar]))$root,
+        error = function(e) {
+            warning("Lower endpoint of profile confidence interval is on the boundary.", 
+        call. = FALSE)
+        -Inf
+        })
+    upper <- tryCatch(upper <- uniroot(f, c(MLE[whichPar], interval[2]))$root,
+        error = function(e) {
+            warning("Upper endpoint of profile confidence interval is on the boundary.",
+        call. = FALSE)
+        Inf
+        })
 	
-  return(c(lower,upper))
+    return(c(lower,upper))
 }
 
 ## link functions and their gradients
@@ -714,16 +715,16 @@ as.numeric(1 - exp(-lambda))
 
 formatDistData <- function(distData, distCol, transectNameCol, dist.breaks)
 {
-transects <- distData[,transectNameCol]
-M <- nlevels(transects)
-J <- length(dist.breaks) - 1
-y <- matrix(NA, M, J, 
-	dimnames = list(levels(transects), paste("y", 1:J, sep=".")))
-for(i in 1:M) {
-	sub <- subset(distData, transects==rownames(y)[i])
-	y[i,] <- table(cut(sub[,distCol], dist.breaks, include.lowest=TRUE))
-	}
-return(data.frame(y))
+    transects <- distData[,transectNameCol]
+    M <- nlevels(transects)
+    J <- length(dist.breaks) - 1
+    y <- matrix(NA, M, J, 
+	   dimnames = list(levels(transects), paste("y", 1:J, sep=".")))
+    for(i in 1:M) {
+	   sub <- subset(distData, transects==rownames(y)[i])
+	   y[i,] <- table(cut(sub[,distCol], dist.breaks, include.lowest=TRUE))
+	   }
+    return(y)
 }
 
 
@@ -732,17 +733,18 @@ return(data.frame(y))
 
 sight2perpdist <- function(sightdist, sightangle) 
 {
-if(any(0 > sightangle | sightangle > 180))
-	stop("sightangle must be degrees in [0, 180]")
-sightdist * sin(sightangle * pi / 180)
+    if(any(0 > sightangle | sightangle > 180))
+	   stop("sightangle must be degrees in [0, 180]")
+    sightdist * sin(sightangle * pi / 180)
 }
 
 
 
-SSE <- function(fit) {
+SSE <- function(fit) 
+{
     sse <- sum(residuals(fit)^2, na.rm=TRUE)
     return(c(SSE=sse))
-    }
+}
 
 
 

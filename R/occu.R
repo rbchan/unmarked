@@ -4,17 +4,19 @@
 occu <- function(formula, data, knownOcc = numeric(0), starts, method = "BFGS", 
 	control = list(), se = TRUE)
 {
-	if(!is(data, "unmarkedFrameOccu")) stop("Data is not an unmarkedFrameOccu object.")
+	if(!is(data, "unmarkedFrameOccu")) 
+    stop("Data is not an unmarkedFrameOccu object.")
 		
 	designMats <- getDesign(data, formula)
-	X <- designMats$X; V <- designMats$V; y <- designMats$y; removed <- designMats$removed.sites
-        X.offset <- designMats$X.offset; V.offset <- designMats$V.offset
-        if (is.null(X.offset)) {
-          X.offset <- rep(0, nrow(X))
-        }
-        if (is.null(V.offset)) {
-          V.offset <- rep(0, nrow(V))
-        }
+	X <- designMats$X; V <- designMats$V; y <- designMats$y 
+  removed <- designMats$removed.sites
+  X.offset <- designMats$X.offset; V.offset <- designMats$V.offset
+  if (is.null(X.offset)) {
+      X.offset <- rep(0, nrow(X))
+      }
+  if (is.null(V.offset)) {
+      V.offset <- rep(0, nrow(V))
+      }
 
 	y <- truncateToBinary(y)
 	J <- ncol(y)
@@ -31,6 +33,9 @@ occu <- function(formula, data, knownOcc = numeric(0), starts, method = "BFGS",
 	nOP <- ncol(X)
 
 	nP <- nDP + nOP
+	if(!missing(starts) && length(starts) != nP)
+	   stop(paste("The number of starting values should be", nP))
+	
 	yvec <- as.numeric(t(y))
 	navec <- is.na(yvec)
 	nd <- ifelse(rowSums(y,na.rm=TRUE) == 0, 1, 0) # no det at site i indicator

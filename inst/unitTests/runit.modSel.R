@@ -39,7 +39,7 @@ test.modSel <- function() {
     
     checkTrue(all(is.na(ms1@Full$Rsq)))
     checkEqualsNumeric(sum(ms1@Full$AICwt), 1)
-    checkEqualsNumeric(ms1@Full$deltaAIC[1L], 0)
+    checkEqualsNumeric(ms1@Full$delta[1L], 0)
     
     checkException(modSel(fits, nullmod=fm2))
 
@@ -49,5 +49,14 @@ test.modSel <- function() {
         ms1@Full[,-which(colnames(ms1@Full)=="Rsq")],
         ms1@Full[,-which(colnames(ms2@Full)=="Rsq")]        
         )
+    
+    # Fake hessian problem    
+    fm1@opt$hessian[] <- NA
+    fm1@estimates@estimates$state@covMat[] <- NA
+    fits2 <- fitList(m1=fm1, m2=fm2)
+    ms3 <- modSel(fits2)
+    checkEquals(coef(ms1), coef(ms3))
+    
+    
     }
 

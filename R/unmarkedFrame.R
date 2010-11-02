@@ -1,20 +1,24 @@
 
 ############# VALIDATION FUNCTIONS #############################################
 
-validunmarkedFrame <- function(object) {
-	errors <- character(0)
-	M <- nrow(object@y)
-	if(!is.null(object@siteCovs))
-		if(nrow(object@siteCovs) != M)
-			errors <- c(errors, 
-				"siteCovData does not have same size number of sites as y.")
-	if(!is.null(obsCovs(object)) & !is.null(obsNum(object)))
-		if(nrow(object@obsCovs) != M*obsNum(object))
-			errors <- c(errors, "obsCovData does not have M*obsNum rows.")
-	if(length(errors) == 0)
-		TRUE
-	else
-		errors
+validunmarkedFrame <- function(object) 
+{
+    errors <- character(0)
+    M <- nrow(object@y)
+    J <- ncol(object@y)
+    if(J < 2) # matrices can have 0 columns
+        errors <- c(errors, "y must have at least 2 columns")    
+    if(!is.null(object@siteCovs))
+        if(nrow(object@siteCovs) != M)
+            errors <- c(errors, 
+                "siteCovData does not have same size number of sites as y.")
+    if(!is.null(obsCovs(object)) & !is.null(obsNum(object)))
+        if(nrow(object@obsCovs) != M*obsNum(object))
+            errors <- c(errors, "obsCovData does not have M*obsNum rows.")
+    if(length(errors) == 0)
+        TRUE
+    else
+        errors
 }
 
 ############ DATA CLASSES ######################################################
@@ -24,38 +28,40 @@ setClass("unmarkedFrame",
     representation(y = "matrix",
         obsCovs = "optionalDataFrame",
         siteCovs = "optionalDataFrame",
-		mapInfo = "optionalMapInfo",
+        mapInfo = "optionalMapInfo",
         obsToY = "optionalMatrix"),
     validity = validunmarkedFrame)
 
 ## a class for multi-season data
 
 setClass("unmarkedMultFrame",
-		representation(numPrimary = "numeric",
-				yearlySiteCovs = "optionalDataFrame"),  # a data frame in site-major, year-minor order describing site-level covariates
-		contains="unmarkedFrame")
+    representation(numPrimary = "numeric",
+        #data frame in site-major, year-minor order describing site-level covs
+        yearlySiteCovs = "optionalDataFrame"),
+    contains="unmarkedFrame")
+
 
 ## a class for distance sampling data
 setClass("unmarkedFrameDS", 
-	representation(
-		dist.breaks = "numeric",
-		tlength = "numeric",
-		survey = "character",
-		unitsIn = "character"),
-	contains = "unmarkedFrame",
-	validity = function(object) {
-		errors <- character(0)
-		J <- numY(object)
-		db <- object@dist.breaks
-		if(J != length(db) - 1)
-			errors <- c(errors, "ncol(y) must equal length(dist.breaks)-1")
-		if(db[1] != 0)
-			errors <- c(errors, "dist.breaks[1] must equal 0")
-		if(!is.null(obsCovs(object)))
-			"obsCovs cannot be used with distsamp"
-		if(length(errors) == 0) TRUE	
-			else errors
-		})
+    representation(
+        dist.breaks = "numeric",
+        tlength = "numeric",
+        survey = "character",
+        unitsIn = "character"),
+    contains = "unmarkedFrame",
+    validity = function(object) {
+        errors <- character(0)
+        J <- numY(object)
+        db <- object@dist.breaks
+        if(J != length(db) - 1)
+            errors <- c(errors, "ncol(y) must equal length(dist.breaks)-1")
+        if(db[1] != 0)
+            errors <- c(errors, "dist.breaks[1] must equal 0")
+        if(!is.null(obsCovs(object)))
+            "obsCovs cannot be used with distsamp"
+        if(length(errors) == 0) TRUE	
+        else errors
+        })
 
 
 setClass("unmarkedFrameOccu",
@@ -72,35 +78,41 @@ setClass("unmarkedFrameMPois",
 			piFun = "character"),
 		contains = "unmarkedFrame")
 
+
+# for gmm aka gmultmix     
+setClass("unmarkedFrameGMM", 
+    representation(
+        piFun = "character",
+        samplingMethod = "character"),
+    contains = "unmarkedMultFrame")    
+
+
+
 ################### CONSTRUCTORS ###############################################
 
 # Constructor for unmarkedFrames.
 unmarkedFrame <- function(y, siteCovs = NULL, obsCovs = NULL, mapInfo,
-    obsToY) {
-
-  if(class(obsCovs) == "list") {
-    obsVars <- names(obsCovs)
-    for(i in seq(length(obsVars))) {
-      if(!(class(obsCovs[[i]]) %in% c("matrix", "data.frame")))
-        stop("At least one element of obsCovs is not a matrix or data frame.")
-      if(ncol(obsCovs[[i]]) != ncol(y) | nrow(obsCovs[[i]]) != nrow(y))
-        stop("At least one matrix in obsCovs has incorrect number of dimensions.")
-    }
-    if(is.null(obsNum)) obsNum <- ncol(obsCovs[[1]])
-    obsCovs <- data.frame(lapply(obsCovs, function(x) as.vector(t(x))))
-  }
-
-  if(("data.frame" %in% class(y)) |
-      ("cast_matrix" %in% class(y))) y <- as.matrix(y)
-
-	if(missing(obsToY)) obsToY <- NULL
-	if(missing(mapInfo)) mapInfo <- NULL
-	
-  umf <- new("unmarkedFrame", y = y, obsCovs = obsCovs,
-      siteCovs = siteCovs, mapInfo = mapInfo, 
-	  obsToY = obsToY)
-
-  return(umf)
+    obsToY) 
+{
+    if(class(obsCovs) == "list") {
+        obsVars <- names(obsCovs)
+        for(i in seq(length(obsVars))) {
+            if(!(class(obsCovs[[i]]) %in% c("matrix", "data.frame")))
+                stop("At least one element of obsCovs is not a matrix or data frame.")
+            if(ncol(obsCovs[[i]]) != ncol(y) | nrow(obsCovs[[i]]) != nrow(y))
+                stop("At least one matrix in obsCovs has incorrect number of dimensions.")
+            }
+        if(is.null(obsNum)) obsNum <- ncol(obsCovs[[1]]) #??
+        obsCovs <- data.frame(lapply(obsCovs, function(x) as.vector(t(x))))
+        }    
+    if(("data.frame" %in% class(y)) | ("cast_matrix" %in% class(y))) 
+        y <- as.matrix(y)    
+    if(missing(obsToY)) obsToY <- NULL
+    if(missing(mapInfo)) mapInfo <- NULL
+	   
+    umf <- new("unmarkedFrame", y = y, obsCovs = obsCovs, siteCovs = siteCovs, 
+        mapInfo = mapInfo, obsToY = obsToY)
+    return(umf)
 }
 
 
@@ -133,12 +145,76 @@ unmarkedFrameOccu <- function(y, siteCovs = NULL, obsCovs = NULL, mapInfo)
 unmarkedMultFrame <- function(y, siteCovs = NULL, obsCovs = NULL, numPrimary,
 	yearlySiteCovs = NULL) 
 {
-	J <- ncol(y)
+    J <- ncol(y)
 	umf <- unmarkedFrame(y, siteCovs, obsCovs, obsToY = diag(J))
-	umf <- as(umf, "unmarkedMultFrame")
-	umf@numPrimary <- numPrimary
+    umf <- as(umf, "unmarkedMultFrame")
+    umf@numPrimary <- numPrimary
+	
+    if(class(yearlySiteCovs) == "list") {
+        yearlySiteVars <- names(yearlySiteCovs)
+        for(i in seq(length(yearlySiteVars))) {
+            if(!(class(yearlySiteCovs[[i]]) %in% c("matrix", "data.frame")))
+                stop("At least one element of yearlySiteCovs is not a matrix or data frame.")
+            if(ncol(yearlySiteCovs[[i]]) != (ncol(y) / numPrimary) | 
+                nrow(yearlySiteCovs[[i]]) != nrow(y))
+                    stop("At least one matrix in yearlySiteCovs has incorrect number of dimensions.")
+            }
+        if(is.null(obsNum)) obsNum <- ncol(obsCovs[[1]])
+        yearlySiteCovs <- data.frame(lapply(yearlySiteCovs, function(x) 
+            as.vector(t(x))))
+        }    
+
 	umf@yearlySiteCovs <- yearlySiteCovs
 	umf
+}
+
+
+# This function constructs an unmarkedMultFrame object.
+unmarkedFrameGMM <- function(y, siteCovs = NULL, obsCovs = NULL, numPrimary,
+	yearlySiteCovs = NULL, type, obsToY, piFun) 
+{
+    if(!missing(type)) {
+      if(!type %in% c("removal", "double"))
+        stop("if specifying type, it should either be 'removal' or 'double'")
+      switch(type,
+        removal = {
+          obsToY <- matrix(1, ncol(y), ncol(y))
+				  obsToY[col(obsToY) < row(obsToY)] <- 0
+				  piFun <- "removalPiFun"
+          },
+        double = {
+				  obsToY <- matrix(c(1, 0, 0, 1, 1, 1), 2, 3)
+				  piFun <- "doublePiFun"
+          })
+      }
+    else {
+        type <- "userDefined" 
+        if(missing(obsToY)) 
+            stop("obsToY is required for gmultmix data with no specified type.")
+		}
+       
+    umf <- unmarkedFrame(y, siteCovs, obsCovs, obsToY = obsToY)
+    umf <- as(umf, "unmarkedMultFrame")
+    umf@numPrimary <- numPrimary
+    J <- ncol(y) / numPrimary
+    if(class(yearlySiteCovs) == "list") {
+        yearlySiteVars <- names(yearlySiteCovs)
+        for(i in seq(length(yearlySiteVars))) {
+            if(!(class(yearlySiteCovs[[i]]) %in% c("matrix", "data.frame")))
+                stop("At least one element of yearlySiteCovs is not a matrix or data frame.")
+            if(ncol(yearlySiteCovs[[i]]) != numPrimary | 
+                nrow(yearlySiteCovs[[i]]) != nrow(y))
+                    stop("At least one matrix in yearlySiteCovs has incorrect number of dimensions.")
+            }
+        if(is.null(obsNum)) obsNum <- ncol(obsCovs[[1]])
+        yearlySiteCovs <- data.frame(lapply(yearlySiteCovs, function(x) 
+            as.vector(t(x))))
+        }    
+    umf@yearlySiteCovs <- yearlySiteCovs
+    umf <- as(umf, "unmarkedFrameGMM")
+    umf@piFun <- piFun
+    umf@samplingMethod <- type
+    umf
 }
 
 
@@ -186,11 +262,30 @@ unmarkedFrameMPois <- function(y, siteCovs = NULL, obsCovs = NULL, type, obsToY,
 
 
 setMethod("show", "unmarkedFrame",
-		function(object) {
-			df <- as(object, "data.frame")
-			cat("Data frame representation of unmarkedFrame object.\n")
-			print(df)
-		})
+        function(object) {
+            df <- as(object, "data.frame")
+            cat("Data frame representation of unmarkedFrame object.\n")
+            print(df)
+        })
+
+
+setMethod("show", "unmarkedMultFrame",
+        function(object) {
+            df <- as(object, "data.frame")
+            ysc <- yearlySiteCovs(object)
+            if(is.null(ysc)) { 
+                cat("Data frame representation of unmarkedFrame object.\n")
+                print(df)
+                }
+            else {
+                T <- object@numPrimary
+                yscwide <- data.frame(lapply(ysc, matrix, ncol=T))
+                df <- data.frame(df, yscwide)
+                cat("Data frame representation of unmarkedFrame object.\n")
+                print(df)
+                }
+        })
+
 
 ############################ EXTRACTORS ########################################
 
@@ -343,36 +438,75 @@ setMethod("summary", "unmarkedFrameDS",
 })
 
 
+
+
+setMethod("summary", "unmarkedMultFrame",
+	function(object,...) {
+		cat("unmarkedFrame Object\n\n")
+		cat(nrow(object@y), "sites\n")
+		cat("Maximum number of observations per site:",obsNum(object),"\n")
+			mean.obs <- mean(rowSums(!is.na(getY(object))))
+		cat("Mean number of observations per site:",round(mean.obs,2),"\n")
+		cat("Number of primary survey periods:", object@numPrimary, "\n")
+		cat("Number of secondary survey periods:", 
+            obsNum(object) / object@numPrimary, "\n")
+        cat("Sites with at least one detection:", 
+			sum(apply(getY(object), 1, function(x) any(x > 0, na.rm=TRUE))), 
+				"\n\n")
+		cat("Tabulation of y observations:")
+		print(table(object@y, exclude=NULL))
+		if(!is.null(object@siteCovs)) {
+			cat("\nSite-level covariates:\n")
+			print(summary(object@siteCovs))
+			}
+		if(!is.null(object@obsCovs)) {
+			cat("\nObservation-level covariates:\n")
+			print(summary(object@obsCovs))
+			}
+		if(!is.null(object@yearlySiteCovs)) {
+			cat("\nYearly-site-level covariates:\n")
+			print(summary(object@yearlySiteCovs))
+			}
+	})
+
+
+
+
 ################################# PLOT METHODS #################################
 # TODO:  come up with nice show/summary/plot methods for each of these data types.
 
 setMethod("plot", c(x="unmarkedFrame", y="missing"),
-	function (x, y, panels = 1, ...)
+	function (x, y, panels = 1, colorkey, strip=FALSE, 
+    ylab="Site", xlab="Observation", ...)
 {
-	y <- getY(x)
-	M <- nrow(y)
-	J <- ncol(y)
-        y <- as.data.frame(y)
-        colnames(y) <- paste("obs",1:J)
-        y$site <- 1:M
-        sites.per.panel <- M/panels
-        y$group <- as.factor(round(seq(1,panels,length=M)))
-        y2 <- melt(y, #measure.var = c("V1", "V2", "V3"),
-                   id.var=c("site","group"))
-        levelplot(value ~ variable*site | group, y2,
-                  scales=list(relation="free", x=list(labels=1:J)), ...)
-      })
+    y <- getY(x)
+    ym <- max(y, na.rm=TRUE)
+    M <- nrow(y)
+    J <- ncol(y)
+    y <- as.data.frame(y)
+    colnames(y) <- paste("obs",1:J)
+    y$site <- 1:M
+    sites.per.panel <- M/panels
+    y$group <- as.factor(round(seq(1,panels,length=M)))
+    y2 <- melt(y, #measure.var = c("V1", "V2", "V3"),
+        id.var=c("site","group"))
+    if(missing(colorkey))
+        colorkey <- list(at=0:(ym+1), labels=list(labels=as.character(0:ym), 
+            at=(0:ym)+0.5))    
+    levelplot(value ~ variable*site | group, y2,
+        scales=list(relation="free", x=list(labels=1:J)), 
+        colorkey=colorkey, strip=strip, xlab=xlab, ylab=ylab, ...)
+})
 
 
-setMethod("hist", "unmarkedFrameDS",
-	function(x, ...)
+setMethod("hist", "unmarkedFrameDS", function(x, ...)
 {
-	y <- getY(x)
-	dbreaks <- x@dist.breaks
-	nb <- length(dbreaks)
- 	mids <- (dbreaks[-1] - dbreaks[-nb]) / 2 + dbreaks[-nb]
-    distances <- unlist(mapply(rep, mids, each=colSums(y)))
-	hist(distances, breaks=dbreaks, ...)
+    y <- getY(x)
+    dbreaks <- x@dist.breaks
+    nb <- length(dbreaks)
+    mids <- (dbreaks[-1] - dbreaks[-nb]) / 2 + dbreaks[-nb]
+        distances <- rep(mids, times=colSums(y))
+    hist(distances, breaks=dbreaks, ...)
 })
 
 

@@ -5,6 +5,7 @@
 \alias{modSel-methods}
 \alias{unmarkedModSel-class}
 \alias{show,unmarkedModSel-method}
+\alias{summary,unmarkedModSel-method}
 \alias{coef,unmarkedModSel-method}
 \alias{SE,unmarkedModSel-method}
 \arguments{
@@ -19,7 +20,8 @@
 A S4 object with the following slots
 	\item{Full}{data.frame with formula, estimates, standard errors and model 
 		selection information. Converge is optim convergence code. CondNum is
-		model condition number. n is the number of sites. 
+		model condition number. n is the number of sites. delta is delta AIC.
+		cumltvWt is cumulative AIC weight.
         Rsq is Nagelkerke's (1991) R-squared index, which is only returned when 
         the nullmod argument is specified. }
 	\item{Names}{matrix referencing column names of estimates (row 1) and 
@@ -48,7 +50,10 @@ fm3 <- distsamp( ~ 1 ~area, ltUMF)
 fl <- fitList(Null=fm1, A.=fm2, .A=fm3)
 fl
 
-(ms <- modSel(fl, nullmod="Null"))
+ms <- modSel(fl, nullmod="Null")
+
+ms
+summary(ms) 
 
 coef(ms)                            # Estimates only
 SE(ms)                              # Standard errors only

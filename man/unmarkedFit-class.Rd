@@ -16,18 +16,22 @@
 \alias{parboot,unmarkedFit-method}
 \alias{plot,unmarkedFit,missing-method}
 \alias{predict,unmarkedFit-method}
+\alias{predict,unmarkedFitColExt-method}
+\alias{predict,unmarkedFitGMM-method}
 \alias{profile,unmarkedFit-method}
 \alias{residuals,unmarkedFit-method}
 \alias{residuals,unmarkedFitOccu-method}
 \alias{residuals,unmarkedFitOccuRN-method}
 \alias{update,unmarkedFit-method}
 \alias{update,unmarkedFitColExt-method}
+\alias{update,unmarkedFitGMM-method}
 \alias{sampleSize}
 \alias{sampleSize,unmarkedFit-method}
 \alias{unmarkedFitOccu-class}
 \alias{unmarkedFitPCount-class}
 \alias{unmarkedFitDS-class}
 \alias{unmarkedFitMPois-class}
+\alias{unmarkedFitGMM-class}
 \alias{plot,profile,missing-method}
 \alias{show,unmarkedFit-method}
 \alias{summary,unmarkedFit-method}
@@ -36,6 +40,10 @@
 \alias{smoothed,unmarkedFitColExt-method}
 \alias{projected}
 \alias{projected,unmarkedFitColExt-method}
+\alias{logLik}
+\alias{logLik,unmarkedFit-method}
+\alias{LRT}
+\alias{LRT,unmarkedFit,unmarkedFit-method}
 
 \title{Class "unmarkedFit" }
 \description{Contains fitted model information which can be manipulated or 
@@ -114,7 +122,12 @@ extracted using the methods described below.
     \item{projected}{\code{signature(object="unmarkedFitColExt")}:
       Returns the projected trajectory from a colonization-extinction
       model fit.  Takes additional logical argument mean which specifies
-    whether or not to return the average over sites.} 
+    whether or not to return the average over sites.}
+    \item{logLik}{\code{signature(object="unmarkedFit")}:
+        Returns the log-likelihood.}
+    \item{LRT}{\code{signature(m1="unmarkedFit", m2="unmarkedFit")}:
+        Returns the chi-squared statistic, degrees-of-freedom, and p-value from
+        a Likelihood Ratio Test.} 
 	 }
 }
 \note{ This is a superclass with child classes for each fit type }

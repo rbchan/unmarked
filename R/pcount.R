@@ -36,6 +36,9 @@ pcount <- function(formula, data, K, mixture = c("P", "NB"), starts,
 	k.ijk <- rep(k, M*J)
 
 	nP <- nAP + nDP + ifelse(identical(mixture,"NB"),1,0)
+	if(!missing(starts) && length(starts) != nP)
+	   stop(paste("The number of starting values should be", nP))	
+	
 	y.ij <- as.numeric(t(y))
 	y.ijk <- rep(y.ij, each = K + 1)
 	navec <- is.na(y.ijk)

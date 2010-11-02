@@ -42,4 +42,7 @@ pp. 777--790.}
 \item{se}{logical specifying whether or not to compute standard errors.}}
 \examples{data(birds)
 woodthrushUMF <- unmarkedFrameOccu(woodthrush.bin)
-(fm.wood.rn <- occuRN(~ obs ~ 1, woodthrushUMF))}
+# survey occasion-specific detection probabilities
+(fm.wood.rn <- occuRN(~ obsNum ~ 1, woodthrushUMF)) 
+
+}
