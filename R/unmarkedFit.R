@@ -358,11 +358,7 @@ setMethod("predict", "unmarkedFitGMM",
         out$SE <- SE(lc)
         ci <- as.data.frame(confint(lc))
         colnames(ci) <- c("lower", "upper")
-<<<<<<< HEAD
-       out <- cbind(out, ci)
-=======
         out <- cbind(out, ci)
->>>>>>> master
         if(appendData)
             out <- data.frame(out, as(newdata, "data.frame"))
         return(out)
