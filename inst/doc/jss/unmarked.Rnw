@@ -184,6 +184,18 @@ negative binomial.  In the Poisson case, there is no $\theta$.  In the
 negative binomial case, $\theta$ is a dispersion parameter, which is
 useful when overdispersion is suspected.
 
+\citet{Royle2004b} showed that if sites are iid the integrated likelihood of $Y_{ij}$ is:
+
+\begin{equation}
+L(\{ Y_{ij};  i=1,2,\ldots,R \}| {\bf p},\theta) = 
+ \prod_{i}^{R} 
+ \left\{ \sum_{N_{i}=0}^{\infty}
+          \left( \prod_{t}^{J} 
+     \frac{N_{i!}}{ (N_{i}-Y_{ij})!} p^{Y_{ij}}(1-p)^{N_{i}-Y_{ij}} \right)
+       g(N_{i}|\theta) \right\}
+\end{equation}
+
+
 As with the occupancy model, covariates may be included in either the
 state (here, abundance) or detection levels, but abundance is modeled
 through a log link to enforce it's positivity constraint.
@@ -226,6 +238,19 @@ determined by the specific sampling method and
 $\sum_{j} \pi_{ij} \le 1$ because detection is imperfect and
 $\pi_{i}^{*}=1 - \sum_{j} \pi_{ij}$ is the probability of the species
 escaping detection at site $i$.  
+
+\citet{Royle2004a} made similar assumptions for the multinomial case in which $T \equiv$ 1, and he demonstrated that if the observations ${\bf y}_i$ are independent when conditioned on local population size $N_i$ and $p_{it}$, the integrated likelihood of ${\bf y}_{i}$ is:
+\begin{equation}
+L(\{ {\bf y}_{i};  i=1,2,\ldots,R \}| {\bf p},\theta) = 
+ \prod_{i=1}^{R} \left\{ 
+  \sum_{N_{i}=0}^{\infty} \left(
+ \frac{N_{i}!}{ y_{i1}! y_{i2}! y_{i3}! y_{i0}!}
+  \pi_{1}^{y_{i1}}
+  \pi_{2}^{y_{i2}}
+  \pi_{3}^{y_{i3}}
+  \pi_{0}^{M_{i}- y_{i.}} \right)
+ g(N_{i}|\theta) \right\}
+\end{equation}
 
 For multinomial-Poisson sampling methods, the actual observations are
 an underlying categorical detection variable with $R \leq J$ levels so
