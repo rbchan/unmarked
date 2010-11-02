@@ -16,5 +16,6 @@ bc
 *.jpg
 *.out
 *.pdf
+*.aux
 
 
