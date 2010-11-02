@@ -826,9 +826,9 @@ qplot(trba, Predicted, data = preddata, geom = "line",
 AIC can be used to select the best model in a set, but it does not indicate how well a model fits the data.  To conduct goodness of fit tests, \um\ provides a generic parametric bootstrapping function.  It simulated data from the fitted model and the computes summary information from any specified statistic, with the default being the sum of squared residuals.
 
 %suppress progress report. Probably should add option to argument list too.
-<<cache=true,quite=TRUE,echo=FALSE>>=  
+<<cache=true,quite=TRUE>>=  
 set.seed(1234)
-pb <- parboot(fm.oven.1, statistic = SSE, nsim = 20)
+pb <- parboot(fm.oven.1, statistic = SSE, nsim = 20, report=F)
 @ 
 <<>>=
 pb
