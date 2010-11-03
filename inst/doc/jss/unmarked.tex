@@ -564,7 +564,7 @@ The following call to \code{unmarkedFramePCount} function creates an unmarkedFra
 \begin{Schunk}
 \begin{Sinput}
 > mallardUMF <- unmarkedFramePCount(y = mallard.y, siteCovs = mallard.site, 
-+     obsCovs = mallard.obs)
+     obsCovs = mallard.obs)
 \end{Sinput}
 \end{Schunk}
 
@@ -695,9 +695,9 @@ specify the particular type of multinomial-Poisson data as
 \begin{Schunk}
 \begin{Sinput}
 > scaled.covs <- as.data.frame(scale(ovendata.list$covariates[, 
-+     -1]))
+     -1]))
 > ovenFrame <- unmarkedFrameMPois(ovendata.list$data, siteCovs = scaled.covs, 
-+     type = "removal")
+     type = "removal")
 > summary(ovenFrame)
 \end{Sinput}
 \begin{Soutput}
@@ -745,7 +745,7 @@ Continuing the Mallard example, the following call to \code{pcount} fits an bino
 \begin{Schunk}
 \begin{Sinput}
 > fm.mallard.1 <- pcount(~date + I(date^2) ~ elev + forest, 
-+     data = mallardUMF)
+     data = mallardUMF)
 > fm.mallard.1
 \end{Sinput}
 \begin{Soutput}
@@ -1034,7 +1034,7 @@ profile limit.
 \begin{Schunk}
 \begin{Sinput}
 > ci <- confint(fm.oven.1, type = "state", level = 0.95, 
-+     method = "profile")
+     method = "profile")
 \end{Sinput}
 \begin{Soutput}
 Profiling parameter 1 of 3 ... done.
@@ -1070,7 +1070,7 @@ log-abundance rate for a site with \code{ufp = 0.5} and \code{trba
 \begin{Schunk}
 \begin{Sinput}
 > (lc <- linearComb(fm.oven.1, type = "state", coefficients = c(1, 
-+     0.5, 0)))
+     0.5, 0)))
 \end{Sinput}
 \begin{Soutput}
 Linear combination(s) of Abundance estimate(s)
@@ -1087,7 +1087,7 @@ following code requests the estimated log-abundance for sites with
 \begin{Schunk}
 \begin{Sinput}
 > (lc <- linearComb(fm.oven.1, type = "state", coefficients = matrix(c(1, 
-+     0.5, 0, 1, 1, 0), 2, 3, byrow = TRUE)))
+     0.5, 0, 1, 1, 0), 2, 3, byrow = TRUE)))
 \end{Sinput}
 \begin{Soutput}
 Linear combination(s) of Abundance estimate(s)
@@ -1195,16 +1195,16 @@ the use the \code{modSel} method to rank the models by AIC.
 \begin{Schunk}
 \begin{Sinput}
 > fmList <- fitList(Global = fm.oven.2, additive = fm.oven.1, 
-+     ufp = fm.oven.3, trba = fm.oven.4, Null = fm.oven.5)
+     ufp = fm.oven.3, trba = fm.oven.4, Null = fm.oven.5)
 > modSel(fmList)
 \end{Sinput}
 \begin{Soutput}
-          n nPars    AIC delta AICwt cumltvWt
-trba     70     3 324.77  0.00  0.35     0.35
-ufp      70     3 325.73  0.96  0.21     0.56
-additive 70     4 326.14  1.37  0.17     0.73
-Null     70     2 326.28  1.51  0.16     0.90
-Global   70     5 327.17  2.40  0.10     1.00
+         nPars    AIC delta AICwt cumltvWt
+trba         3 324.77  0.00  0.35     0.35
+ufp          3 325.73  0.96  0.21     0.56
+additive     4 326.14  1.37  0.17     0.73
+Null         2 326.28  1.51  0.16     0.90
+Global       5 327.17  2.40  0.10     1.00
 \end{Soutput}
 \end{Schunk}
 
@@ -1232,9 +1232,9 @@ with the \code{predict} method (Figure~\ref{fig:pred}).
 > preddata <- predict(fm3, type = "state", appendData = TRUE)
 > library(ggplot2)
 > qplot(trba, Predicted, data = preddata, geom = "line", 
-+     xlab = "Scaled Basal Tree Area", ylab = "Estimated Abundance") + 
-+     geom_ribbon(aes(x = trba, ymin = lower, ymax = upper), 
-+         alpha = 0.1) + theme_bw()
+     xlab = "Scaled Basal Tree Area", ylab = "Estimated Abundance") + 
+     geom_ribbon(aes(x = trba, ymin = lower, ymax = upper), 
+         alpha = 0.1) + theme_bw()
 \end{Sinput}
 \end{Schunk}
 
@@ -1250,19 +1250,6 @@ AIC can be used to select the best model in a set, but it does not indicate how 
 > set.seed(1234)
 > pb <- parboot(fm.oven.1, statistic = SSE, nsim = 20)
 \end{Sinput}
-\begin{Soutput}
-t0 = 72.24217 
-76.2, 97.5
-65.1, 89.7
-49.9, 77.3
-56.6, 60
-88, 76.9
-78.3, 83.5
-79.5, 73.4
-76.4, 85.1
-77.4, 68.3
-85.6, 76
-\end{Soutput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
