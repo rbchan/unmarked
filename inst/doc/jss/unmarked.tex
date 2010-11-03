@@ -144,6 +144,16 @@ probability of detection can be modeled with
 \end{gather}
 where $\mathbf v_{ij}$ is a vector of survey-specific covariates and
 $\mathbf \alpha$ is a vector of their corresponding effect parameters.
+
+The likelihood then is
+
+\begin{equation}
+L(\{ Y_{ij};  i=1,2,\ldots,R \}| {\bf p},\phi) = 
+ \prod_{i}^{M} \left\{
+    \prod_{j}^{J} 
+      \left(p^{Y_{ij}}(1-p)^{1-Y_{ij}}\right)
+          \phi + I(Y_{i.}=0)(1-\phi) \right\} 
+\end{equation}
                                                                                                             
 Examples of site-level covariates include habitat characteristics such as vegetation height. Observation covariates could include time of day, date, wind speed, or other factors that might affect detection probability and are specific to each survey occasion. 
 
@@ -1240,6 +1250,19 @@ AIC can be used to select the best model in a set, but it does not indicate how 
 > set.seed(1234)
 > pb <- parboot(fm.oven.1, statistic = SSE, nsim = 20)
 \end{Sinput}
+\begin{Soutput}
+t0 = 72.24217 
+76.2, 97.5
+65.1, 89.7
+49.9, 77.3
+56.6, 60
+88, 76.9
+78.3, 83.5
+79.5, 73.4
+76.4, 85.1
+77.4, 68.3
+85.6, 76
+\end{Soutput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
@@ -1286,19 +1309,11 @@ explain these data.
 \section[Future directions for unmarked development]{Future directions for \um\ development}
 \label{sec:future-direct-unmark}
 
-\um\ has become a stable and useful platform for the analysis of
-ecological data, but several areas of development could improve its
-utility.  Bayesian estimation could be implemented for many of these
-models.  This would provide a useful comparison with the maximum
-likelihood results.  Random effects are an often requested feature
-from users that will likely be incorporated into a future version.
-Random effects are useful for modeling heterogeneity among sites that
-is not accounted for by covariates alone.  For maximum likelihood
-methods, the Laplace approximation to the integrated likelihood
-approach is likely to be fruitful and the incorporation of random
-effects into Bayesian estimation is even more straightforward.  Also,
-\um\ can easily be extended to add new TLEMs as they are published
-and found to be useful.
+\um\ has become a stable and useful platform for the analysis of ecological data, but several areas of development could improve its utility.  First, several of the closed population models could be extended to open populations, which are subject to temporal dynamics in the state process. Open population models often require fewer assumptions than do closed population models, and more importantly, they provide a means of estimating demographic parameters of ecological interest. Currently, this functionality is restricted to the \code{colext} function, which implements the multi-season occupancy model of \citet{MacKenzie04}.  This model allows estimation of colonization and extinction probabilities, which are key parameters in metapopulation studies.  Similar models have recently been developed for repeated count data that include apparent survival (ie the number of mortalities and permanent emigrations) and recruitment rate parameters \citep{DailMadsen2010}.  We hope to add these and other models as they are developed.
+
+Second, each of the models in \um\ assumes independence among sites. However, ecologists often use sampling methods such as cluster sampling that induce spatial dependence. Typically, this is done for logistical convenience, but because few methosd are available to account for spatial correlation and imperfect detection probability, the spatial dependence is often ignored.  Rather than this being a weakness of the sampling design, we envision that this dependence can be used as information related to the observation process.  
+
+Finally, Bayesian estimation could be implemented for many of these models.  An important advantage of Bayesian analysis over classical methods is that the latent abundance or occurence variables can be treated as formal parameters.  Thus posterior distriutions could easily be calculated for derived parameters such as the proportion of sites occupied.  Bayesian analysis also would provide a natural framework for incorporating additional sources of random variation. For example, one could model heterogeneity among sites not accounted for by covariates alone.  
 
 \section*{Acknowledgements}
 
