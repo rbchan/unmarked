@@ -236,7 +236,7 @@ setMethod("show", "unmarkedModSel", function(object)
 {
     out <- as(object, "data.frame")
     rownames(out) <- out$model
-    out <- out[,c('n', 'nPars', 'AIC', 'delta', 'AICwt', 'cumltvWt', 'Rsq')]
+    out <- out[,c('nPars', 'AIC', 'delta', 'AICwt', 'cumltvWt', 'Rsq')]
     if (all(is.na(out$Rsq))) out$Rsq <- NULL
     print(format(out, digits=2, nsmall=2))
 })
