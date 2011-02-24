@@ -74,10 +74,6 @@ for(i in 1:M) {
         }
     }
     
-## NA handling
-# Sites w/ missing siteCovs should be removed beforehand
-# Sites w/ some missing yearlySiteCovs shoul be retained but      
-
 nll <- function(pars) {
     lambda <- exp(Xlam %*% pars[1:nLP] + Xlam.offset) 
     phi <- drop(plogis(Xphi %*% pars[(nLP+1):(nLP+nPP)] + Xphi.offset))
@@ -93,7 +89,7 @@ nll <- function(pars) {
     
     for(t in 1:T) cp[,t,1:J] <- do.call(piFun, list(p[,t,]))
     cp[,,1:J] <- cp[,,1:J] * phi
-    cp[,,J+1] <- 1 - apply(cp[,,1:J], 1:2, sum, na.rm=TRUE) # is na.rm=T valid?
+    cp[,,J+1] <- 1 - apply(cp[,,1:J], 1:2, sum, na.rm=TRUE) # NAs should be handled previously
     
     switch(mixture, 
         P = f <- sapply(k, function(x) dpois(x, lambda)),
