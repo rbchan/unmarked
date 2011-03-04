@@ -102,7 +102,7 @@ which $J$ observations are made at $M$ spatial sample units during each of
 $T$ seasons. As an example, Table~\ref{tab:exdata} shows a typical 
 repeated count dataset. 
 
-\begin{table}[h!] %\small
+\begin{table}[h] %\small
 \begin{centering}
 \begin{tabular}{lccccccc}
 \hline
@@ -187,7 +187,7 @@ to resemble the syntax of \rlang's common fitting functions such as \code{lm}
 for fitting linear models.
 
 Although there is existing software for fitting some of these models 
-\citetext{e.g. \citep{Hines2002}}, there are a number of advantages to a unified 
+\citetext{e.g. \citet{Hines2002}}, there are a number of advantages to a unified 
 framework within \rlang.  Many researchers are already familiar with \rlang\ 
 and use its powerful data manipulation and plotting capabilities.  Sometimes 
 many species are analyzed in tandem, so that a common method of aggregating 
@@ -216,7 +216,7 @@ developed. Table~\ref{tab:models} shows the models available as of version
 provides a summary of several of the most common sampling techniques and how 
 \um\ can be used to model the resulting data. 
 
-\begin{table} \footnotesize
+\begin{table}[ht] \footnotesize
 %\begin{sidewaystable} \small
 %\begin{tabular}{lp{2cm}cc}
 \begin{tabular}{lccc}
@@ -226,7 +226,7 @@ provides a summary of several of the most common sampling techniques and how
 Single-season Occupancy & \code{occu} & unmarkedFrameOccu & \citealt{MacKenzie2002} \\
 Abundance from presence-absence & \code{occuRN}& unmarkedFrameOccu & \citealt{Royle2003} \\
 Abundance from repeated counts &\code{pcount}& unmarkedFramePCount & \citealt{Royle2004} \\
-Distance-sampling &\code{distsamp}& unmarkedFrameDS & \citealt{Royle2004b} \\
+Distance sampling &\code{distsamp}& unmarkedFrameDS & \citealt{Royle2004b} \\
 Multinomial Counts &\code{multinomPois}& unmarkedFrameMPois & \citealt{Royle2004a} \\
 Repeated Multinomial Counts &\code{gmultmix} & unmarkedFrameGMM & \citealt{chandlerEAip_TempEm} \\
 Multi-season Occupancy &\code{colext}& unmarkedMultFrame & \citealt{MacKenzie2003} \\
@@ -427,7 +427,7 @@ the integrated likelihood obtained by marginalizing each $N_{i}$ from the
 conditional likelihood \citep{Royle2004b}:
 
 \begin{equation}
-L(Y_{ij}| p,\lambda) = 
+L(\lambda, p | Y_{ij}) = 
  \prod_{i}^{M} 
  \left\{ \sum_{N_{i}=max({\bf Y_i})}^{\infty}
           \left( \prod_{j}^{J} 
@@ -485,7 +485,7 @@ latent variables, and so inference is based on the integrated
 likelihood of ${\bf y}_{i}$ which is:
 
 \begin{equation}
-L({\bf Y}_i| {\bf p},\lambda) = 
+L(\lambda, p | {\bf Y}_i) = 
  \prod_{i=1}^{N} \left\{ 
   \sum_{N_{i}=\sum_{j}(Y_{ij})}^{\infty} \left(
  \frac{N_{i}!}{ Y_{i1}! Y_{i2}! Y_{i3}! Y_{i0}!}
@@ -560,16 +560,6 @@ for $j=2,\dots,J$ and the probability of not being sampled is
 \begin{equation}
   \pi_{i,J+1} = 1 - \sum_{j=1}^{J}(\pi_{ij}) \notag
 \end{equation}
-Or, equivalently,
-\begin{equation}
-  \mathbf \pi_i =
-  \begin{pmatrix}
-    p_{i1} \\
-    (1-p_{i1})p_{i2} \\
-    \vdots \\
-    \sum_{j=1}^{J}(\pi_{ij}}) \notag
-  \end{pmatrix}
-\end{equation}
 Thus, the mapping matrix is an $J \times J$  matrix with ones in
 the upper triangle,
 \begin{equation}
@@ -615,14 +605,18 @@ following $3 \times 2$ matrix.
 
 The flexibility of the \code{multinomPois} function has been extended even 
 further in the \code{gmultmix} function to allow for a negative binomial
-mixture {\citet{DorazioEA05} and to relax the population closure assumption
-\citep{chandlerEAip_TempEm}. In addition, we note that one of the most 
-widely used sampling methods, known as distance sampling, yeilds data 
-that can be regarded as multinomial outcomes. Because distsance sampling 
-data are associated with many unique attributes such as distance interval 
-cut-points and survey method (`line' vs `point'), we created the specialized
-function \code{distsamp} to fit the multinomial-Poisson model to distance 
-sampling data.
+mixture {\citep{DorazioEA05} and to relax the population closure assumption
+\citep{chandlerEAip_TempEm}. In addition, one of the most 
+widely used sampling methods, known as distance sampling, yields data 
+that can be modeled as a multinomial-Poisson mixture \citep{Royle2004b}.  In 
+distance sampling, observers record the distance to organisms detected at 
+$M$ sites on a single visit. The distance data are then binned into $J$ 
+distance intervals and the multinomial cell probabilities are computed as 
+a function of distance from the observer. Because distance sampling data 
+are associated with many unique attributes such as distance interval 
+ut-points and survey method (line-transect vs point count), we created 
+the specialized function \code{distsamp} to fit the multinomial-Poisson model 
+to distance sampling data.
 
 \section[unmarked usage]{\pkg{unmarked} usage}
 \label{sec:unmarked-usage}
@@ -644,7 +638,7 @@ also making the program more user-friendly \citep{Chambers2008}.
 \label{sec:data-requirements}
 
 \um\ uses a custom S4 data structure called the \code{unmarkedFrame}
-to store all data and metadata related to a sampling survey.  Although this at
+to store all data and metadata related to a sampling design.  Although this at
 first appears to add an extra layer of work for the user, there are
 several reasons for this design choice.  The multilevel structure of
 the models means that standard rectangular data structures such as 
@@ -663,12 +657,11 @@ Repeated fitting calls using the same set of data require less code
 repetition if all data are contained in a single object.  Finally,
 calls to fitting functions have a cleaner appearance with a more
 obvious purpose when the call is not buried in data arguments.  The
-parent data class is called an unmarkedFrame and each \um\
+parent data class is called an \code{unmarkedFrame} and each \um\
 fitting function has its own data type that extends the
-unmarkedFrame.  Thus, the first step when using \um\ is to
-import data into the proper type of unmarkedFrame.  To ease
-this step, \um\ includes several helper functions to automatically
-convert data into an unmarkedFrame: \code{csvToUMF} which
+\code{unmarkedFrame}.  To ease data importing 
+and conversion, \um\ includes several helper functions to automatically
+convert data into an \code{unmarkedFrame}: \code{csvToUMF} which
 imports data directly from a comma-separated value text file,
 \code{formatWide} and \code{formatLong} which convert data from data
 frames, and the family of unmarkedFrame constructor functions.
@@ -680,7 +673,7 @@ site-level covariates \code{siteCovs}, and a \code{data.frame} of
 observation-level covariates \code{obsCovs}.  The \code{y} matrix is the 
 only required unmarkedFrame slot. 
 Each row of \code{y} contains either the observed counts or presence-absence
-data at each of the $R$ sites.  \code{siteCovs} is an $M$-row \code{data.frame} 
+data at each of the $M$ sites.  \code{siteCovs} is an $M$-row \code{data.frame} 
 with a column for each site-level covariate.  \code{obsCovs} is an $MJ$-row 
  \code{data.frame} with a column for each observation-level covariate.  Thus 
 each row of \code{obsCovs} corresponds to a particular observation, with the 
@@ -695,7 +688,7 @@ the basic \code{unmarkedFrame} to handle model-specific nuances.
 
 \subsubsection{Importing repeated count data}
 
-Here is an example of creating an unmarkedFrame for repeated count data
+Here is an example of creating an \code{unmarkedFrame} for repeated count data
 (Section~\ref{sec:repeated-count-data}). First, load the included data set of 
 Mallard ({\it Anas platyrhynchos}) point counts described in \citet{Kery2005}.
 
@@ -706,15 +699,13 @@ data(mallard)
 
 Loading the mallard data makes three objects available within the \rlang\ 
 workspace. The matrix \code{mallard.y} contains the number of mallards counted
-at each of $M=239$ sites on $J=3$ visits.  It is formatted such that each 
-row is a site and each columnn corresponds to a visit.  The site-level 
-covariates are column vectors in the \code{mallard.site} \code{data.frame}, 
-which 
-has $M$ rows. The observation-level covariates are a list object with separate 
-$M \times J$ matrices for each observation-level covariate.  The unmarkedFrame 
-constructors can accept \ocovs\ in this list format or as a \code{data.frame} 
-in the 
-format described above.
+at each of $M=239$ sites (rows) on $J=3$ visits (columns).  The site-level 
+covariates are columns of the \code{mallard.site} \code{data.frame}, 
+which has $M$ rows. The observation-level covariates are a \code{list} 
+with separate $M \times J$ matrices for each observation-level covariate.  
+The unmarkedFrame constructors can accept \ocovs\ in this \code{list} format or 
+as a \code{data.frame} in the format described in 
+Section~\ref{sec:data-requirements}.
 
 The following call to \code{unmarkedFramePCount} organizes the observations 
 and covariates into an object that can be passed to the data argument of
@@ -766,22 +757,21 @@ information.
 data(ovendata)
 @ 
 
-THIS LOADS XYZ . . Thus, it is evident that ovenbirds were detected at three of 
-the first ten sites and no new birds were detected after the first removal 
-occasion.  The only additional specification required when importing removal 
-data is to specify the particular type of multinomial-Poisson data as
-\code{removal} via the \code{type} argument.
+This loads a \code{list} named ovendata.list with components for the 
+observed count data and covariates.  The only additional specification 
+required when creating an \code{unmarkedFrame} for the multinomial-Poisson
+model is to specify the particular type of data as either 
+\code{removal}, \code{double}, or \code{userDefined}.
 
 <<>>=
-ovenFrame <- unmarkedFrameMPois(ovendata.list$data, siteCovs=ovendata.list$covariates, type="removal")
+ovenFrame <- unmarkedFrameMPois(ovendata.list$data, siteCovs = ovendata.list$covariates, type="removal")
 head(ovenFrame, 5)
 @ 
 
 \subsubsection{Preparing multi-season occupancy data}
 
-The data structures are more complex when surveys occurred during more than one
-season. In this case, the covariates can occur at the site-, season-, and
-observation-levels. The following toy examples demonstrates how to prepare data
+The data structures are more complex when surveys were conducted over more 
+than one season. The following toy examples demonstrates how to prepare data
 for the \code{colext} fitting function if there were only four sites, two
 visits per season, and three seasons.
 
@@ -808,7 +798,7 @@ number of seasons.
 \label{sec:manip}
 
 The various components of \code{unmarkedFrames} can be extracted and 
-subsetted ina manner similar to the methods used to manipulate standard 
+subsetted in a manner similar to the methods used to manipulate standard 
 \rlang\ objects.  Subsetting can be accomplished using the `bracket' 
 notation. For example, the first five rows of data and all three 
 removal occasions can be extracted from the ovenbird removal study using
@@ -929,46 +919,8 @@ vcov(fm.mallard.2, type = "det")
 
 \code{vcov} also accepts a \code{type} argument, as does the convenience method 
 \code{SE}, which returns standard errors from the square root of the diagonal 
-of the covariance matrix.
-
-Nonparametric bootstrapping can also be used to estimate the
-covariance matrix. \um\ implements a two-stage bootstrap in which the
- sites are first drawn with replacement, and then within each site, the
-observations are drawn with replacement.  First, bootstrap draws must
-be taken using the \code{nonparboot}.  \code{nonparboot} returns a new
-version of the unmarkedFit object with additional bootstrap sampling
-information.  Thus, this new fit must be stored, either in a new fit
-object or the same one, and then subsequently queried for bootstrap
-summaries.  In the following, bootstrapping can be quite slow.  For
-these examples, we illustrate with the removal sampling data simply
-because computations are much faster.  However, bootstrapping is
-available for any of the models that \um\ fits.
-
-<<cache=TRUE>>=
-set.seed(1234)
-fm.oven.1 <- nonparboot(fm.oven.1, B = 10)
-@ 
-
-<<>>=
-SE(fm.oven.1, type = "state")
-SE(fm.oven.1, type = "state", method = "nonparboot")
-@ 
-
-It looks like bootstrapping and asymptotic standard errors are close.
-The summary now states the number of bootstrap samples.
-
-<<>>=
-summary(fm.oven.1)
-@ 
-
-Additional bootstrap samples can be drawn by calling \code{nonparboot} again.
-<<cache=TRUE>>=
-fm.oven.1 <- nonparboot(fm.oven.1, B = 10)
-@ 
-
-Confidence intervals can be requested for the coefficients at either
-stage of the model.  By default, the asymptotic normal approximation
-is used.
+of the covariance matrix. Extracting confidence intervals proceeds in a similar 
+fashion.  By default, the asymptotic normal approximation is used.
 
 <<>>=
 confint(fm.oven.1, type = "state", level = 0.95)
@@ -988,6 +940,40 @@ ci
 
 The profile confidence intervals and normal approximations are quite
 similar here.
+
+\subsubsection{The nonparametric bootstrap}
+
+Nonparametric bootstrapping can also be used to estimate the
+covariance matrix. \um\ implements a two-stage bootstrap in which the
+ sites are first drawn with replacement, and then within each site, the
+observations are drawn with replacement.  First, bootstrap draws must
+be taken using the \code{nonparboot}.  \code{nonparboot} returns a new
+version of the unmarkedFit object with additional bootstrap sampling
+information.  Thus, this new fit must be stored, either in a new fit
+object or the same one, and then subsequently queried for bootstrap
+summaries.  In the following, bootstrapping can be quite slow.  For
+these examples, we illustrate with the removal sampling data simply
+because computations are much faster.  However, bootstrapping is
+available for any of the models in \um.
+
+<<cache=TRUE>>=
+set.seed(1234)
+fm.oven.1 <- nonparboot(fm.oven.1, B = 10)
+@ 
+
+<<>>=
+SE(fm.oven.1, type = "state")
+SE(fm.oven.1, type = "state", method = "nonparboot")
+@ 
+
+The bootstrapping and asymptotic standard errors are similar.
+
+Additional bootstrap samples can be drawn by calling \code{nonparboot} again.
+<<cache=TRUE>>=
+fm.oven.1 <- nonparboot(fm.oven.1, B = 10)
+@ 
+
+
 
 \subsubsection{Linear combinations of estimates}
 
@@ -1102,7 +1088,7 @@ useful in the presence of high model selection uncertainty.
 
 
 
-\subsection{Goodness of fit}
+\subsection{Goodness of fit and the parametric bootstrap}
 
 To conduct goodness of fit tests, \um\ provides a generic parametric 
 bootstrapping function.  It simulates data from the fitted model and 
@@ -1126,7 +1112,7 @@ pb <- parboot(fm.oven.1, statistic = chisq, nsim = 10)
 plot(pb, main = "")
 @ 
 
-\begin{figure}[H]
+\begin{figure}[hb]
   \centering
 <<fig=TRUE,echo=FALSE>>=
 set.seed(1234)
@@ -1155,24 +1141,29 @@ population dynamics commonly encountered. Table 3 illustrates the current
 gaps that need to be filled. In most cases, models to fill these gaps have not 
 been developed so more research is needed.  
 
-\begin{table}[H] \small
+
+\begin{table}[h] \small
+\begin{centering}
 \begin{tabular}{lccc}
 \hline
 & \multicolumn{3}{c}{Population Dynamics} \\
 \cline{2-4} 
-Sampling method             & Closed              & Open to movement & Open to demographic processes \\
+Sampling method             & Closed              & Open to         & Open to \\
+                            &                     & temporary       & demographic \\ 
+                            &                     & emigration      & processess \\
 \hline                            
-Occurrence sampling         & \code{occu}         & ---               & \code{colext} \\
-Repeated counts             & \code{pcount}       & ---               & \code{pcountOpen} \\
-Removal sampling, \\double observer sampling,  & \code{multinomPois} & \code{gmultmix}  & --- \\
+Occurrence sampling         & \code{occu}         & ---             & \code{colext} \\
+Repeated counts             & \code{pcount}       & ---             & \code{pcountOpen} \\
+Removal sampling, \\double observer sampling,  & \code{multinomPois}& \code{gmultmix}  & --- \\
 and other multinomial designs \\
-Distance-sampling           & \code{distsamp}     & ---               & --- \\
+Distance sampling           & \code{distsamp}     & ---               & --- \\
 \hline
 \end{tabular}
 \caption{Model fitting functions classified by sampling method and population 
 dynamics. Missing cells indicate models that have not been developed but are 
 likely to be investigated in the future.} 
 \label{tab:modelspace}
+\end{centering}
 \end{table}
 
 Second, each of the models in \um\ assumes independence among sites. However, 
