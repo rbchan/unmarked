@@ -603,11 +603,11 @@ following $3 \times 2$ matrix.
   \end{pmatrix} \notag
 \end{equation}
 
-The flexibility of the \code{multinomPois} function has been extended even 
-further in the \code{gmultmix} function to allow for a negative binomial
-mixture {\citep{DorazioEA05} and to relax the population closure assumption
-\citep{chandlerEAip_TempEm}. In addition, one of the most 
-widely used sampling methods, known as distance sampling, yields data 
+\paragraph{Distance sampling}
+\label{sec:distsamp}
+
+One of the most widely used sampling methods in animal ecology is 
+distance sampling.  , yields data 
 that can be modeled as a multinomial-Poisson mixture \citep{Royle2004b}.  In 
 distance sampling, observers record the distance to organisms detected at 
 $M$ sites on a single visit. The distance data are then binned into $J$ 
@@ -617,6 +617,39 @@ are associated with many unique attributes such as distance interval
 ut-points and survey method (line-transect vs point count), we created 
 the specialized function \code{distsamp} to fit the multinomial-Poisson model 
 to distance sampling data.
+
+In distance sampling, surveyors sample sites by traveling along a
+transect or standing at a so-called point transect and recording the
+distance to each detected study animal
+\citep{Thomas2010}. For the model of \citep{Royle2004b} used in \um\,
+the continuous distances to each observed animal must be binned into
+categories according to cut-points $c_1, c_2,\dots,c_{J}$.
+Then $Y_{ij}$ is the count of observations at site $i$ falling into
+the $j$th distance bin. The user must specify a
+detection function $g(x;\theta)$ that describes the probability of
+observing an animal as a function of distance $x$ from the transect.
+The cell probabilities $\mathbf \pi_i$ are
+constructed by integrating $g$ over the distance classes.
+
+As currently implemented, the general form of the distance sampling model
+is identical to the multinomial-Poisson mixture described above, with the
+sole difference being that instead of
+\begin{gather}
+  \logit(p_{ij}) = \mathbf v_{ij}' \mathbf \alpha,
+\end{gather}
+we have
+\begin{gather}
+  \log(\sigma_i) = \mathbf v_{i}' \mathbf \alpha,
+\end{gather}
+Here, the log link is required because $\sigma$ is a positive shape parameter
+of the detection function.
+
+\paragraph{Generalization}
+
+The flexibility of the \code{multinomPois} function is extended even 
+further in the \code{gmultmix} function, which allows for a negative binomial
+mixture {\citep{DorazioEA05} and relaxes the population closure assumption
+\citep{chandlerEAip_TempEm}. 
 
 \section[unmarked usage]{\pkg{unmarked} usage}
 \label{sec:unmarked-usage}
