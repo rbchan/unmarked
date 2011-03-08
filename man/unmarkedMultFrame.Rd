@@ -1,18 +1,21 @@
 \name{unmarkedMultFrame}
+
 \alias{unmarkedMultFrame}
 \alias{yearlySiteCovs}
 \alias{yearlySiteCovs,unmarkedMultFrame-method}
 \alias{yearlySiteCovs<-}
 \alias{yearlySiteCovs<-,unmarkedMultFrame-method}
 \alias{unmarkedFrameGMM}
+
 \title{Create an unmarkedMultFrame or an unmarkedFrameGMM.}
+
 \usage{
-unmarkedMultFrame(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs)
-unmarkedFrameGMM(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs,
-    type, obsToY, piFun)     
-}
+    unmarkedMultFrame(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs)
+    unmarkedFrameGMM(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs,
+        type, obsToY, piFun)}
+
 \description{These functions construct flavors of unmarkedFrames for data
-collected during primary and secondary sampling periods.}
+    collected during primary and secondary sampling periods.}
 
 \details{
 unmarkedMultFrame objects are used by \code{\link{colext}}. 
@@ -55,22 +58,25 @@ during a single year, so yearlySiteCovs may be a misnomer is some cases. }
 
 \value{an unmarkedMultFrame or unmarkedFrameGMM object}
 \arguments{
-\item{y}{A matrix of the observed data.}
-\item{siteCovs}{Data frame of covariates that vary at the site level.}
-\item{obsCovs}{Data frame of covariates that vary within site-year-observation level.}
-\item{numPrimary}{Number of primary time periods (seasons in the multiseason model).}
-\item{yearlySiteCovs}{Data frame containing covariates at the site-year level.}
-\item{type}{Either "removal" or "double" for constant-interval removal sampling
-or double observer sampling. This should be not be specified for other types
-of survey designs.}
-\item{obsToY}{A matrix specifying relationship between observation-level 
-covariates and response matrix}
-\item{piFun}{A function converting an MxJ matrix of detection probabilities into
-an MxJ matrix of multinomial cell probabilities.}
-}
+    \item{y}{A matrix of the observed data.}
+    \item{siteCovs}{Data frame of covariates that vary at the site level.}
+    \item{obsCovs}{Data frame of covariates that vary within 
+        site-year-observation level.}
+    \item{numPrimary}{Number of primary time periods (seasons in the 
+        multiseason model).}
+    \item{yearlySiteCovs}{Data frame containing covariates at the 
+        site-year level.}
+    \item{type}{Either "removal" or "double" for constant-interval removal 
+        sampling or double observer sampling. This should be not be specified 
+        for other types of survey designs.}
+    \item{obsToY}{A matrix specifying relationship between observation-level 
+        covariates and response matrix}
+    \item{piFun}{A function converting an MxJ matrix of detection probabilities 
+      into an MxJ matrix of multinomial cell probabilities.}}
+
+\seealso{\code{\link{formatMult}}}
 
 \examples{
-
 
 n <- 50   # number of sites
 T <- 4    # number of primary periods
@@ -124,10 +130,6 @@ umfGMM2 <- unmarkedFrameGMM(y=y,
     numPrimary=T, obsToY=o2y, piFun="instRemPiFun")   
 
 str(umfGMM2)
-
-
-
-
 
 
 

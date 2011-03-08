@@ -54,7 +54,57 @@ Program. Herpetological Conservation and Biology. 4(3):389-402.
 \item{method}{Optimization method used by \code{\link{optim}}.}
 \item{control}{Other arguments passed to \code{\link{optim}}.}
 \item{se}{logical specifying whether or not to compute standard errors.}}
-\examples{data(frogs)
+\examples{
+
+# Fake data
+R <- 4 # number of sites
+J <- 3 # number of secondary sampling occasions
+T <- 2 # number of primary periods
+
+y <- matrix(c(
+   1,1,0,  0,0,0,
+   0,0,0,  0,0,0,
+   1,1,1,  1,1,0,
+   1,0,1,  0,0,1), nrow=R, ncol=J*T, byrow=TRUE)
+y
+   
+site.covs <- data.frame(x1=1:4, x2=factor(c('A','B','A','B')))
+site.covs
+
+yearly.site.covs <- list(
+   year = matrix(c(
+      'year1', 'year2',
+      'year1', 'year2',
+      'year1', 'year2',
+      'year1', 'year2'), nrow=R, ncol=T, byrow=TRUE)
+      )
+yearly.site.covs
+
+obs.covs <- list(
+   x4 = matrix(c(
+      -1,0,1,  -1,1,1, 
+      -2,0,0,  0,0,2,
+      -3,1,0,  1,1,2,
+      0,0,0,   0,1,-1), nrow=R, ncol=J*T, byrow=TRUE),
+   x5 = matrix(c(
+      'a','b','c',  'a','b','c',
+      'd','b','a',  'd','b','a',
+      'a','a','c',  'd','b','a',
+      'a','b','a',  'd','b','a'), nrow=R, ncol=J*T, byrow=TRUE))
+obs.covs
+
+umf <- unmarkedMultFrame(y=y, siteCovs=site.covs, 
+    yearlySiteCovs=yearly.site.covs, obsCovs=obs.covs, 
+    numPrimary=2)                  # organize data
+umf                                # look at data
+summary(umf)                       # summarize      
+fm <- colext(~1, ~1, ~1, ~1, umf)  # fit a model
+fm
+
+
+
+# Real data
+data(frogs)
 umf <- formatMult(masspcru)
 obsCovs(umf) <- scale(obsCovs(umf))
 

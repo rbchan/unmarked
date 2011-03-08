@@ -51,7 +51,7 @@ colext <- function(psiformula = ~ 1, gammaformula = ~ 1,
   }
   ests <- opt$par
   names(ests) <- fm$mle$names
-  fmAIC <- 2 * opt$value + 2 * nP + 2*nP*(nP + 1)/(M - nP - 1)
+  fmAIC <- 2 * opt$value + 2 * nP # + 2*nP*(nP + 1)/(M - nP - 1)
   
     psiParams <- ests[1:nSP]
     colParams <- ests[(nSP + 1) : (nSP + nGP)]

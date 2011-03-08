@@ -114,7 +114,7 @@ y.ijt <- cbind(y[,1,], y[,2,], y[,3,], y[,4,])
 
 umf1 <- unmarkedFrameGMM(y=y.ijt, numPrimary=T, type="removal")
 
-(m1 <- gmultmix(~1, ~1, ~1, data=umf1))
+(m1 <- gmultmix(~1, ~1, ~1, data=umf1, K=30))
 
 backTransform(m1, type="lambda")        # Individuals per plot
 backTransform(m1, type="phi")           # Probability of being avilable

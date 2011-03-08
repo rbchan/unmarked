@@ -43,7 +43,7 @@ setClass("unmarkedFitPCount",
 
 
 
-setClass("unmarkedFitPCountOpen", 
+setClass("unmarkedFitPCO", 
         representation(
             formlist = "list",
             dynamics = "character"),
@@ -309,7 +309,7 @@ setMethod("predict", "unmarkedFitColExt",
 
 
 
-setMethod("predict", "unmarkedFitPCountOpen", 
+setMethod("predict", "unmarkedFitPCO", 
     function(object, type, newdata, backTransform = TRUE, na.rm = TRUE, 
         appendData = FALSE, ...) 
 {
@@ -497,9 +497,11 @@ setMethod("logLik", "unmarkedFit", function(object, ...)
 
 setMethod("LRT", c(m1="unmarkedFit", m2="unmarkedFit"), function(m1, m2)
 {
-    chisq <- 2 * diff(c(logLik(m1), logLik(m2)))
-    DF <- diff(c(length(coef(m1)), length(coef(m2))))
-    pval <- pchisq(chisq, DF, lower=FALSE)
+    ll1 <- unmarked:::logLik(m1)
+    ll2 <- unmarked:::logLik(m2)
+    chisq <- 2 * abs(ll1 - ll2)
+    DF <- abs(length(coef(m1)) - length(coef(m2)))
+    pval <- pchisq(chisq, DF, lower.tail=FALSE)
     return(data.frame(Chisq=chisq, DF = DF, 'Pr(>Chisq)' = pval, check.names=F))
 }) 
     
@@ -573,20 +575,36 @@ setMethod("fitted", "unmarkedFit",
 setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE) 
 {
     data <- object@data
-    D <- getDesign(data, object@formula, na.rm = na.rm)
+    db <- data@dist.breaks
+    w <- diff(db)
+    D <- unmarked:::getDesign(data, object@formula, na.rm = na.rm)
     X <- D$X
     X.offset <- D$X.offset
-    if (is.null(X.offset)) {
-      X.offset <- rep(0, nrow(X))
-    }
+    if (is.null(X.offset))
+        X.offset <- rep(0, nrow(X))
+    M <- nrow(X)
+    J <- length(w)
     lambda <- drop(exp(X %*% coef(object, 'state') + X.offset))
-    a <- calcAreas(dist.breaks = data@dist.breaks, tlength = data@tlength, 
-	   survey = data@survey, output = object@output, M = numSites(data), 
-	   J = ncol(getY(data)), unitsIn = data@unitsIn, unitsOut = object@unitsOut)
-    if(length(D$removed.sites)>0)
-        a <- a[-D$removed.sites,]
-    p <- getP(object, na.rm = na.rm)
-    fitted <- lambda * p * a
+    if(identical(object@output, "density")) {
+        a <- matrix(NA, M, J)
+        switch(data@survey, 
+            line = {
+                tlength <- data@tlength
+                A <- tlength * max(db) * 2
+                },
+            point = {
+                A <- pi * max(db)^2
+                })
+        switch(data@unitsIn, 
+            m = A <- A / 1e6,
+            km = A <- A)
+        switch(object@unitsOut, 
+            ha = A <- A * 100,
+            kmsq = A <- A)
+        lambda <- lambda * A
+        }
+    cp <- getP(object, na.rm = na.rm)
+    fitted <- lambda * cp
     fitted
 })		
 
@@ -646,49 +664,52 @@ setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
 })
 
 
-setMethod("fitted", "unmarkedFitPCountOpen",
+setMethod("fitted", "unmarkedFitPCO",
     function(object, K, na.rm = FALSE) 
 {
     dynamics <- object@dynamics
     data <- getData(object)
-    D <- getDesign(data, object@formula, na.rm = na.rm)
+    D <- unmarked:::getDesign(data, object@formula, na.rm = na.rm)
     Xlam <- D$Xlam; Xgam <- D$Xgam; Xom <- D$Xom; Xp <- D$Xp
     delta <- D$delta #FIXME this isn't returned propertly when na.rm=F
     y <- D$y
     M <- nrow(y)
-    T <- ncol(y)
+    T <- data@numPrimary
+    J <- ncol(y) / T
     lambda <- exp(Xlam %*% coef(object, 'lambda'))
-    omega <- matrix(plogis(Xom %*% coef(object, 'omega')), M, T-1, 
-        byrow=TRUE)
-    omega <- omega^delta
-    if(!identical(dynamics, "notrend")) {
-        gamma <- matrix(exp(Xgam %*% coef(object, 'gamma')), M, T-1, 
-                byrow=TRUE)
-        gamma <- gamma*delta
-    } else {
+    omega <- matrix(plogis(Xom %*% coef(object, 'omega')), M, T-1, byrow=TRUE)
+    if(!identical(dynamics, "notrend"))
+        gamma <- matrix(exp(Xgam %*% coef(object, 'gamma')), M, T-1, byrow=TRUE)
+    else {
         if(identical(dynamics, "notrend")) 
             gamma <- (1-omega)*lambda
-        else
-            stop("fitted method not yet written for dynamics=autoreg case")
         }
-    p <- getP(object, na.rm = na.rm)
-    state <- matrix(NA, M, T)
-    switch(object@mixture,
-    P = state[,1] <- lambda,
-    NB = {
-        if(missing(K)) K <- max(y, na.rm = TRUE) + 20
-        k <- 0:K
-        alpha <- exp(coef(object['alpha']))
-        den.ik <- sapply(k, function(x) dnbinom(x, size=alpha, mu=lambda))
-        state[,1] <- den.ik %*% k
-        })
-    for(t in 2:T) {
-        if(!identical(dynamics, "autoreg"))
-            state[,t] <- omega[,t-1] * state[,t-1] + gamma[,t-1]
-        else
-            stop("fitted method not yet writted for dynamics=autreg case")
+    p <- getP(object, na.rm = na.rm) # Should return MxJT
+    N <- matrix(NA, M, T)
+    for(i in 1:M) {
+        N[i, 1] <- lambda[i]
+        if(delta[i, 1] > 1) {
+            for(d in 2:delta[i ,1]) {
+                if(identical(dynamics, "autoreg"))
+                    gamma[i, 1] <- N[i, 1] * gamma[i, 1]
+                N[i, 1] <- N[i, 1] * omega[i, 1] + gamma[i, 1]
+                }
+            }
+        for(t in 2:T) {
+            if(identical(dynamics, "autoreg"))
+                gamma[i, t-1] <- N[i, t-1] * gamma[i, t-1]
+            N[i, t] <- N[i, t-1] * omega[i, t-1] + gamma[i, t-1]
+            if(delta[i, t] > 1) {
+                for(d in 2:delta[i, t]) {
+                    if(identical(dynamics, "autoreg"))
+                        gamma[i, t-1] <- N[i, t] * gamma[i, t-1]
+                    N[i, t] <- N[i, t] * omega[i, t-1] + gamma[i, t-1]
+                    }
+                }
+            }
         }
-    fitted <- state * p
+    N <- N[,rep(1:T, each=J)]
+    fitted <- N * p
     return(fitted)
 })
 
@@ -736,7 +757,7 @@ setMethod("fitted", "unmarkedFitColExt", function(object, na.rm = FALSE)
         gammaformula=object@gamformula,
         epsilonformula=object@epsformula,
         pformula=object@detformula)
-    designMats <- getDesign(object@data, formlist = formulaList)
+    designMats <- getDesign(object@data, object@formula)
     V.itj <- designMats$V
     X.it.gam <- designMats$X.gam
     X.it.eps <- designMats$X.eps
@@ -972,7 +993,7 @@ setMethod("update", "unmarkedFitGMM",
           
 
 
-setMethod("update", "unmarkedFitPCountOpen", 
+setMethod("update", "unmarkedFitPCO", 
     function(object, lambdaformula., gammaformula., omegaformula., pformula., 
         ..., evaluate = TRUE) 
     {
@@ -1197,65 +1218,129 @@ setGeneric("getP", function(object, ...) standardGeneric("getP"))
 
 
 setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE) 
-          {
-            formula <- object@formula
-            detformula <- as.formula(formula[[2]])
-            umf <- object@data
-            designMats <- getDesign(umf, formula, na.rm = na.rm)
-            y <- designMats$y
-            V <- designMats$V
-            V.offset <- designMats$V.offset
-            if (is.null(V.offset)) {
-              V.offset <- rep(0, nrow(V))
-            }
-            M <- nrow(y)
-            J <- ncol(y)
-            ppars <- coef(object, type = "det")
-            p <- plogis(V %*% ppars + V.offset)
-            p <- matrix(p, M, J, byrow = TRUE)
-            return(p)
-          })
+{
+    formula <- object@formula
+    detformula <- as.formula(formula[[2]])
+    umf <- object@data
+    designMats <- getDesign(umf, formula, na.rm = na.rm)
+    y <- designMats$y
+    V <- designMats$V
+    V.offset <- designMats$V.offset
+    if (is.null(V.offset))
+        V.offset <- rep(0, nrow(V))
+    M <- nrow(y)
+    J <- ncol(y)
+    ppars <- coef(object, type = "det")
+    p <- plogis(V %*% ppars + V.offset)
+    p <- matrix(p, M, J, byrow = TRUE)
+    return(p)
+})
 
 
 
 
 setMethod("getP", "unmarkedFitDS", 
-    function(object, na.rm = TRUE) {
-        formula <- object@formula
-        detformula <- as.formula(formula[[2]])
-        umf <- object@data
-        designMats <- getDesign(umf, formula, na.rm = na.rm)
-        y <- designMats$y
-        V <- designMats$V
-        V.offset <- designMats$V.offset
-        if (is.null(V.offset)) {
-          V.offset <- rep(0, nrow(V))
-        }
-        M <- nrow(y)
-        J <- ncol(y)
-        ppars <- coef(object, type = "det")
-        d <- umf@dist.breaks
-        survey <- umf@survey
-        key <- object@keyfun
-        switch(key, 
+    function(object, na.rm = TRUE) 
+{
+    formula <- object@formula
+    detformula <- as.formula(formula[[2]])
+    umf <- object@data
+    designMats <- getDesign(umf, formula, na.rm = na.rm)
+    y <- designMats$y
+    V <- designMats$V
+    V.offset <- designMats$V.offset
+    if (is.null(V.offset))
+        V.offset <- rep(0, nrow(V))
+    M <- nrow(y)
+    J <- ncol(y)
+    ppars <- coef(object, type = "det")
+    db <- umf@dist.breaks
+    w <- diff(db)
+    survey <- umf@survey
+    key <- object@keyfun
+    tlength <- umf@tlength
+
+    cp <- u <- a <- matrix(NA, M, J)
+    switch(survey,
+    line = {
+        for(i in 1:M) {
+            a[i,] <- tlength[i] * w
+            u[i,] <- a[i,] / sum(a[i,])
+            }
+        }, 
+    point = {
+        for(i in 1:M) {
+            a[i, 1] <- pi*db[2]^2
+            for(j in 2:J)
+                a[i, j] <- pi*db[j+1]^2 - sum(a[i, 1:(j-1)])
+            u[i,] <- a[i,] / sum(a[i,])
+            }
+        })
+
+
+    switch(key, 
         halfnorm = {
             sigma <- exp(V %*% ppars + V.offset)
-            p <- sapply(sigma, function(x) cp.hn(d = d, s = x, survey = survey))
+            for(i in 1:M) {
+                switch(survey, 
+                line = { 
+                    f.0 <- 2 * dnorm(0, 0, sd=sigma[i])
+                    int <- 2 * (pnorm(db[-1], 0, sd=sigma[i]) - 
+                        pnorm(db[-(J+1)], 0, sd=sigma[i]))
+                    cp[i,] <- int / f.0 / w 
+                    },
+                point = {
+                    for(j in 1:J) {
+                        cp[i, j] <- integrate(grhn, db[j], db[j+1], 
+                            sigma=sigma[i], rel.tol=1e-4)$value * 
+                            2 * pi / a[i, j]
+                        }
+                    })
+                cp[i,] <- cp[i,] * u[i,]
+                }
             }, 
         exp = {
             rate <- exp(V %*% ppars + V.offset)
-            p <- sapply(rate, function(x) cp.exp(d = d, r = x, survey = survey))
+            for(i in 1:M) {
+                switch(survey, 
+                line = {
+                    for(j in 1:J) {
+                        cp[i, j] <- integrate(gxexp, db[j], db[j+1], 
+                            rate=rate[i], rel.tol=1e-4)$value / w[j]
+                        }},
+                point = {
+                    for(j in 1:J) {
+                        cp[i, j] <- u * integrate(grexp, db[j], db[j+1], 
+                            rate=rate[i], rel.tol=1e-4)$value * 
+                            2 * pi * a[i, j]
+                        }	
+                    })
+                cp[i,] <- cp[i,] * u[i,]
+                }
             }, 
         hazard = {
             shape <- exp(V %*% ppars + V.offset)
             scale <- exp(coef(object, type="scale"))
-            p <- sapply(shape, function(x) cp.haz(d = d, shape = x, 
-            scale = scale, survey = survey))
+            for(i in 1:M) {
+                switch(survey, 
+                line = {
+                    for(j in 1:J) {
+                        cp[i, j] <- integrate(gxhaz, db[j], db[j+1], 
+                            shape=shape[i], scale=scale, 
+                            rel.tol=1e-4)$value / w[j]
+                        }},
+                point = {   
+                    for(j in 1:J) {
+                        cp[i, j] <- integrate(grhaz, db[j], db[j+1], 
+                            shape = shape[i], scale=scale, 
+                            rel.tol=1e-4)$value * 2 * pi / a[i, j]
+                    }})
+                cp[i,] <- cp[i,] * u[i,]
+                }
             },
-		uniform = p <-1)
-        p <- matrix(p, M, J, byrow = TRUE)
-        return(p)
-        })
+		uniform = cp <- u)
+    return(cp)
+})
 
 
 
@@ -1263,50 +1348,63 @@ setMethod("getP", "unmarkedFitDS",
 
 
 setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE) 
-          {
-            formula <- object@formula
-            detformula <- as.formula(formula[[2]])
-            piFun <- object@data@piFun
-            umf <- object@data
-            designMats <- getDesign(umf, formula, na.rm = na.rm)
-            y <- designMats$y
-            V <- designMats$V
-            V.offset <- designMats$V.offset
-            if (is.null(V.offset)) {
-              V.offset <- rep(0, nrow(V))
-            }
-            M <- nrow(y)
-            J <- ncol(y)
-            ppars <- coef(object, type = "det")
-            p <- plogis(V %*% ppars + V.offset)
-            p <- matrix(p, M, J, byrow = TRUE)
-            pi <- do.call(piFun, list(p = p))
-            return(pi)
-          })
-
-
-
-setMethod("getP", "unmarkedFitPCountOpen", function(object, na.rm = TRUE) 
 {
-    formlist <- object@formlist
+    formula <- object@formula
+    detformula <- as.formula(formula[[2]])
+    piFun <- object@data@piFun
+    umf <- object@data
+    designMats <- getDesign(umf, formula, na.rm = na.rm)
+    y <- designMats$y
+    V <- designMats$V
+    V.offset <- designMats$V.offset
+    if (is.null(V.offset))
+        V.offset <- rep(0, nrow(V))
+    M <- nrow(y)
+    J <- ncol(y)
+    ppars <- coef(object, type = "det")
+    p <- plogis(V %*% ppars + V.offset)
+    p <- matrix(p, M, J, byrow = TRUE)
+    pi <- do.call(piFun, list(p = p))
+    return(pi)
+})
+
+
+
+setMethod("getP", "unmarkedFitPCO", function(object, na.rm = TRUE) 
+{
     umf <- object@data
     D <- getDesign(umf, object@formula, na.rm = na.rm)
     y <- D$y
     Xp <- D$Xp
     M <- nrow(y)
-    J <- ncol(y)
+    T <- umf@numPrimary
+    J <- ncol(y) / T
     ppars <- coef(object, type = "det")
     p <- plogis(Xp %*% ppars)
-    p <- matrix(p, M, J, byrow = TRUE)
+    p <- matrix(p, M, J*T, byrow = TRUE)
     return(p)
 })
 
 
 
 setMethod("getP", "unmarkedFitColExt", function(object, na.rm = TRUE)
-          {
-            stop("getP is not yet implemented for colext fits.")
-          })
+{
+    data <- object@data
+    detParms <- coef(object, 'det')
+    D <- getDesign(object@data, object@formula, na.rm=na.rm)
+    y <- D$y
+    V <- D$V
+
+    M <- nrow(y)	# M <- nrow(X.it)
+    nY <- data@numPrimary
+    J <- obsNum(data)/nY
+
+    p <- plogis(V %*% detParms)
+    p <- array(p, c(J, nY, M))
+    p <- aperm(p, c(3, 1, 2))
+    p <- matrix(p, nrow=M)
+    return(p)    
+})
 
 
 
@@ -1352,26 +1450,39 @@ setMethod("simulate", "unmarkedFitDS",
 {
     formula <- object@formula
     umf <- object@data
+    db <- umf@dist.breaks
+    w <- diff(db)
     designMats <- getDesign(umf, formula, na.rm = na.rm)
     y <- designMats$y
     X <- designMats$X
     X.offset <- designMats$X.offset
-    if (is.null(X.offset)) {
-      X.offset <- rep(0, nrow(X))
-    }
-    a <- calcAreas(dist.breaks = umf@dist.breaks, tlength = umf@tlength, 
-	   survey = umf@survey, output = object@output, M = numSites(umf), 
-	   J = ncol(getY(umf)), unitsIn = umf@unitsIn, unitsOut = object@unitsOut)
-    if(length(designMats$removed.sites)>0)
-        a <- a[-designMats$removed.sites,]
+    if (is.null(X.offset))
+        X.offset <- rep(0, nrow(X))
     M <- nrow(y)
     J <- ncol(y)
     lamParms <- coef(object, type = "state")
-    lam <- drop(exp(X %*% lamParms + X.offset))
-    pmat <- getP(object, na.rm = na.rm)
+    lambda <- drop(exp(X %*% lamParms + X.offset))
+    if(identical(object@output, "density")) {
+        switch(umf@survey, 
+            line = {
+                tlength <- umf@tlength
+                A <- tlength * max(db) * 2
+                },
+            point = {
+                A <- pi * max(db)^2
+                })
+        switch(umf@unitsIn, 
+            m = A <- A / 1e6,
+            km = A <- A)
+        switch(object@unitsOut, 
+            ha = A <- A * 100,
+            kmsq = A <- A)
+        lambda <- lambda * A
+        }
+    cp <- getP(object, na.rm = na.rm)
     simList <- list()
     for(i in 1:nsim) {
-        yvec <- rpois(M * J, lam * pmat * a)
+        yvec <- rpois(M * J, lambda * cp)
         simList[[i]] <- matrix(yvec, M, J)
         }
     return(simList)
@@ -1415,52 +1526,66 @@ setMethod("simulate", "unmarkedFitPCount",
 
 
 
-setMethod("simulate", "unmarkedFitPCountOpen", 
+setMethod("simulate", "unmarkedFitPCO", 
     function(object, nsim = 1, seed = NULL, na.rm = TRUE) 
 {
-    formlist <- object@formlist
     mix <- object@mixture
     dynamics <- object@dynamics
     umf <- object@data
-    D <- getDesign(umf, object@formula, na.rm = na.rm)
+    D <- unmarked:::getDesign(umf, object@formula, na.rm = na.rm)
     Xlam <- D$Xlam; Xgam <- D$Xgam; Xom <- D$Xom; Xp <- D$Xp
     delta <- D$delta
     y <- D$y
     M <- nrow(y)
-    T <- ncol(y)
+    T <- umf@numPrimary
+    J <- ncol(y) / T
     lambda <- drop(exp(Xlam %*% coef(object, 'lambda')))
-    if(dynamics != "notrend") {
+    if(dynamics != "notrend")
         gamma <- matrix(exp(Xgam %*% coef(object, 'gamma')), M, T-1, byrow=TRUE)
-        gamma <- gamma*delta
-    } else gamma <- matrix(NA, M, T-1)
+    else 
+        gamma <- matrix(NA, M, T-1)
     omega <- matrix(plogis(Xom %*% coef(object, 'omega')), M, T-1, byrow=TRUE)
-    omega <- omega^delta
     p <- getP(object, na.rm = na.rm)
     N <- matrix(NA, M, T)
     S <- G <- matrix(NA, M, T-1)
     simList <- list()
-    for(i in 1:nsim) {
-        y <- matrix(NA, M, T)
-        switch(mix, 
-            P = N[,1] <- rpois(M, lambda),
-            NB = N[,1] <- rnbinom(M, size = exp(coef(object["alpha"])), 
-                mu = lambda))
-        na.p <- is.na(p[,1])
-        y[!na.p, 1] <- rbinom(sum(!na.p), N[!na.p, 1], p[!na.p, 1])
-        for(t in 2:T) {
-            na <- is.na(omega[,t-1]) | is.na(gamma[,t-1])
-            S[!na, t-1] <- rbinom(sum(!na), N[!na, t-1], omega[!na, t-1])
-            if(identical(dynamics, "autoreg"))
-                gamma[!na, t-1] <- gamma[!na, t-1] * N[!na, t-1]
-            if(identical(dynamics, "notrend")) # is this true for t>2??
-                gamma[!na, t-1] <- (1-omega[!na, t-1]) * lambda[!na]
-            G[!na, t-1] <- rpois(sum(!na), gamma[!na, t-1])
-            N[!na, t] <- S[!na, t-1] + G[!na, t-1]
-            N[na, t] <- N[na, t-1]
-            na.p <- is.na(p[,t])
-            y[!na.p, t] <- rbinom(sum(!na.p), N[!na.p, t], p[!na.p, t])   
+    for(s in 1:nsim) {
+        y.sim <- matrix(NA, M, J*T)
+        for(i in 1:M) {
+            switch(mix, 
+                P = N[i, 1] <- rpois(1, lambda),
+                NB = N[i, 1] <- rnbinom(1, size = exp(coef(object["alpha"])), 
+                    mu = lambda))
+            if(delta[i, 1] > 1) {
+                for(d in 2:delta[i, 1]) 
+                    N[i, 1] <- N[i, 1] * omega[i, 1] + gamma[i, 1]
+                }
+            # Might need more NA handling here...ignore gaps?
+            for(t in 2:T) {
+                if(is.na(omega[i, t-1]) | is.na(gamma[i,t-1])) 
+                    N[i, t] <- N[i, t-1] # just a place holder
+                else{
+                    S[i, t-1] <- rbinom(1, N[i, t-1], omega[i, t-1])
+                    if(identical(dynamics, "autoreg"))
+                        gamma[i, t-1] <- gamma[i, t-1] * N[i, t-1]
+                    if(identical(dynamics, "notrend")) # is this true for t>2??
+                        gamma[i, t-1] <- (1-omega[i, t-1]) * lambda[i]
+                    G[i, t-1] <- rpois(1, gamma[i, t-1])
+                    N[i, t] <- S[i, t-1] + G[i, t-1]
+                    if(delta[i, t] > 1) {
+                        for(d in 2:delta[i, 1]) {
+                            S[i, t-1] <- rbinom(N[i, t], omega[i, t-1])
+                            G[i, t-1] <- rpois(1, gamma[i, t-1])
+                            N[i, t] <- S[i, t-1] + G[i, t-1]
+                            }
+                        }
+                    }
+                }
             }
-        simList[[i]] <- y
+        y.na <- is.na(y)
+        N <- N[,rep(1:T, each=J)]
+        y.sim[!y.na] <- rbinom(sum(!y.na), N[!y.na], p[!y.na])
+        simList[[s]] <- y.sim
         }
     return(simList)
 })
@@ -1538,7 +1663,7 @@ setMethod("simulate", "unmarkedFitColExt",
         gammaformula=object@gamformula,
         epsilonformula=object@epsformula,
         pformula=object@detformula)
-    designMats <- getDesign(object@data, formlist = formulaList)
+    designMats <- getDesign(object@data, object@formula)
     V.itj <- designMats$V
     X.it.gam <- designMats$X.gam
     X.it.eps <- designMats$X.eps
@@ -1766,7 +1891,7 @@ setMethod("show", "parboot", function(object)
     stats <- data.frame("t0" = t0, "mean(t0 - t_B)" = bias, 
         "StdDev(t0 - t_B)" = bias.se, "Pr(t_B > t0)" = p.val, 
         check.names = FALSE)
-    cat("\nCall:", deparse(object@call, width=500), fill=T)
+    cat("\nCall:", deparse(object@call, width.cutoff=500), fill=T)
     cat("\nParametric Bootstrap Statistics:\n")
     print(stats, digits=3)
     cat("\nt_B quantiles:\n")

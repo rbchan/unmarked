@@ -38,7 +38,7 @@
 \alias{unmarkedFramePCount-class}
 \alias{unmarkedFrameDS-class}
 \alias{unmarkedMultFrame-class}
-\alias{unmarkedFramePCountOpen-class}
+\alias{unmarkedFramePCO-class}
 \alias{unmarkedFrameGMM-class}
 \alias{show,unmarkedFrame-method}
 \alias{show,unmarkedMultFrame-method}

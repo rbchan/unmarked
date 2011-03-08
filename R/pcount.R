@@ -26,7 +26,7 @@ pcount <- function(formula, data, K, mixture = c("P", "NB"), starts,
 	nDP <- ncol(V)
 	nAP <- ncol(X)
 
-	if(missing(K)) K <- max(y, na.rm = TRUE) + 20
+	if(missing(K)) K <- max(y, na.rm = TRUE) + 100
 	if(K <= max(y, na.rm = TRUE))
 		stop("specified K is too small. Try a value larger than any observation")
 	k <- 0:K

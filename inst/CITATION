@@ -11,10 +11,11 @@ citEntry(entry="Manual",
                              as.person("J. Andrew Royle")),
          year = year,
          note = vers,
-
+         url = "http://CRAN.R-project.org/package=unmarked",
+         
          textVersion =
          paste("Ian Fiske, Richard B. Chandler, and Andy Royle (",
                year,
                "). unmarked: Models for Data from Unmarked Animals. ",
-               vers, ".", sep=""))
+               vers, ". http://CRAN.R-project.org/package=unmarked", sep=""))
 

@@ -61,11 +61,16 @@ You cannot use obsCovs.
 
 \author{Richard Chandler \email{rchandler@usgs.gov}}
 
-\references{Royle, J. A., D. K. Dawson, and S. Bates (2004) Modeling 
-abundance effects in distance sampling. \emph{Ecology} 85, pp. 1591-1597.}
+\references{
 
-\seealso{\code{\link{unmarkedFit-class}} \code{\link{fitList}}, 
-	\code{\link{formatDistData}}, \code{\link{parboot}}, 
+Royle, J. A., D. K. Dawson, and S. Bates (2004) Modeling 
+abundance effects in distance sampling. \emph{Ecology} 85, pp. 1591-1597.
+
+}
+
+\seealso{\code{\link{unmarkedFrameDS}}, 
+    \code{\link{unmarkedFit-class}} \code{\link{fitList}}, 
+    \code{\link{formatDistData}}, \code{\link{parboot}}, 
     \code{\link{sight2perpdist}}, \code{\link{detFuns}}. 
     Also look at vignette("distsamp").
 	}

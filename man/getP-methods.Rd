@@ -6,7 +6,7 @@
 \alias{getP,unmarkedFitDS-method}
 \alias{getP,unmarkedFitMPois-method}
 \alias{getP,unmarkedFitColExt-method}
-\alias{getP,unmarkedFitPCountOpen-method}
+\alias{getP,unmarkedFitPCO-method}
 \alias{getP,unmarkedFitGMM-method}
 \title{Methods for Function getP in Package `unmarked'}
 \description{

@@ -60,14 +60,15 @@ identLink <- function(x) x
 
 identLinkGrad <- function(x) 1
 
+# !!! This is now done in C++. See rowProds() below
 ## use logarithms to vectorize row-wise products
 ## this speeds things up a LOT (vs. apply(x,1,prod))
 
-rowProds <-
-function(x, na.rm = FALSE)
-{
-  exp(rowSums(log(x), na.rm = na.rm))
-}
+#rowProds <-
+#function(x, na.rm = FALSE)
+#{
+#  exp(rowSums(log(x), na.rm = na.rm))
+#}
 
 # helper function to coerce an array of matrices to a list
 
@@ -671,89 +672,101 @@ SSE <- function(fit)
 
 
 
-# Prepare area argument for distsamp(). This is primarily for internal use
-
-calcAreas <- function(dist.breaks, tlength, survey, output, M, J, unitsIn, 
-	unitsOut)
-{
-switch(output, 	
-	density = {
-        switch(unitsIn, 
-            km = conv <- 1,
-            m = conv <- 1000
-            )
-		switch(survey, 
-			line = {
-				stripwidths <- (((dist.breaks*2)[-1] - 
-                    (dist.breaks*2)[-(J+1)])) / conv
-				tl <- tlength / conv
-				a <- rep(tl, each=J) * stripwidths						# km^2
-				a <- matrix(a, nrow=M, ncol=J, byrow=TRUE)
-				if(unitsOut == "ha") a <- a * 100
-				},
-			point = {
-				W <- max(dist.breaks) / conv
-				a <- matrix(rep(pi * W^2, each=J), M, J, byrow=TRUE) 	# km^2
-				if(unitsOut == "ha") a <- a * 100			
-				})
-			},
-	abund = {
-        ndi <- length(unique(diff(dist.breaks)))
-        if(!isTRUE(all.equal(ndi, 1)))
-            stop("output cannot equal 'abund' when distance intervals differ. Use output='density' instead.")
-        switch(survey, 
-            line = {
-                ntl <- length(unique(tlength))
-                if(!isTRUE(all.equal(ntl, 1)))
-                    stop("output cannot equal 'abund' when transect lengths differ. Use output='density' instead.")
-                a <- matrix(1 / J, M, J)
-                },
-            point = a <- matrix(1, M, J)
-            )
-        })
-return(a)
-}
-
-
-
-
-
-
-
 # For pcountOpen. Calculate time intervals acknowledging gaps due to NAs
-formatDelta <- function(d, y)
+# The first column indicates is time since first primary period + 1
+formatDelta <- function(d, yna)
 {
-    M <- nrow(y)
-    T <- ncol(y)
-    dtab <- table(d)
-    equalInts <- identical(length(dtab), 1L)
-    if(equalInts)
-        dout <- matrix(1, M, T-1)
-    else 
-        dout <- t(apply(d, 1, diff))
+    M <- nrow(yna)
+    T <- ncol(yna)
+    d <- d - min(d, na.rm=TRUE) + 1
+    dout <- matrix(NA, M, T)
+    dout[,1] <- d[,1]
+    dout[,2:T] <- t(apply(d, 1, diff))
     for(i in 1:M) {
-        if(any(is.na(y[i,])) & !all(is.na(y[i,]))) { # 2nd test for simulate
-            first <- 1  #min(which(!is.na(y[i,])))
-        last <- max(which(!is.na(y[i,])))
-        y.in <- y[i, first:last]
-        d.in <- d[i, first:last]
-        if(any(is.na(y.in))) {
-            for(j in last:first) {
-                v <- y[i, 1:j-1]
-                if(any(is.na(v))) {
-                    nextReal <- which(!is.na(v))
-                    nextReal <- ifelse(length(nextReal) > 0, max(nextReal), 1)
-                    if(equalInts)
-                        dout[i,j-1] <- j - nextReal
-                    else 
-                        dout[i,j-1] <- d[i,j] - d[i, nextReal]
+        if(any(yna[i,]) & !all(yna[i,])) { # 2nd test for simulate
+            last <- max(which(!yna[i,]))
+            y.in <- yna[i, 1:last]
+            d.in <- d[i, 1:last]
+            if(any(y.in)) {
+                for(j in last:2) { # first will always be time since 1
+                    nextReal <- which(!yna[i, 1:(j-1)])
+                    if(length(nextReal) > 0)
+                        dout[i, j] <- d[i, j] - d[i, max(nextReal)]
+                    else
+                        dout[i, j] <- d[i, j] - 1
                     }
                 }
             }
         }
-    }
     return(dout)
 }
                         
 
 
+
+
+
+
+
+
+
+
+
+# Markov transition probs for pcountOpen
+tranProbs <- function(Nr, omegaR, gammaR, deltaR, dynamicsR) 
+{
+    if(any(Nr < 0))
+        stop("N should be a non-negative integer")
+    if(any(is.na(omegaR)) | any(is.na(gammaR)))
+        stop("Missing values are not allowed in omega or gamma")
+    if(length(omegaR) != 1 | length(gammaR) != 1 | length(deltaR) != 1)
+        stop("omega, gamma, and delta must be scalars")
+    if(any(is.na(deltaR)))
+        stop("Delta cannot be NA")
+    if(!dynamicsR %in% c("constant", "autoreg", "notrend"))
+        stop("dynamics must be one of: constant, autoreg, or notrend")
+    
+    .Call("tranProbs", 
+        as.integer(Nr),
+        as.double(omegaR),
+        as.double(gammaR),
+        as.integer(deltaR),
+        as.character(dynamicsR),
+        PACKAGE = "unmarked")
+}
+
+
+# The slow way
+tranProbsR <- function(N, omega, gamma, delta, dynamics) {
+    lN <- length(N)
+    bpsum <- matrix(NA, lN, lN)
+    for(j in 1:lN) {
+        for(k in 1:lN) {
+            cmin0 <- 0:min(N[j], N[k])
+            gamma2 <- ifelse(identical(dynamics, "autoreg"), gamma*N[j], gamma)
+            bpsum[k, j] <- sum(dbinom(cmin0, N[j], omega) * 
+                dpois(N[k]-cmin0, gamma2))
+            }}
+    bpsum <- t(t(bpsum) / colSums(bpsum))
+    if(delta>1) {
+        for(d in 2:delta) {
+            bpsum <- bpsum %*% bpsum
+            bpsum <- t(t(bpsum) / colSums(bpsum))
+            }
+        }
+    return(bpsum)
+    }
+    
+    
+    
+    
+# much faster than apply(m, 1, prod) or exp(rowSums(log(m)))    
+rowProds <- function(m) 
+{
+    .Call("rowProds", 
+        as.matrix(m),
+        PACKAGE = "unmarked")
+}    
+    
+    
+ 

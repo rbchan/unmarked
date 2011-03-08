@@ -11,7 +11,8 @@ export(removalPiFun, doublePiFun)
 
 # S4 classes
 exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitDS, unmarkedFitPCount,
-    unmarkedFitMPois, unmarkedFrame, unmarkedFrameOccu, unmarkedFramePCount, 
+    unmarkedFitMPois, unmarkedFitPCO, 
+    unmarkedFrame, unmarkedFrameOccu, unmarkedFramePCount, 
     unmarkedFrameMPois, unmarkedFrameDS, unmarkedMultFrame, unmarkedFrameGMM,
     unmarkedFramePCO, unmarkedEstimate, unmarkedFitList, unmarkedModSel)
 
@@ -22,7 +23,7 @@ exportMethods(backTransform, coef, confint, coordinates, fitted, getData, getP,
     predict, profile, projection, residuals, sampleSize, SE, 
     show, simulate, siteCovs, "siteCovs<-", summary, update, vcov, 
     yearlySiteCovs, "yearlySiteCovs<-", "[", smoothed, projected, 
-    nonparboot, LRT)
+    nonparboot, logLik, LRT)
 
 # Constructors
 export(unmarkedEstimate, fitList, mapInfo, unmarkedFrame, unmarkedFrameOccu,

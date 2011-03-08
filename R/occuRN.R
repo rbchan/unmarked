@@ -1,21 +1,19 @@
 
 # Fit the Occupancy model of Royle and Nichols
 
-occuRN <-
-function(formula, data, K = 25, starts, method = "BFGS", control = list(), se = TRUE)
+occuRN <- function(formula, data, K = 25, starts, method = "BFGS", 
+    control = list(), se = TRUE)
 {
-	if(!is(data, "unmarkedFrameOccu")) 
-    stop("Data is not an unmarkedFrameOccu object.")	
+    if(!is(data, "unmarkedFrameOccu")) 
+        stop("Data is not an unmarkedFrameOccu object.")	
 	
-	designMats <- getDesign(data, formula)
-	X <- designMats$X; V <- designMats$V; y <- designMats$y
-        X.offset <- designMats$X.offset; V.offset <- designMats$V.offset
-        if (is.null(X.offset)) {
-          X.offset <- rep(0, nrow(X))
-        }
-        if (is.null(V.offset)) {
-          V.offset <- rep(0, nrow(V))
-        }
+    designMats <- getDesign(data, formula)
+    X <- designMats$X; V <- designMats$V; y <- designMats$y
+    X.offset <- designMats$X.offset; V.offset <- designMats$V.offset
+    if(is.null(X.offset))
+        X.offset <- rep(0, nrow(X))
+    if (is.null(V.offset))
+        V.offset <- rep(0, nrow(V))
 	
   y <- truncateToBinary(data@y)
 
@@ -87,15 +85,15 @@ function(formula, data, K = 25, starts, method = "BFGS", control = list(), se = 
 
   detEstimates <- unmarkedEstimate(name = "Detection", short.name = "p",
       estimates = ests[(nOP + 1) : nP],
-      covMat = as.matrix(covMat[(nOP + 1) : nP, (nOP + 1) : nP]), invlink = "logistic",
-      invlinkGrad = "logistic.grad")
+      covMat = as.matrix(covMat[(nOP + 1) : nP, (nOP + 1) : nP]), 
+      invlink = "logistic", invlinkGrad = "logistic.grad")
 
   estimateList <- unmarkedEstimateList(list(state=stateEstimates,
           det=detEstimates))
 
   umfit <- new("unmarkedFitOccuRN", fitType = "occuRN",
-      call = match.call(), formula = formula, data = data, sitesRemoved = designMats$removed.sites, 
-			estimates = estimateList,
+      call = match.call(), formula = formula, data = data, 
+      sitesRemoved = designMats$removed.sites, estimates = estimateList,
       AIC = fmAIC, opt = opt, negLogLike = fm$value, nllFun = nll)
 
   return(umfit)

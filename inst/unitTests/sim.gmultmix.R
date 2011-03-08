@@ -219,7 +219,7 @@ pb4 <- parboot(m4, nsim=5, report=1)
 
 
 
-nsim <- 20
+nsim <- 500
 simout <- matrix(NA, nsim, 5)
 colnames(simout) <- c("lambda", "phi", "pA", "pB", "alpha")
 for(i in 1:nsim) {
