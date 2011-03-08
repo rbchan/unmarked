@@ -16,23 +16,24 @@ SEXP tranProbs( SEXP Nr, SEXP omegaR, SEXP gammaR, SEXP deltaR, SEXP dynamicsR)
         for(int k=0; k<n; k++) {
             int Nm = std::min(N[j], N[k]);
             IntegerVector cmin0 = seq(0, Nm);
-            if(dynamics=="autoreg")
-                bpsum(k, j) = sum(dbinom(cmin0, N[j], omega, false) *
-                    dpois(N[k]-cmin0, gamma*N[j], false));
-            else
-                bpsum(k, j) = sum(dbinom(cmin0, N[j], omega, false) *
-                    dpois(N[k]-cmin0, gamma, false));
+            if(dynamics=="autoreg") {
+                for(int c=0; c<Nm; c++) 
+                    bpsum(j, k) += sum(Rf_dbinom(c, N[j], omega, false) *
+                        Rf_dpois(N[k]-c, gamma*N[j], false));
+                }
+            else {
+                for(int c=0; c<Nm; c++)
+                    bpsum(j, k) += sum(Rf_dbinom(c, N[j], omega, false) *
+                        Rf_dpois(N[k]-c, gamma, false));
+                }
             }
         }
-    arma::mat cs1 = sum(bpsum, 0);
-    arma::mat csm1 = arma::repmat(cs1, n, 1);
-    bpsum = bpsum / csm1;
     if(delta > 1) {    
         for(int d=1; d<delta; d++) {
             bpsum *= bpsum;
-            arma::mat cs = sum(bpsum, 0);
-            arma::mat csm = arma::repmat(cs, n, 1);
-            bpsum = bpsum / csm;
+//            arma::mat cs = sum(bpsum, 0);
+//            arma::mat csm = arma::repmat(cs, n, 1);
+//            bpsum = bpsum / csm;
             }
         }
     return wrap(bpsum);

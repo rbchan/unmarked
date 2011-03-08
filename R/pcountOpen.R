@@ -124,7 +124,6 @@ nll <- function(parms) {
             bin.kT[is.na(bin.kT)] <- 1
             g1.T <- rowProds(bin.kT)
             }
-        g.star <- matrix(NA, lk, last.i-1) 
         if(identical(go.dims, "scalar"))
             g3.T <- g3[,, delta[i, last.i]]
         else {
@@ -134,11 +133,11 @@ nll <- function(parms) {
                 delta[i, last.i], dynamics)
             }
         if(first.i == last.i & delta.i1 > 1) {
-            g.star0 <- colSums(g1.T * g3.T)
-            L[i] <- sum(g2 * colSums(g1 * g3.T * g.star0))
+            g.star <- g3.T %*% g1.T
+            L[i] <- sum(g3.T %*% (g2 * (g3.T %*% c(g1 * g.star)))
             next
             }
-        g.star[, last.i-1] <- colSums(g1.T * g3.T)
+        g.star <- g3.T %*% g1.T
         if((last.i - first.i) > 1) { 
             for(t in (last.i-1):(first.i+1)) {
                 if(ytna[i, t])
@@ -158,7 +157,7 @@ nll <- function(parms) {
                     else
                         g3.t <- tranProbs(k, omega[i, t-1], gamma[i, t-1], 
                             delta[i, t], dynamics)
-                    g.star[,t-1] <- colSums(g1.t * g3.t * g.star[,t])
+                    g.star[,t-1] <- g3.t %*% (g1.t * g.star[,t])
                     }
                 }
             }
@@ -171,7 +170,7 @@ nll <- function(parms) {
             else
                 g3.1 <- tranProbs(k, omega[i, first.i], gamma[i, first.i], 
                     delta.i1, dynamics)
-            L[i] <- sum(g2 * colSums(g1 * g3.1 * g.star[,first.i]))
+            L[i] <- sum(g2 * (g3.1 %*% (g1 * g.star[,first.i])))
             }
         }
     -sum(log(L))
