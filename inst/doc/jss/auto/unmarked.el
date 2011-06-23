@@ -1,28 +1,33 @@
 (TeX-add-style-hook "unmarked"
  (lambda ()
-    (LaTeX-add-bibliographies
-     "/home/ian/Documents/bibtex/dissertation")
+    (LaTeX-add-bibliographies)
     (LaTeX-add-labels
+     "tab:exdata"
      "sec:models-impl-unmark"
      "tab:models"
      "sec:occ"
      "sec:repeated-count-data"
      "eq:pc2"
+     "sec:gener-mult-poiss"
      "eq:mp2"
      "sec:double-observ-sampl"
+     "sec:distsamp"
      "sec:unmarked-usage"
      "sec:data-requirements"
+     "sec:manip"
      "sec:fitting-models"
      "sec:examining-model-fits"
-     "fig:preddet"
+     "fig:pred"
      "fig:pb"
-     "sec:future-direct-unmark")
+     "sec:future-direct-unmark"
+     "tab:modspace")
     (TeX-add-symbols
      "um"
      "rlang"
      "scovs"
      "ocovs")
     (TeX-run-style-hooks
+     "float"
      "rotating"
      "inputenc"
      "utf8"

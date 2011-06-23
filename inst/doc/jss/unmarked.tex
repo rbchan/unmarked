@@ -9,6 +9,8 @@
 \usepackage{rotating}
 \usepackage{float}
 
+%% \usepackage{Sweave}
+
 \DeclareMathOperator{\logit}{logit}
 \DeclareMathOperator{\Bern}{Bernoulli}
 \DeclareMathOperator{\Bin}{Binomial}
@@ -21,35 +23,39 @@
 \newcommand{\ocovs}{\code{obsCovs}}
 
 \author{Ian J. Fiske\\North Carolina State University \And
-  Richard Chandler\\ USGS Patuxent Wildlife Research Center}
+  Richard B. Chandler\\ USGS Patuxent Wildlife Research Center}
 \title{\pkg{unmarked}:\\
-  An \proglang{R} package for Fitting Hierarchical Models of 
+  An \proglang{R} package for Fitting Hierarchical Models of
   Wildlife Occurrence and Abundance}
 
 \Plainauthor{Ian Fiske, Richard Chandler}
-\Plaintitle{unmarked: An R Package for Fitting Hierarchical Models of 
+\Plaintitle{unmarked: An R Package for Fitting Hierarchical Models of
   Wildlife Occurrence and Abundance}
 \Shorttitle{\um: Analyze Wildlife Data in \proglang{R}}
 
-\Abstract{Ecological research uses data collection techniques that are prone 
-to substantial and unique types of measurement error to address scientific 
-questions about species abundance and distribution.  These data collection 
-schemes include a number of survey methods in which unmarked individuals are 
-counted, or determined to be present, at spatially-referenced sites.  
-Examples include site occupancy sampling, repeated counts, distance sampling, 
-removal sampling, and double observer sampling.  To appropriately analyze 
-these data, hierarchical models have been developed to separately model 
-explanatory variables of both a latent abundance or occurrence process and 
-a conditional detection process.  Because these models have a straightforward 
-interpretation paralleling mechanisms under which the data arose, they have 
-recently gained immense popularity.  The common hierarchical structure of 
-these models is well-suited for a unified modeling interface.  The 
-\proglang{R} package \pkg{unmarked} provides such a unified modeling 
-framework, including tools for data exploration, model fitting, model 
-criticism, post-hoc analysis, and model comparison.}
+\Abstract{Ecological research uses data collection techniques that are
+  prone to substantial and unique types of measurement error to
+  address scientific questions about species abundance and
+  distribution.  These data collection schemes include a number of
+  survey methods in which unmarked individuals are counted, or
+  determined to be present, at spatially-referenced sites. Examples
+  include site occupancy sampling, repeated counts, distance sampling,
+  removal sampling, and double observer sampling.  To appropriately
+  analyze these data, hierarchical models have been developed to
+  separately model explanatory variables of both a latent abundance or
+  occurrence process and a conditional detection process.  Because
+  these models have a straightforward interpretation paralleling
+  mechanisms under which the data arose, they have recently gained
+  immense popularity.  The common hierarchical structure of these
+  models is well-suited for a unified modeling interface.  The
+  \proglang{R} package \pkg{unmarked} provides such a unified modeling
+  framework, including tools for data exploration, model fitting,
+  model criticism, post-hoc analysis, and model comparison.}
 
-\Keywords{ecological, wildlife, hierarchical, occupancy, occurrence, distance, point count}
-\Plainkeywords{ecological, wildlife, hierarchical, occupancy, occurrence, distance, point count}
+\Keywords{ecological, wildlife, hierarchical, occupancy, occurrence,
+  distance, point count}
+\Plainkeywords{ecological, wildlife, hierarchical, occupancy,
+  occurrence, distance, point count}
 
 
 \Address{
@@ -61,17 +67,16 @@ Campus Box 8203 \\
 Raleigh, NC 27695-8203 \\
 E-mail: \email{ijfiske@ncsu.edu}
 
-Richard Chandler \\   
+Richard Chandler \\
 USGS Patuxent Wildlife Research Center \\
 Gabrielson Lab, Room 226 \\
 12100 Beech Forest Rd. \\
 Laurel, MD 20708 \\
-E-mail: \email{rchandler@usgs.gov} 
+E-mail: \email{rchandler@usgs.gov}
 }
 
 
 
-\usepackage{Sweave}
 \begin{document}
 
 
@@ -80,146 +85,146 @@ E-mail: \email{rchandler@usgs.gov}
 
 \subsection{Imperfect detection and data collection in ecological research}
 
-A fundamental goal of ecological research is to understand how environmental 
-variables influence spatial or temporal variation in species abundance or 
-occurrence.  Addressing these research questions is complicated by imperfect 
-detection of individuals or species.  Individuals may go 
-undetected when present for a variety of reasons including their proximity to 
-the observer, cryptic behavior, or camouflage. Thus, imperfect detection 
-can introduce substantial measurement error and obscure underlying 
-ecological relationships if ignored. 
+A fundamental goal of ecological research is to understand how environmental
+variables influence spatial or temporal variation in species abundance or
+occurrence.  Addressing these research questions is complicated by imperfect
+detection of individuals or species.  Individuals may go
+undetected when present for a variety of reasons including their proximity to
+the observer, cryptic behavior, or camouflage. Thus, imperfect detection
+can introduce substantial measurement error and obscure underlying
+ecological relationships if ignored.
 
-To accommodate imperfect detection of individuals or species, 
-ecologists have developed specialized methods to survey wildlife 
-populations such as site occupancy sampling, repeated counts, 
-distance sampling, removal sampling, and double observer sampling 
-\citetext{see Section~\ref{sec:models-impl-unmark} and 
-\citep{WilliamsEA2002} for definitions}.  This myriad of sampling methods 
-are all unified by a common repeated-measures type of sampling design in 
-which $J$ observations are made at $M$ spatial sample units during each of 
-$T$ seasons. As an example, Table~\ref{tab:exdata} shows a typical 
-repeated count dataset. 
+To accommodate imperfect detection of individuals or species,
+ecologists have developed specialized methods to survey wildlife
+populations such as site occupancy sampling, repeated counts,
+distance sampling, removal sampling, and double observer sampling
+\citetext{see Section~\ref{sec:models-impl-unmark} and
+\citet{WilliamsEA2002} for definitions}.  This myriad of sampling methods
+are all unified by a common repeated-measures type of sampling design in
+which $J$ ``observations'' are made at $M$ spatial sample units during each of
+$T$ seasons. As an example, Table~\ref{tab:exdata} shows a typical
+repeated count dataset.
 
 \begin{table}[h] %\small
 \begin{centering}
 \begin{tabular}{lccccccc}
 \hline
 & \multicolumn{3}{c}{Season 1} && \multicolumn{3}{c}{Season 2} \\
-\cline{2-4} \cline{6-8} 
+\cline{2-4} \cline{6-8}
         & Visit 1 & Visit 2 & Visit 3 && Visit 1 & Visit 2 & Visit 3 \\
 \hline
 Site 1  & 3       & 3       & 2       && 0       & 0       & 0 \\
 Site 2  & 0       & 0       & 0       && 0       & 0       & 0 \\
 Site 3  & 4       & 6       & 5       && 5       & 5       & 3 \\
-Site 4  & 0       & 0       & 0       && 0       & 0       & 2 \\  
+Site 4  & 0       & 0       & 0       && 0       & 0       & 2 \\
 \hline
 \end{tabular}
-\caption{An example of the data structure required by \um's fitting functions. 
-Counts of organisms were made at $M=4$ sites during $T=2$ seasons with $J=3$ 
-visits per season.}
+\caption{An example of the data structure required by \um's fitting functions.
+Counts of organisms were made at $M=4$ sites during $T=2$ seasons with $J=3$
+visits (``observations'') per season.}
 \end{centering}
 \label{tab:exdata}
 \end{table}
 
-In addition to the repeated-measures structure, there are two important 
-features to note about the data shown in Table~\ref{tab:exdata}.  First, 
-this design is often referred to as a `metapopulation design' because 
-the population may be regarded as an aggregation of subpopulations and 
-because the spatial sampling is an explicit component of the problem. 
-This is important because it provides a basis for modeling variation 
-among sites as a function of site-specific covariates, and because 
-metapopulation parameters such as local colonization and extinction 
-can be directly estimated. Second, the counts are of individuals that 
-may not be uniquely recognized, so although it may be possible to 
-determine if three individuals were detected on two different visits 
-(as was the case at Site 1 in Table~\ref{tab:exdata}), it is not always 
-possible to determine if they were the {\it same} three individuals.  
+In addition to the repeated-measures structure, there are two important
+features to note about the data shown in Table~\ref{tab:exdata}.  First,
+this design is often referred to as a `metapopulation design' because
+the population may be regarded as an aggregation of subpopulations and
+because the spatial sampling is an explicit component of the problem.
+This is important because it provides a basis for modeling variation
+among sites as a function of site-specific covariates, and because
+metapopulation parameters such as local colonization and extinction
+can be directly estimated. Second, the counts are of individuals that
+may not be uniquely recognized, so although it may be possible to
+determine if three individuals were detected on two different visits
+(as was the case at Site 1 in Table~\ref{tab:exdata}), it is not always
+possible to determine if they were the {\it same} three individuals.
 
-Both the metapopulation design and absence of individual recognition 
-distinguish these data from data collected using another large suite of 
-ecological sampling methods known as `capture-recapture' methods. A vast number 
-of models have been developed for capture-recapture data, and many of them 
-are implemented in the software program \emph{MARK} 
-\citep{whiteBurnham99_MARK}. The origins of \um\ (the package and its name) 
-arose to fill the void of models for data from studies of unmarked 
-individuals involving explicit spatial sampling. 
+Both the metapopulation design and absence of individual recognition
+distinguish these data from data collected using another large suite of
+ecological sampling methods known as `capture-recapture' methods. A vast number
+of models have been developed for capture-recapture data, and many of them
+are implemented in the software program \emph{MARK}
+\citep{whiteBurnham99_MARK}. The origins of \um\ (the package and its name)
+arose to fill the void of models for data from studies of unmarked
+individuals involving explicit spatial sampling.
 
 \subsection{Hierarchical Models for Metapopulation Designs}
 
-While many ecological studies produce data consistent with a 
-metapopulation design, the development and implementation of 
-models for inference under individual sampling protocols has 
-proceeded in a piecemeal fashion, without a coherent analysis 
-platform. Recently, however, a broad 
-class of hierarchical models \citetext{see \citet{royleDorazio08} for a 
-general treatment} has been developed that offer a unified 
-framework for analysis by formally recognizing that observations are 
-generated by a combination of (1) a \emph{state} process 
-determining abundance or species occurrence at each site and (2) a 
-\emph{detection} process that yields observations conditional on the 
-state process. The model for the state process describes abundance or 
-occurrence at each site, but due to imperfect detection, these quantities 
-cannot be observed directly and are regarded latent variables. 
+While many ecological studies produce data consistent with a
+metapopulation design, the development and implementation of
+models for inference under individual sampling protocols has
+proceeded in a piecemeal fashion, without a coherent analysis
+platform. Recently, however, a broad
+class of hierarchical models \citetext{see \citet{royleDorazio08} for a
+general treatment} has been developed that offer a unified
+framework for analysis by formally recognizing that observations are
+generated by a combination of (1) a \emph{state} process
+determining abundance or species occurrence at each site and (2) a
+\emph{detection} process that yields observations conditional on the
+state process. The model for the state process describes abundance or
+occurrence at each site, but due to imperfect detection, these quantities
+cannot be observed directly and are regarded latent variables.
 
-This paper introduces \um, an \rlang\ package that provides a 
-unified approach for fitting this broad class of hierarchical 
-models developed for sampling biological populations.  Inference in \um\ 
-is based on the integrated likelihood wherein the latent state 
+This paper introduces \um, an \rlang\ package that provides a
+unified approach for fitting this broad class of hierarchical
+models developed for sampling biological populations.  Inference in \um\
+is based on the integrated likelihood wherein the latent state
 variable is marginalized out of the conditional likelihood.
 
 
-\subsection[Scope and features of unmarked]{Scope and features of \pkg{unmarked}} 
+\subsection[Scope and features of unmarked]{Scope and features of \pkg{unmarked}}
 
-\um\ provides tools to assist researchers with every step of the analysis 
-process, including data manipulation and exploration, model fitting, post-hoc 
-analysis, model criticism, and model selection.  \um\ provides a growing list 
-of model-fitting functions designed for specific 
-sampling methods.  The fitting functions each find the maximum likelihood 
-estimates of parameters from a particular model 
-(Section~\ref{sec:fitting-models}) and return an object that can be easily 
-manipulated.  Methods exist for performing numerous post-hoc analyses such as 
-requesting linear combinations of parameters, back-transforming parameters to 
-constrained scales, determining confidence intervals, and evaluating goodness 
-of fit.  The model specification syntax of the fitting functions was designed 
-to resemble the syntax of \rlang's common fitting functions such as \code{lm} 
+\um\ provides tools to assist researchers with every step of the analysis
+process, including data manipulation and exploration, model fitting, post-hoc
+analysis, model criticism, and model selection.  \um\ provides a growing list
+of model-fitting functions designed for specific
+sampling methods.  The fitting functions each find the maximum likelihood
+estimates of parameters from a particular model
+(Section~\ref{sec:fitting-models}) and return an object that can be easily
+manipulated.  Methods exist for performing numerous post-hoc analyses such as
+requesting linear combinations of parameters, back-transforming parameters to
+constrained scales, determining confidence intervals, and evaluating goodness
+of fit.  The model specification syntax of the fitting functions was designed
+to resemble the syntax of \rlang's common fitting functions such as \code{lm}
 for fitting linear models.
 
-Although there is existing software for fitting some of these models 
-\citetext{e.g. \citet{Hines2002}}, there are a number of advantages to a unified 
-framework within \rlang.  Many researchers are already familiar with \rlang\ 
-and use its powerful data manipulation and plotting capabilities.  Sometimes 
-many species are analyzed in tandem, so that a common method of aggregating 
-and post-processing of results is needed, a task easily accomplished in 
-\rlang.  Unlike other available software, \um\ makes it possible to map 
-habitat-specific abundance and species distributions when combined with 
-\rlang's GIS capabilities.  Another important advantage of \um's approach is 
-that researchers can simulate and analyze data within the same 
-computational environment.  This work flow permits simulation studies for power 
-analysis calculations or the effectiveness of future sampling designs.  All of 
-this is made much simpler by analyzing the data within \rlang, and using a 
-single environment to complete all phases of the analysis is much less 
-error-prone than switching between applications. 
+Although there is existing software for fitting some of these models
+\citetext{e.g. \citet{Hines2002}}, there are a number of advantages to a unified
+framework within \rlang.  Many researchers are already familiar with \rlang\
+and use its powerful data manipulation and plotting capabilities.  Sometimes
+many species are analyzed in tandem, so that a common method of aggregating
+and post-processing of results is needed, a task easily accomplished in
+\rlang.  Unlike other available software, \um\ makes it possible to map
+habitat-specific abundance and species distributions when combined with
+\rlang's GIS capabilities.  Another important advantage of \um's approach is
+that researchers can simulate and analyze data within the same
+computational environment.  This work flow permits simulation studies for power
+analysis calculations or the effectiveness of future sampling designs.  All of
+this is made much simpler by analyzing the data within \rlang, and using a
+single environment to complete all phases of the analysis is much less
+error-prone than switching between applications.
 
-In this paper, Section~\ref{sec:models-impl-unmark} gives a brief summary of 
-many of the models \um\ is capable of fitting.  
-Section~\ref{sec:unmarked-usage} describes general \um\ usage aided by a 
+In this paper, Section~\ref{sec:models-impl-unmark} gives a brief summary of
+many of the models \um\ is capable of fitting.
+Section~\ref{sec:unmarked-usage} describes general \um\ usage aided by a
 running data example.
 
 \section[Models implemented in unmarked]{Models implemented in \um}
 \label{sec:models-impl-unmark}
 
-The list of models implemented in \um\ continues to grow as new models are 
-developed. Table~\ref{tab:models} shows the models available as of version 
-0.9-0.  Rather than describe each fitting function in detail, this section 
-provides a summary of several of the most common sampling techniques and how 
-\um\ can be used to model the resulting data. 
+The list of models implemented in \um\ continues to grow as new models are
+developed. Table~\ref{tab:models} shows the models available as of version
+0.9-0.  Rather than describe each fitting function in detail, this section
+provides a summary of several of the most common sampling techniques and how
+\um\ can be used to model the resulting data.
 
 \begin{table}[ht] \footnotesize
 %\begin{sidewaystable} \small
 %\begin{tabular}{lp{2cm}cc}
 \begin{tabular}{lccc}
 \hline
-\textbf{Model} & \textbf{Fitting} & \textbf{Data} & \textbf{Citation} \\ 
+\textbf{Model} & \textbf{Fitting} & \textbf{Data} & \textbf{Citation} \\
                & \textbf{function}&& \\ \hline
 Occupancy from detection/non-detection & \code{occu} & unmarkedFrameOccu & \citealt{MacKenzie2002} \\
 Abundance from detection/non-detection & \code{occuRN}& unmarkedFrameOccu & \citealt{Royle2003} \\
@@ -240,39 +245,37 @@ Multi-season abundance & \code{pcountOpen} & unmarkedFramePCO & \citealt{DailMad
 
 \subsection{Site occupancy models}
 
-\subsubsection{Single season site occupancy model} 
+\subsubsection{Single season site occupancy model}
 \label{sec:occ}
- 
-An important state variable in ecological research is species occurrence 
-(or `site occupancy'), say $Z_{i}$, a binary state variable such that 
+
+An important state variable in ecological research is species occurrence
+(or `site occupancy'), say $Z_{i}$, a binary state variable such that
 $Z_{i}=1$ if site $i$ is occupied by a species and $Z_{i}=0$ otherwise.
-Much interest is focused on estimating functions of species occurrence 
+Much interest is focused on estimating functions of species occurrence
 (e.g., number of occupied sites) or to identify factors that are
 associated with changes in the probability of a site being
-occupied, i.e., $\psi  = \Pr(Z_{i}=1)$. To estimate these parameters, 
+occupied, i.e., $\psi  = \Pr(Z_{i}=1)$. To estimate these parameters,
 researchers employ a sampling design, whereby surveyors visit a sample of $M$
 sites and record the binary response $Y_{ij}$ of species detection ($Y=1$) or
-non-detection ($Y=0$) during $j=1,\ldots,J_{i}$ visits to the $i$th site 
-during a `season' \citep{MacKenzie2002}.  
-A key feature of species occurrence surveys is that false absences are 
-possible, so that a species might go undetected ($Y_{ij} =0$) even if it is 
-present ($Z_{i} = 1$). The detection probability parameter $p$ accounts for this 
+non-detection ($Y=0$) during $j=1,\ldots,J_{i}$ visits to the $i$th site
+during a `season' \citep{MacKenzie2002}.
+A key feature of species occurrence surveys is that false absences are
+possible, so that a species might go undetected ($Y_{ij} =0$) even if it is
+present ($Z_{i} = 1$). The detection probability parameter $p$ accounts for this
 observation process, and is defined as the
-probability of detecting a species that is present. 
+probability of detecting a species that is present.
 
-The key assumptions made when modeling these data are that the occupancy 
+The key assumptions made when modeling these data are that the occupancy
 state at a site remains constant throughout the season and repeated visits at
-a site are independent.  The first assumption is commonly referred to as the
-`population closure' assumption, meaning that no births, deaths, emigrations,
-or immigrations occur during the season.  
-Season, therefore, will generally refer to a very short time frame, such as 
-a few months during a breeding season, or even a few minutes if repeated 
-visits are made in quick succession.  Replicate samples (i.e., $J>1$) are 
-necessary to obtain information about the detection rate separate from 
-the occupancy rate.  
+a site are independent.  In order to meet the first assumption, a
+season will generally be a very short time frame, such as
+a few months during a breeding season, or even a few minutes if repeated
+visits are made in quick succession.  Replicate samples (i.e., $J>1$) are
+necessary to obtain information about the detection rate separate from
+the occupancy rate.
 
-The following hierarchical model describes the joint distribution of the 
-observations conditional on the latent occupancy state, and the marginal 
+The following hierarchical model describes the joint distribution of the
+observations conditional on the latent occupancy state, and the marginal
 distribution of the latent occupancy state variable:
 \begin{gather}
 Z_i \sim \Bern(\psi) \text{\quad for $i=1,2,\dots,M$} \notag \\
@@ -281,15 +284,15 @@ Y_{ij}|Z_i \sim \Bern(Z_i p)\text{\quad for $j=1,2,\dots,J_{i}$} \notag
 Removing the latent $Z$ variables by marginalization yields the likelihood:
 
 \begin{equation}
-L(\psi, p | \left\{Y_{ij}\right\}) = 
- \prod_{i}^{M} \left\{
-    \prod_{j}^{J_i} 
+L(\psi, p | \left\{Y_{ij}\right\}) =
+ \prod_{i=1}^{M} \left\{
+    \prod_{j=1}^{J_i}
       \left(p^{Y_{ij}}(1-p)^{1-Y_{ij}}\right)
-          \psi + I(Y_{i.}=0)(1-\psi) \right\},  
+          \psi + I(Y_{i.}=0)(1-\psi) \right\},
 \end{equation}
 
-where $I$ is the indicator function taking the value 1 if its argument is 
-true, and 0 otherwise. The model and likelihood are easily generalizable to 
+where $I(.)$ is the indicator function taking the value 1 if its argument is
+true, and 0 otherwise. The model and likelihood are easily generalizable to
 accommodate covariates on detection probability or occupancy.
 Variables that are related to the occupancy state are modeled as
 
@@ -303,25 +306,25 @@ probability of detection can be modeled with
   \logit(p_{ij}) = \mathbf v_{ij}' \mathbf \alpha, \notag
 \end{gather}
 where $\mathbf v_{ij}$ is a vector of observation-level covariates and
-$\mathbf \alpha$ is a vector of their corresponding effect parameters.  
-Examples of site-level covariates include habitat characteristics such as 
-vegetation height. Observation-level covariates could include time of day, 
-date, wind speed, or other factors that might affect detection probability. 
+$\mathbf \alpha$ is a vector of their corresponding effect parameters.
+Examples of site-level covariates include habitat characteristics such as
+vegetation height. Observation-level covariates could include time of day,
+date, wind speed, or other factors that might affect detection probability.
 The function \code{occu} implements this model.
 
 
-\subsubsection{Multi-season site occupancy model} 
+\subsubsection{Multi-season site occupancy model}
 
-Sometimes the study objective is to understand the dynamics of the 
-occupancy state over time. To obtain such information researchers conduct 
-repeated occupancy studies (see Section~\ref{sec:occ}) at the same sample of 
+Sometimes the study objective is to understand the dynamics of the
+occupancy state over time. To obtain such information researchers conduct
+repeated occupancy studies (see Section~\ref{sec:occ}) at the same sample of
 sites over consecutive seasons \citep{MacKenzie2003} and seek to estimate
 probabilities of colonization ($\gamma$) and extinction
 ($\epsilon$), where colonization is the change of an unoccupied
 site to occupied and extinction if the change of an occupied site to
 unoccupied.  If the occupancy status is assumed to evolve according to
 a Markov process, then a 2-state finite hidden Markov model describes
-these data.  Let $Y_{itj}$ denote the observed species occurrence
+these data.  Let $Y_{ijt}$ denote the observed species occurrence
 status at visit $j$ during season $t$ to site $i$.  Then
 \begin{gather}
   Z_{i1} \sim \Bern(\psi) \notag \\
@@ -331,22 +334,22 @@ status at visit $j$ during season $t$ to site $i$.  Then
     \Bern(1-\epsilon_{t-1}) & \text{if $Z_{i(t-1)} = 1$}
   \end{cases}, \\
   \text{for $t=2,3,\dots,T$} \notag \\
-  Y_{itj} | Z_{it} \sim \Bern(Z_{it} p) \notag
+  Y_{ijt} | Z_{it} \sim \Bern(Z_{it} p) \notag
 \end{gather}
 
-This model generalizes the single season site occupancy model by relaxing the 
-population closure assumption. To define the likelihood of this model, 
-let $\phi_0 = (\psi, 1-\psi)$ and 
+This model generalizes the single season site occupancy model by relaxing the
+population closure assumption. To define the likelihood of this model,
+let $\phi_0 = (\psi, 1-\psi)$ and
 
 \begin{equation}
   \theta_{{\bf Y_{it}}} =
   \begin{pmatrix}
-    \prod_{j}^{J} p I(Y_{ijt}=0)(1-p) \\
-    I(\sum_{j}^{J} Y_{ijt}=0). \notag\\
+    \prod_{j=1}^{J} p I(Y_{ijt}=0)(1-p) \\
+    I(\sum_{j=1}^{J} Y_{ijt}=0). \notag\\
   \end{pmatrix}
 \end{equation}
 
-Furthermore, let the matrix of one-step Markov transition probabilities be 
+Furthermore, let the matrix of one-step Markov transition probabilities be
 
 \begin{equation}
   \Phi_t =
@@ -356,19 +359,19 @@ Furthermore, let the matrix of one-step Markov transition probabilities be
   \end{pmatrix}
 \end{equation}
 
-The likelihood is then
+The likelihood is then given by
 
 \begin{equation}
-L(\psi,\epsilon,\gamma,p | \left\{Y_{ijt}\right\}) = 
- \prod_{i}^{M} \left\{
-    \phi_0 \left\{ \prod_{t}^{T-1} \Phi_t \theta_{Y_{it}}  
+L(\psi,\epsilon,\gamma,p | \left\{Y_{ijt}\right\}) =
+ \prod_{i=1}^{M} \left\{
+    \phi_0 \left\{ \prod_{t=1}^{T-1} \Phi_t \theta_{Y_{it}}
         \right\} \theta_{Y_{iT}} \right\},
 \end{equation}
 
-which can be maximized by the \code{colext} function in \um. Again, 
-each of the four model parameters $\psi$, $\gamma$, 
-$\epsilon$, and $p$ can be modeled as functions of covariates on the logit 
-scale. 
+which can be maximized by the \code{colext} function in \um. Again,
+each of the four model parameters $\psi$, $\gamma$,
+$\epsilon$, and $p$ can be modeled as functions of covariates on the logit
+scale.
 
 
 \subsection{Abundance models}
@@ -376,18 +379,18 @@ scale.
 \subsubsection{Repeated count data}
 \label{sec:repeated-count-data}
 
-Occupancy is a crude summary of population structure and dynamics and, in 
-practice, considerable effort is focused on obtaining information about 
-abundance \citep{dorazio07}. A common sampling design for obtaining 
-abundance information, 
-analogous to the basic occupancy design described above, is to 
+Occupancy is a crude summary of population structure and dynamics and in
+practice considerable effort is focused on obtaining information about
+abundance \citep{dorazio07}. A common sampling design for obtaining
+abundance information,
+analogous to the basic occupancy design described above, is to
 repeatedly visit a sample of $M$ sites $J$ times and
 record the number of unique individuals observed at each site.
 Similar assumptions are made as with occurrence data: (1) abundance at
 a site remains constant during a season and (2) counts at a site are
 independent.  \citet{Royle2004} presented the following hierarchical model for
 repeated count data.  Let $N_i$ be the unobserved total number of
-individuals using a site and define $Y_{ij}$ as the number of individuals 
+individuals using a site and define $Y_{ij}$ as the number of individuals
 observed during the $j$th visit.  Then,
 \begin{gather}
 \label{eq:pc2}
@@ -401,12 +404,12 @@ $\theta$ are extra parameters of $f$ other than the location
 parameter, $\lambda$.  \um\ currently supports $f$ as Poisson or
 negative binomial.  In the
 negative binomial case, $\theta$ is a dispersion parameter, which is
-useful when overdispersion is suspected. In the Poisson case, 
-the overdispersion parameter $\theta$ is constrained to equal zero.  
+useful when overdispersion is suspected. In the Poisson case,
+the overdispersion parameter $\theta$ is constrained to equal zero.
 
 As with the occupancy model, covariates may be included at either the
 state (here, abundance) or detection levels, but abundance is modeled
-through a log link to enforce it's positivity constraint.
+through a log link to enforce its positivity constraint.
 \begin{gather}
   \log(\lambda_i) = \mathbf x_i' \mathbf \beta, \notag
 \end{gather}
@@ -419,28 +422,28 @@ probability of detection can be modeled with
 where $\mathbf v_{ij}$ is a vector of observation-level covariates and
 $\mathbf \alpha$ is a vector of their corresponding effect parameters.
 
-The $N_{i}$ variables are latent and so analysis is carried out based on 
-the integrated likelihood obtained by marginalizing each $N_{i}$ from the 
+The $N_{i}$ variables are latent and so analysis is carried out based on
+the integrated likelihood obtained by marginalizing each $N_{i}$ from the
 conditional likelihood \citep{Royle2004b}:
 
 \begin{equation}
-L(\lambda, p | \left\{Y_{ij}\right\}) = 
- \prod_{i}^{M} 
- \left\{ \sum_{N_{i}=max({\bf Y_i})}^{\infty}
-          \left( \prod_{j}^{J} 
+L(\lambda, p | \left\{Y_{ij}\right\}) =
+ \prod_{i=1}^{M}
+ \left\{ \sum_{N_{i}=\max({\bf Y_i})}^{\infty}
+          \left( \prod_{j=1}^{J}
      \frac{N_{i!}}{ (N_{i}-Y_{ij})!} p^{Y_{ij}}(1-p)^{N_{i}-Y_{ij}} \right)
        \frac{e^{-\lambda} \lambda^{N_i}}{N_i!} \right\}.
 \end{equation}
 
-This likelihood can be maximized using the \code{pcount} function.  
+This likelihood can be maximized using the \code{pcount} function.
 
 The function \code{pcountOpen} implements a generalized form of this model
-designed for `open' populations with temporal dynamics governed by 
+designed for `open' populations with temporal dynamics governed by
 apparent survival and recruitment parameters \citep{DailMadsen2011}. Another
-related model was described by \citet{Royle2003} and can be fit with the 
-\code{occuRN} function. This model estimates abundance from site occupancy 
-data by exploiting the link between abundance and detection probability. 
-     
+related model was described by \citet{Royle2003} and can be fit with the
+\code{occuRN} function. This model estimates abundance from site occupancy
+data by exploiting the link between abundance and detection probability.
+
 \subsubsection{General multinomial-Poisson mixture model}
 
 \label{sec:gener-mult-poiss}
@@ -454,28 +457,31 @@ user for a variety of sampling methods, the multinomial-Poisson model
 \end{gather}
 where $N_i$ is the latent abundance at site $i$ as with the repeated
 count model, and $\boldsymbol \pi=(\pi_1,\pi_2,\dots,\pi_J)'$ is
-the vector of cell probabilities corresponding to the vector of counts 
-$\mathbf Y_{i}$.  In general, $\boldsymbol \pi$ is
+the vector of cell probabilities corresponding to the vector of counts
+$\mathbf Y_{i}$.  Examples of sampling methods that produce data of
+this form include removal sampling, double observer sampling,
+and distance sampling. In the next sections, we discuss these specific
+cases.  In general, $\boldsymbol \pi$ is
 determined by the specific sampling method and
 $\sum_{j} \pi_{j} \le 1$ because detection is imperfect and
 $\pi_{J+1}=1 - \sum_{j} \pi_{j}$  is the probability of the species
-escaping detection.  
+escaping detection.
 
-Note that the replication here is of a different 
-nature than in previously described models -- not over time necessarily -- 
-but still effectively replication as far as the design goes. That is, 
-there are repeated measurements at each site, but with a multinomial protocol, 
-the replicate counts are {\it dependent} instead of independent. 
+Note that the replication here is of a different
+nature than in previously described models -- not over time necessarily --
+but still effectively replication as far as the design goes. That is,
+there are repeated measurements at each site, but with a multinomial protocol,
+the replicate counts are {\it dependent} instead of independent.
 
-To illustrate the likelihood under a multinomial observation model, 
-suppose that a sampling method produces a multinomial observation 
-with 3 observable frequencies at each site. As before, $N_i$ are 
-latent variables, and so inference is based on the integrated 
+To illustrate the likelihood under a multinomial observation model,
+suppose that a sampling method produces a multinomial observation
+with 3 observable frequencies at each site, {\it ie} $J=3$. As before,
+$N_i$ are latent variables, and so inference is based on the integrated
 likelihood of ${\bf Y}_{i}$ which is:
 
 \begin{equation}
-L(\lambda, p | \left\{{\bf Y}_i\right\}) = 
- \prod_{i=1}^{N} \left\{ 
+L(\lambda, p | \left\{{\bf Y}_i\right\}) =
+ \prod_{i=1}^{N} \left\{
   \sum_{N_{i}=\sum_{j}(Y_{ij})}^{\infty} \left(
  \frac{N_{i}!}{ Y_{i1}! Y_{i2}! Y_{i3}! Y_{i0}!}
   \pi_{1}^{Y_{i1}}
@@ -484,7 +490,7 @@ L(\lambda, p | \left\{{\bf Y}_i\right\}) =
   \pi_{J+1}^{N_{i}- Y_{i.}} \right)
  \frac{e^{-\lambda} \lambda^{N_i}}{N_i!} \right\}
 \end{equation}
-For this specific case of a multinomial-Poisson mixture, the likelihood 
+For this specific case of a multinomial-Poisson mixture, the likelihood
 simplifies analytically (to a product-Poisson likelihood).
 The function \code{multinomPois} can be used to maximize this likelihood.
 
@@ -497,7 +503,7 @@ level, denoted $p_{ik}$ for $k=1,2,\dots,M$ at site $i$.  Then we
 derive the multinomial cell probabilities $\boldsymbol \pi_{i}$
 through the sampling technique-specific relationship
 $\pi_{ij}=g(p_{ik})$ where $p_{ik}$ is the underlying probability of
-detection and $g$ is some sampling method-specific function.  
+detection and $g$ is some sampling method-specific function.
 
 Thus, the only two requirements to adapt \um's general multinomial Poisson
 modeling to a new sampling method is to specify $g$ and a binary 0-1
@@ -528,15 +534,15 @@ $\mathbf \alpha$ is a vector of their corresponding effect parameters.
 We now describe two common sampling methods that can be modeled
 with the multinomial-Poisson model: removal sampling and double
 observer sampling.  These two methods are included in \um, but
-additional methods, such as mark-recapture samples, may easily be specified 
+additional methods, such as mark-recapture samples, may easily be specified
 by defining a user-specified \code{piFun} function and \code{obsToY} matrix.
 
 \paragraph{Removal sampling }
 
-Popular in fisheries, removal sampling is commonly implemented by 
-visiting a sample of $M$ sites $J$ times each and trapping or 
-otherwise capturing and then removing individuals at each visit.  Thus, 
-$Y_{ij}$ is the number of individuals captured at the $j$th visit for 
+Popular in fisheries, removal sampling is commonly implemented by
+visiting a sample of $M$ sites $J$ times each and trapping or
+otherwise capturing and then removing individuals at each visit.  Thus,
+$Y_{ij}$ is the number of individuals captured at the $j$th visit for
 $j=1,2,\dots,J$. We can specify $g$ for removal sampling as follows.  The
 probability of an individual at site $i$ being captured on the first
 visit is $\pi_{i1} = p_{i1}$.  The probability of capture on the $j$th
@@ -564,13 +570,13 @@ the upper triangle,
 \label{sec:double-observ-sampl}
 
 Double observer sampling involves collecting data by a team of two surveyors
-simultaneously visiting a site.  Each observer independently records a list 
-of detected organisms, and at the end of the survey the two observers attempt 
-to reconcile their counts.  If individuals are not uniquely marked, this may 
-be a difficult task in practice; however, assuming that individuals can 
-be distinguished, the data at each site are a vector of length three 
-($\mathbf Y_i$), corresponding to the numbers of individuals seen by 
-only observer one, only observer two, and both observers.  Thus, for 
+simultaneously visiting a site.  Each observer independently records a list
+of detected organisms, and at the end of the survey the two observers attempt
+to reconcile their counts.  If individuals are not uniquely marked, this may
+be a difficult task in practice; however, assuming that individuals can
+be distinguished, the data at each site are a vector of length three
+($\mathbf Y_i$), corresponding to the numbers of individuals seen by
+only observer one, only observer two, and both observers.  Thus, for
 double observer sampling, $g$ is defined as follows.
 \begin{equation}
   \mathbf \pi_i =
@@ -587,25 +593,25 @@ following $3 \times 2$ matrix.
   \begin{pmatrix}
     1 & 0 \\
     0 & 1 \\
-    1 & 1 
+    1 & 1
   \end{pmatrix} \notag
 \end{equation}
 
 \paragraph{Distance sampling}
 \label{sec:distsamp}
 
-One of the most widely used sampling methods in animal ecology is 
-distance sampling \citep{BucklandEA01}, which involves recording the 
-distance to each individual detected at $M$ sites (often referred to as 
-`transects') on a single occasion.  
-Detection probability is modeled as a function of distance ($d$) to the observer, 
-for example using the half-normal detection function 
-$p = exp(-d^2/(2*\sigma^2))$ where $\sigma$ is the half-normal shape 
-parameter.  In practice, the distance measurements are often binned into 
-$J$ distance intervals, which allows them to modeled as multinomial 
-outcomes with cell probabilities $\mathbf \pi_i$ computed as the product of the 
-probability of detection and the probability of 
-occurrence in each distance interval \citep{Royle2004b}.  
+One of the most widely used sampling methods in animal ecology is
+distance sampling \citep{BucklandEA01}, which involves recording the
+distance to each individual detected at $M$ sites (often referred to as
+`transects') on a single occasion.
+Detection probability is modeled as a function of distance ($d$) to the observer,
+for example using the half-normal detection function
+$p = \exp(-d^2/(2\sigma^2))$ where $\sigma$ is the half-normal shape
+parameter.  In practice, the distance measurements are often binned into
+$J$ distance intervals, which allows them to modeled as multinomial
+outcomes with cell probabilities $\mathbf \pi_i$ computed as the product of the
+probability of detection and the probability of
+occurrence in each distance interval \citep{Royle2004b}.
 
 As currently implemented, the general form of the distance sampling model
 is identical to the multinomial-Poisson mixture described above, with the
@@ -618,28 +624,28 @@ we have
   \log(\sigma_i) = \mathbf v_{i}' \mathbf \alpha,
 \end{gather}
 Here, the log link is required because $\sigma$ is a positive shape parameter
-of the detection function. In addition, distance sampling data 
-are associated with many unique attributes such as distance interval 
-cut-points and survey method (line-transect vs point count); therefore, 
-we created the specialized function \code{distsamp} to fit the 
+of the detection function. In addition, distance sampling data
+are associated with many unique attributes such as distance interval
+cut-points and survey method (line-transect vs point count); therefore,
+we created the specialized function \code{distsamp} to fit the
 multinomial-Poisson model to distance sampling data.
 
 
 \paragraph{Generalization}
 
-The flexibility of the \code{multinomPois} function is extended even 
+The flexibility of the \code{multinomPois} function is extended even
 further in the \code{gmultmix} function, which allows for a negative binomial
 mixture {\citep{DorazioEA05} and relaxes the population closure assumption
-\citep{chandlerEAip_TempEm}. 
+\citep{chandlerEAip_TempEm}.
 
 \section[unmarked usage]{\pkg{unmarked} usage}
 \label{sec:unmarked-usage}
 
 \um\ provides data structures, fitting syntax, and post-processing that form a
-cohesive framework for the analysis of ecological data collected using  
-a metapopulation design. In order to achieve these goals, \um\ uses the S4 
+cohesive framework for the analysis of ecological data collected using
+a metapopulation design. In order to achieve these goals, \um\ uses the \proglang{S4}
 class system \citep{Chambers2008}. As \rlang's most modern system of class-based
-programming, S4 allows customization of functions, referred to as
+programming, \proglang{S4} allows customization of functions, referred to as
 methods, to specific object classes and superclasses. For example,
 when the generic \code{predict} method is called with any \um\ model
 fit object as an argument, the actual \code{predict} implementation
@@ -651,18 +657,18 @@ also making the program more user-friendly \citep{Chambers2008}.
 \subsection{Preparing data}
 \label{sec:data-requirements}
 
-\um\ uses a custom S4 data structure called the \code{unmarkedFrame}
+\um\ uses a custom \proglang{S4} data structure called the \code{unmarkedFrame}
 to store all data and metadata related to a sampling design.  Although this at
 first appears to add an extra layer of work for the user, there are
 several reasons for this design choice.  The multilevel structure of
-the models means that standard rectangular data structures such as 
+the models means that standard rectangular data structures such as
 \code{data.frame}s or matrices are not suitable for storing the data.  For
 example, covariates might have been measured separately at the site
 level and at the visit level.  Furthermore, the length of the response
 vector $\mathbf Y_{i}$ at site $i$ might differ from the number of
-observations at the site as in the multinomial Poisson model.  In some 
-cases, metadata of arbitrary dimensions may need to be associated with the 
-data.  For example, in distance sampling it is necessary to store the units 
+observations at the site as in the multinomial Poisson model.  In some
+cases, metadata of arbitrary dimensions may need to be associated with the
+data.  For example, in distance sampling it is necessary to store the units
 of measure and the survey design type.  Aside
 from these technical reasons, \citet{Gentleman2009} pointed out that
 the use of such portable custom data objects can simplify future
@@ -670,34 +676,34 @@ reference to previous analyses, an often neglected aspect of research.
 Repeated fitting calls using the same set of data require less code
 repetition if all data are contained in a single object.  Finally,
 calls to fitting functions have a cleaner appearance with a more
-obvious purpose when the call is not buried in data arguments.  
+obvious purpose when the call is not buried in data arguments.
 
-The parent S4 data class is called an \code{unmarkedFrame} and each \um\
+The parent \proglang{S4} data class is called an \code{unmarkedFrame} and each \um\
 fitting function has its own data type that extends the
-\code{unmarkedFrame}.  To ease data importing 
+\code{unmarkedFrame}.  To ease data importing
 and conversion, \um\ includes several helper functions to automatically
 convert data into an \code{unmarkedFrame}: \code{csvToUMF} which
 imports data directly from a comma-separated value text file,
 \code{formatWide} and \code{formatLong} which convert data from data
 frames, and the family of unmarkedFrame constructor functions.
 
-An \code{unmarkedFrame} object contains components, referred to 
-as slots, which hold the data and metadata. All \code{unmarkedFrame} 
-objects contain a slot for the observation matrix \code{y}, a \code{data.frame} 
-of site-level covariates \code{siteCovs}, and a \code{data.frame} of 
-observation-level covariates \code{obsCovs}.  The \code{y} matrix is the 
-only required slot. Each row of \code{y} contains either the observed 
-counts or detection/non-detection data at each of the $M$ sites.  
-\code{siteCovs} is an $M$-row \code{data.frame} with a column for each 
-site-level covariate.  \code{obsCovs} is an $MJ$-row \code{data.frame} with 
-a column for each observation-level covariate.  Thus 
-each row of \code{obsCovs} corresponds to a particular observation, with the 
+An \code{unmarkedFrame} object contains components, referred to
+as slots, which hold the data and metadata. All \code{unmarkedFrame}
+objects contain a slot for the observation matrix \code{y}, a \code{data.frame}
+of site-level covariates \code{siteCovs}, and a \code{data.frame} of
+observation-level covariates \code{obsCovs}.  The \code{y} matrix is the
+only required slot. Each row of \code{y} contains either the observed
+counts or detection/non-detection data at each of the $M$ sites.
+\code{siteCovs} is an $M$-row \code{data.frame} with a column for each
+site-level covariate.  \code{obsCovs} is an $MJ$-row \code{data.frame} with
+a column for each observation-level covariate.  Thus
+each row of \code{obsCovs} corresponds to a particular observation, with the
 order corresponding to site varying slower and observation within site
 varying faster.  Both \scovs\ and \ocovs\ can contain \code{NA}
-values corresponding to unbalanced or missing data.  If a site-level 
-covariate is missing, \um\ automatically removes all data for that site 
-prior to fitting the model. Missing values in the \ocovs\ are handled by 
-removing the corresponding occurrence or count observations such that 
+values corresponding to unbalanced or missing data.  If a site-level
+covariate is missing, \um\ automatically removes all data for that site
+prior to fitting the model. Missing values in the \ocovs\ are handled by
+removing the corresponding occurrence or count observations such that
 the missing values make no contribution to the likelihood. \um\ provides
 constructor functions to make creating unmarkedFrames straightforward.
 For each specific data type, specific types of unmarkedFrames extend
@@ -706,8 +712,8 @@ the basic \code{unmarkedFrame} to handle model-specific nuances.
 \subsubsection{Importing repeated count data}
 
 Here is an example of creating an \code{unmarkedFrame} for repeated count data
-(Section~\ref{sec:repeated-count-data}). First, load 
-Mallard ({\it Anas platyrhynchos}) point count dataset described in 
+(Section~\ref{sec:repeated-count-data}). First, load
+Mallard ({\it Anas platyrhynchos}) point count dataset described in
 \citet{Kery2005}.
 
 \begin{Schunk}
@@ -717,10 +723,10 @@ Mallard ({\it Anas platyrhynchos}) point count dataset described in
 \end{Sinput}
 \end{Schunk}
 
-Loading the mallard data makes three objects available within the \rlang\ 
+Loading the mallard data makes three objects available within the \rlang\
 workspace. The matrix \code{mallard.y} contains the number of mallards counted
-at each of $M=239$ sites (rows) on $J=3$ visits (columns).  Counts from 
-the first five sites are shown below: 
+at each of $M=239$ sites (rows) on $J=3$ visits (columns).  Counts from
+the first five sites are shown below:
 
 \begin{Schunk}
 \begin{Sinput}
@@ -736,8 +742,8 @@ the first five sites are shown below:
 \end{Soutput}
 \end{Schunk}
 
-The site-level covariates are columns of the \code{mallard.site} 
-\code{data.frame}, which also has $M=239$ rows. 
+The site-level covariates are columns of the \code{mallard.site}
+\code{data.frame}, which also has $M=239$ rows.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -753,14 +759,14 @@ The site-level covariates are columns of the \code{mallard.site}
 \end{Soutput}
 \end{Schunk}
 
-The site-level covariates are elevation (elev), transect length (length), 
+The site-level covariates are elevation (elev), transect length (length),
 and the proportion of forest covering the site (forest).
 
-The observation-level covariates are a \code{list} named \code{mallard.obs} 
-with separate $M \times J$ matrices for each observation-level covariate. 
-Here, the two observation-level covariates are a measure of survey effort 
-(ivel) and the date of the survey (date). Both have been standardized to 
-a mean of zero and unit variance. 
+The observation-level covariates are a \code{list} named \code{mallard.obs}
+with separate $M \times J$ matrices for each observation-level covariate.
+Here, the two observation-level covariates are a measure of survey effort
+(ivel) and the date of the survey (date). Both have been standardized to
+a mean of zero and unit variance.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -786,12 +792,12 @@ a mean of zero and unit variance.
 [5,] -1.833  0.167  1.381
 \end{Soutput}
 \end{Schunk}
-  
-The unmarkedFrame constructors can accept \ocovs\ in this \code{list} format or 
-as a \code{data.frame} in the format described in 
+
+The unmarkedFrame constructors can accept \ocovs\ in this \code{list} format or
+as a \code{data.frame} in the format described in
 Section~\ref{sec:data-requirements}.
 
-The following call to \code{unmarkedFramePCount} organizes the observations 
+The following call to \code{unmarkedFramePCount} organizes the observations
 and covariates into an object that can be passed to the data argument of
 the fitting function \code{pcount}.
 
@@ -839,20 +845,24 @@ Observation-level covariates:
 \end{Soutput}
 \end{Schunk}
 
-The summary reveals that only 40 sites have at least one detection. The 
-tabulation of y observations provides additional evidence of sparse counts, 
-with no mallards being detected during 576 of the surveys. The 58 NA values 
-correspond to missing data. 
+The summary reveals that only 40 sites have at least one
+detection. Note that the ``number of observations'' in this case refers to
+number of visits. The term ``observation'' is used rather than ``visit''
+because the definition of the $J$ replicate surveys depends upon the
+sampling method. The
+tabulation of y observations provides additional evidence of sparse counts,
+with no mallards being detected during 576 of the surveys. The 58 NA values
+correspond to missing data.
 
 
 \subsubsection{Importing removal sampling data}
 
-To illustrate the slightly different syntax for removal sampling data example, 
-we will import data from a removal survey of ovenbirds 
-({\it Seiurus aurocapillus}) described by \citet{Royle2004a}.  The data consist 
-of a list named \code{ovendata.list} with 
-a matrix named \code{data} containing the removal counts for 4 visits and a 
-\code{data.frame} called \code{covariates} containing site-level covariates 
+To illustrate the slightly different syntax for removal sampling data example,
+we will import data from a removal survey of ovenbirds
+({\it Seiurus aurocapillus}) described by \citet{Royle2004a}.  The data consist
+of a list named \code{ovendata.list} with
+a matrix named \code{data} containing the removal counts for 4 visits and a
+\code{data.frame} called \code{covariates} containing site-level covariates
 information.
 
 \begin{Schunk}
@@ -861,10 +871,10 @@ information.
 \end{Sinput}
 \end{Schunk}
 
-This loads a \code{list} named ovendata.list with components for the 
-observed count data and covariates.  The only additional specification 
+This loads a \code{list} named ovendata.list with components for the
+observed count data and covariates.  The only additional specification
 required when creating an \code{unmarkedFrame} for the multinomial-Poisson
-model is to specify the particular type of data as either 
+model is to specify the particular type of data as either
 \code{removal}, \code{double}, or \code{userDefined}.
 
 \begin{Schunk}
@@ -884,16 +894,18 @@ Data frame representation of unmarkedFrame object.
 \end{Soutput}
 \end{Schunk}
 
-Notice the bracket method of subsetting used to display data from the first 
+Notice the bracket method of subsetting used to display data from the first
 five sites.
 
 \subsubsection{Preparing multi-season occupancy data}
 
-The data structures are more complex when surveys were conducted over more 
-than one season. The following example demonstrates how to prepare a toy 
+The data structures are more complex when surveys were conducted over more
+than one season. The following example demonstrates how to prepare a toy
 dataset for the \code{colext} fitting function. This detection/non-detection
-dataset has dimensions $M=4$ sites, $T=2$ seasons, and $J=3$ visits per season. 
+dataset has dimensions $M=4$ sites, $T=2$ seasons, and $J=3$ visits per season.
 
+
+\newpage
 
 \begin{Schunk}
 \begin{Sinput}
@@ -911,19 +923,19 @@ site4         1         1         1         1         1         1
 \end{Sinput}
 \end{Schunk}
 
-The function \code{unmarkedMultFrame} accepts \scovs\ and \ocovs\ like all 
+The function \code{unmarkedMultFrame} accepts \scovs\ and \ocovs\ like all
 other unmarkedFrame classes, and it also has an argument \code{yearlySiteCovs}
-that can accept a list of $M \times T$ \code{data.frame}s containing 
-season-level covariates. The \code{numPrimary} argument specifies the 
+that can accept a list of $M \times T$ \code{data.frame}s containing
+season-level covariates. The \code{numPrimary} argument specifies the
 number of seasons.
 
 \subsection{Manipulating unmarkedFrames}
 \label{sec:manip}
 
-The various components of \code{unmarkedFrame}s can be extracted and 
-subsetted in a manner similar to the methods used to manipulate standard 
-\rlang\ objects.  Subsetting can be accomplished using the `bracket' 
-notation. For example, the first five rows of data and all three 
+The various components of \code{unmarkedFrame}s can be extracted and
+subsetted in a manner similar to the methods used to manipulate standard
+\rlang\ objects.  Subsetting can be accomplished using the `bracket'
+notation. For example, the first five rows of data and all three
 removal occasions can be extracted from the ovenbird removal study using
 
 \begin{Schunk}
@@ -941,10 +953,10 @@ Data frame representation of unmarkedFrame object.
 \end{Soutput}
 \end{Schunk}
 
-In some cases, the covariate data may need to be manipulated after the 
-\code{unmarkedFrame} has been created. The following code demonstrates 
-how to extract the site-level covariates, standardize those that are 
-continuous (columns 2 and 3), and reinsert them back into the 
+In some cases, the covariate data may need to be manipulated after the
+\code{unmarkedFrame} has been created. The following code demonstrates
+how to extract the site-level covariates, standardize those that are
+continuous (columns 2 and 3), and reinsert them back into the
 \code{unmarkedFrame}.
 
 \begin{Schunk}
@@ -960,28 +972,28 @@ continuous (columns 2 and 3), and reinsert them back into the
 \subsection{Fitting models}
 \label{sec:fitting-models}
 
-As introduced in Section~\ref{sec:models-impl-unmark}, each type of 
-survey design 
+As introduced in Section~\ref{sec:models-impl-unmark}, each type of
+survey design
 has a corresponding fitting function.  For example, to fit a repeated count
 model, we call \code{pcount}.  Table~\ref{tab:models} provides a
-summary of all models that \um\ currently fits.  With the exception of the 
-`open' population models (\code{colext}, \code{gmultmix}, and 
-\code{pcountOpen}), all fitting functions use a double right-hand sided 
-formula syntax representing the hierarchical model structure.  
-Specifically, covariates affecting the detection process are specified 
-following the first tilde, and covariates of the state process follow the 
-second tilde. No left-hand side of the formula is specified because the 
+summary of all models that \um\ currently fits.  With the exception of the
+`open' population models (\code{colext}, \code{gmultmix}, and
+\code{pcountOpen}), all fitting functions use a double right-hand sided
+formula syntax representing the hierarchical model structure.
+Specifically, covariates affecting the detection process are specified
+following the first tilde, and covariates of the state process follow the
+second tilde. No left-hand side of the formula is specified because the
 unmarkedFrame defines the response variable uniquely as the \code{y} slot.
 
 \subsubsection{Fitting a repeated count model}
 
-Continuing the Mallard example, the following call to \code{pcount} fits a 
-binomial-Poisson mixture model (Section~\ref{sec:repeated-count-data}).  The 
-following code specifies that detection probability $p$ should be modeled by 
-day of year, including a quadratic term.  We also wish to model abundance 
-using elevation and proportion of area forested.  As described in 
-Section~\ref{sec:repeated-count-data}, covariates of detection are on the 
-logit-scale and covariates of abundance are on the log scale for the 
+Continuing the Mallard example, the following call to \code{pcount} fits a
+binomial-Poisson mixture model (Section~\ref{sec:repeated-count-data}).  The
+following code specifies that detection probability $p$ should be modeled by
+day of year, including a quadratic term.  We also wish to model abundance
+using elevation and proportion of area forested.  As described in
+Section~\ref{sec:repeated-count-data}, covariates of detection are on the
+logit-scale and covariates of abundance are on the log scale for the
 repeated count model.
 
 \begin{Schunk}
@@ -1043,15 +1055,15 @@ AIC: 519.2081
 \end{Schunk}
 
 This seems to be a better model according to both the Wald p-value and
-AIC.  The result suggests that detection probability decreases during the 
+AIC.  The result suggests that detection probability decreases during the
 course of a year.
 
 
 
 \subsubsection{Fitting a multinomial-Poisson model}
 
-Here we demonstrate fitting a multinomial-Poisson mixture model to removal 
-sampling data.  The Ovenbird data has no observation-level covariates, so 
+Here we demonstrate fitting a multinomial-Poisson mixture model to removal
+sampling data.  The Ovenbird data has no observation-level covariates, so
 detection probability is assumed constant across visits.  It is not necessary
 to specify that removal sampling was used when fitting the model
 because this information is already stored in the \code{ovenFrame} data.
@@ -1085,8 +1097,8 @@ AIC: 326.1387
 \subsection{Examining fitted models}
 \label{sec:examining-model-fits}
 
-Objects returned by \um's fitting functions also make use of the S4
-class system.  All fitted model objects belong to the \code{unmarkedFit} 
+Objects returned by \um's fitting functions also make use of the \proglang{S4}
+class system.  All fitted model objects belong to the \code{unmarkedFit}
 parent class.  Thus, common operations such as extracting coefficient
 estimates, covariance matrices for estimates, and confidence intervals
 have been adapted to behave similar to \rlang's base functions.
@@ -1124,10 +1136,10 @@ To check which types are available for a model, use the \code{names} method.
 \end{Schunk}
 
 Similarly, the \code{vcov} function extracts the covariance matrix of
-the estimates, using the observed Fisher information by default. \code{vcov} 
-also accepts a \code{type} argument, as does the convenience method 
-\code{SE}, which returns standard errors from the square root of the diagonal 
-of the covariance matrix. 
+the estimates, using the observed Fisher information by default. \code{vcov}
+also accepts a \code{type} argument, as does the convenience method
+\code{SE}, which returns standard errors from the square root of the diagonal
+of the covariance matrix.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -1140,7 +1152,7 @@ p(date) 0.00344853 0.01302865
 \end{Soutput}
 \end{Schunk}
 
-Extracting confidence intervals proceeds in a similar 
+Extracting confidence intervals proceeds in a similar
 fashion.  By default, the asymptotic normal approximation is used.
 
 \begin{Schunk}
@@ -1197,7 +1209,7 @@ version of the \code{unmarkedFit} object with additional bootstrap sampling
 information.  Thus, this new fit must be stored, either in a new fit
 object or the same one, and then subsequently queried for bootstrap
 summaries.  To illustrate, we use the removal sampling data instead of the
-repeated count data because computations are much faster; however, 
+repeated count data because computations are much faster; however,
 bootstrapping is available for any of the models in \um.
 
 \begin{Schunk}
@@ -1224,7 +1236,7 @@ bootstrapping is available for any of the models in \um.
 \end{Soutput}
 \end{Schunk}
 
-The bootstrapping and asymptotic standard errors are similar. Additional 
+The bootstrapping and asymptotic standard errors are similar. Additional
 bootstrap samples can be drawn by calling \code{nonparboot} again.
 
 \begin{Schunk}
@@ -1239,8 +1251,8 @@ bootstrap samples can be drawn by calling \code{nonparboot} again.
 
 Often, meaningful hypotheses can be addressed by estimating linear
 combinations of coefficient estimates.  Linear combinations of coefficient
-estimates can be requested with \code{linearComb}. Continuing the Ovenbird 
-example, the following code estimates the log-abundance rate for a site with 
+estimates can be requested with \code{linearComb}. Continuing the Ovenbird
+example, the following code estimates the log-abundance rate for a site with
 \code{ufp = 0.5} and \code{trba= 0}.
 
 \begin{Schunk}
@@ -1251,14 +1263,14 @@ example, the following code estimates the log-abundance rate for a site with
 \begin{Soutput}
 Linear combination(s) of Abundance estimate(s)
 
- Estimate    SE (Intercept) ufp trba
-    0.153 0.130           1 0.5    0
+ Estimate   SE (Intercept) ufp trba
+    0.153 0.13           1 0.5    0
 \end{Soutput}
 \end{Schunk}
 
 Multiple sets of coefficients may be supplied as a design matrix.  The
 following code requests the estimated log-abundance for sites with
-\code{ufp = 0.5} and \code{trba = 1}. 
+\code{ufp = 0.5} and \code{trba = 1}.
 
 \begin{Schunk}
 \begin{Sinput}
@@ -1327,9 +1339,9 @@ Transformation: exp
 \end{Soutput}
 \end{Schunk}
 
-\subsection{Model selection} 
+\subsection{Model selection}
 
-\pkg{unmarked} performs AIC-based model selection for structured lists of 
+\pkg{unmarked} performs AIC-based model selection for structured lists of
 unmarkedFit objects.  To demonstrate, we fit a few more models to the Ovenbird
 removal data, including an interaction model, two models with
 single predictors, and a model with no predictors.
@@ -1395,27 +1407,27 @@ lam(ufp*trba)p(.)     5 327.17  2.40  0.10     1.00
 
 
 \code{predict} functions much like \code{linearComb} except that new data can be
-passed to it as a \code{data.frame} rather than a design matrix. When the first 
-argument given to predict is a list of models created by \code{fitList}, 
+passed to it as a \code{data.frame} rather than a design matrix. When the first
+argument given to predict is a list of models created by \code{fitList},
 \code{predict} computes model-averaged predictions, which may be
-useful in the presence of high model selection uncertainty.  
+useful in the presence of high model selection uncertainty.
 
 
 
 \subsection{Goodness of fit and the parametric bootstrap}
 
-To conduct goodness of fit tests, \um\ provides a generic parametric 
-bootstrapping function \code{parboot}.  It simulates data from the fitted model and 
-applies a user-defined function that returns a fit-statistic such as the 
-Pearson's $\chi^2$.   
+To conduct goodness of fit tests, \um\ provides a generic parametric
+bootstrapping function \code{parboot}.  It simulates data from the fitted model and
+applies a user-defined function that returns a fit-statistic such as the
+Pearson's $\chi^2$.
 
 
 
 \begin{figure}[th!]
   \centering
 \includegraphics{unmarked-035}
-\caption{Graphical assessment of model fit by parametric bootstrapping.  The dashed 
-line is the observed chi-squared statistic. The histogram approximates the 
+\caption{Graphical assessment of model fit by parametric bootstrapping.  The dashed
+line is the observed chi-squared statistic. The histogram approximates the
 expected sampling distribution}
 \label{fig:pb}
 \end{figure}
@@ -1440,59 +1452,59 @@ expected sampling distribution}
 
 The above call to \code{plot} with a parametric bootstrap object as
 the argument produces a useful graphic for assessing goodness of fit
-(Figure~\ref{fig:pb}).  The plot suggests that the model adequately  
+(Figure~\ref{fig:pb}).  The plot suggests that the model adequately
 explains these data.
 
 Beyond serving as a tool to evaluate goodness of fit,
-\code{parboot} can be used to characterize uncertainty in any derived quantity 
+\code{parboot} can be used to characterize uncertainty in any derived quantity
 of interest.
 
 
 \section[Future directions for unmarked development]{Future directions for \um\ development}
 \label{sec:future-direct-unmark}
 
-\um\ has become a stable and useful platform for the analysis of ecological 
-data, but several areas of development could improve its utility.  First, new 
-models need to be added to cover the range of sampling techniques and 
-population dynamics commonly encountered. Table~\ref{tab:modspace} illustrates 
-some of the gaps that need to be filled. In most cases, models to fill these 
-gaps have not been developed so more research is needed.  
+\um\ has become a stable and useful platform for the analysis of ecological
+data, but several areas of development could improve its utility.  First, new
+models need to be added to cover the range of sampling techniques and
+population dynamics commonly encountered. Table~\ref{tab:modspace} illustrates
+some of the gaps that need to be filled. In most cases, models to fill these
+gaps have not been developed so more research is needed.
 
 
-Second, each of the models in \um\ assumes independence among sites. However, 
-ecologists often use sampling methods such as cluster sampling that induce 
-spatial dependence. Typically, this is done for logistical convenience, but 
-because few methods are available to account for spatial correlation and 
-imperfect detection probability, the spatial dependence is often ignored.  
-Rather than this being a weakness of the sampling design, we envision that 
+Second, each of the models in \um\ assumes independence among sites. However,
+ecologists often use sampling methods such as cluster sampling that induce
+spatial dependence. Typically, this is done for logistical convenience, but
+because few methods are available to account for spatial correlation and
+imperfect detection probability, the spatial dependence is often ignored.
+Rather than this being a weakness of the sampling design, we envision that
 this dependence can be used as information regarding the spatial distribution
-of individuals.  
+of individuals.
 
-Third, many of the likelihoods are written in pure \rlang, which can be 
+Third, many of the likelihoods are written in pure \rlang, which can be
 slow for large problems. We are currently translating many of these
-functions into \progland{C++} with the help of the R package \pkg{Rcpp} 
+functions into \proglang{C++} with the help of the R package \pkg{Rcpp}
 \citep{Rcpp11}.
 
-Finally, Markov chain Monte Carlo methods could be implemented for all 
-of these models allowing for Bayesian inference.  An 
-important advantage of Bayesian analysis over classical methods is that the 
-latent abundance or occurrence variables can be treated as formal parameters.  
-Thus posterior distributions could easily be calculated for derived parameters 
-such as the proportion of sites occupied.  Bayesian analysis also would provide 
-a natural framework for incorporating additional sources of random variation.  
-For example, one could model heterogeneity among sites not accounted for by 
-covariates alone.  
+Finally, Markov chain Monte Carlo methods could be implemented for all
+of these models allowing for Bayesian inference.  An
+important advantage of Bayesian analysis over classical methods is that the
+latent abundance or occurrence variables can be treated as formal parameters.
+Thus posterior distributions could easily be calculated for derived parameters
+such as the proportion of sites occupied.  Bayesian analysis also would provide
+a natural framework for incorporating additional sources of random variation.
+For example, one could model heterogeneity among sites not accounted for by
+covariates alone.
 
-\begin{table}[bht] \small
+\begin{table}[bt] \small
 \begin{centering}
 \begin{tabular}{lccc}
 \hline
 Sampling method & \multicolumn{3}{c}{Population Dynamics} \\
-\cline{2-4} 
+\cline{2-4}
                             & Closed              & Open to         & Open to \\
-                            &                     & temporary       & demographic \\ 
+                            &                     & temporary       & demographic \\
                             &                     & emigration      & processess \\
-\hline                            
+\hline
 Occurrence sampling         & \code{occu}         & ---             & \code{colext} \\
 Repeated counts             & \code{pcount}       & ---             & \code{pcountOpen} \\
 Removal sampling, \\double observer sampling,  & \code{multinomPois}& \code{gmultmix}  & --- \\
@@ -1500,9 +1512,9 @@ and other multinomial designs \\
 Distance sampling           & \code{distsamp}     & ---               & --- \\
 \hline
 \end{tabular}
-\caption{Model fitting functions classified by sampling method and population 
-dynamics. Missing cells indicate models that have not been developed but are 
-likely to be investigated in the future.} 
+\caption{Model fitting functions classified by sampling method and population
+dynamics. Missing cells indicate models that have not been developed but are
+likely to be investigated in the future.}
 \label{tab:modspace}
 \end{centering}
 \end{table}
