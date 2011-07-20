@@ -91,4 +91,4 @@ R> tools:::texi2dvi("unmarked.tex", pdf=TRUE)
 R> 
 > proc.time()
    user  system elapsed 
-   7.25    0.26    9.15 
+   7.23    0.43    9.18 

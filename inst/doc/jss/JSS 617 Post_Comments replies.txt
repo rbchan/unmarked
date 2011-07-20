@@ -5,8 +5,15 @@ unmarked: An R package for Fitting Hierarchical Models of Wildlife Occurrence an
 For further instruction on JSS style requirements please see the JSS style
 manual (in particular section 2.1 Style Checklist) at http://www.jstatsoft.org/downloads/JSSstyle.zip
 
+
+DONE
+
+
 Please see FAQ at: http://www.jstatsoft.org/style
 And for further references please see RECENT JSS papers for detailed documentation and examples.
+
+DONE
+
 
 Manuscript:
 o As a reminder, please make sure that:
@@ -80,15 +87,35 @@ o All titles in the BibTex file should be in title style.
 i.e. Title style: All principal words should be capitalized. Please
 see FAQ for more details.
 
+DONE
+
 
 
 o In References please correct the following:
   - Springer-Verlag (not: Springer)
 
-o The reference for R is missing. Please add it to the References section.
+DONE
 
-o Please include a standalone replication of all code/examples used within the manuscript.
+o The reference for R is missing. Please add it to the References
+section.
+
+DONE
+
+
+
+o Please include a standalone replication of all code/examples used
+within the manuscript.
+
+unmarked.R CREATED USING Stangle
+
+
 
 o Please include all files that are referenced in the manuscript.
 
+SURELY NOT PUBLISHED PAPERS???
+
+
+
 o Please include a BibTex file (.bib).
+
+OK
