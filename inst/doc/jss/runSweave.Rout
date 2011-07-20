@@ -50,10 +50,10 @@ Loading required package: RcppArmadillo
  6 : echo term verbatim
  7 : echo term verbatim
  8 : echo term verbatim
- 9 : echo term verbatim
-10 : term verbatim
-11 : echo term verbatim
-12 : echo term verbatim
+ 9 : term verbatim
+10 : echo term verbatim
+11 : term verbatim
+12 : term verbatim
 13 : echo term verbatim
 14 : echo term verbatim
 15 : echo term verbatim
@@ -72,19 +72,23 @@ Loading required package: RcppArmadillo
 28 : echo term verbatim
 29 : echo term verbatim
 30 : echo term verbatim
-31 : echo
-32 : term verbatim pdf
+31 : echo term verbatim
+32 : echo term verbatim
+33 : echo
+34 : term verbatim pdf
 Loading required package: grid
 Loading required package: proto
-33 : echo term verbatim
-34 : term verbatim
-35 : term verbatim pdf
+35 : term verbatim
 36 : echo term verbatim
-37 : echo
+37 : term verbatim
+38 : term verbatim
+39 : term verbatim pdf
+40 : echo term verbatim
+41 : echo
 
 You can now run (pdf)latex on 'unmarked.tex'
 R> tools:::texi2dvi("unmarked.tex", pdf=TRUE)
 R> 
 > proc.time()
    user  system elapsed 
-   7.55    0.59    9.84 
+   7.25    0.26    9.15 

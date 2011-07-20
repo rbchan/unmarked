@@ -233,7 +233,7 @@ Abundance from detection / non-detection data & \code{occuRN}& unmarkedFrameOccu
 Abundance from repeated counts &\code{pcount}& unmarkedFramePCount & \citealt{Royle2004} \\
 Abundance from distance sampling &\code{distsamp}& unmarkedFrameDS & \citealt{Royle2004b} \\
 Abundance from multinomial counts &\code{multinomPois}& unmarkedFrameMPois & \citealt{Royle2004a} \\
-Abundance from repeated multinomial counts &\code{gmultmix} & unmarkedFrameGMM & \citealt{chandlerEAip_TempEm} \\
+Abundance from repeated multinomial counts &\code{gmultmix} & unmarkedFrameGMM & \citealt{chandlerEA_TempEm} \\
 Multi-season occupancy &\code{colext}& unmarkedMultFrame & \citealt{MacKenzie2003} \\
 Multi-season abundance & \code{pcountOpen} & unmarkedFramePCO & \citealt{DailMadsen2011} \\
 \hline
@@ -638,7 +638,7 @@ multinomial-Poisson model to distance sampling data.
 The flexibility of the \code{multinomPois} function is extended even
 further in the \code{gmultmix} function, which allows for a negative binomial
 mixture {\citep{DorazioEA05} and relaxes the population closure assumption
-\citep{chandlerEAip_TempEm}.
+\citep{chandlerEA_TempEm}.
 
 \section[unmarked usage]{\pkg{unmarked} usage}
 \label{sec:unmarked-usage}
@@ -879,9 +879,11 @@ required when creating an \code{unmarkedFrame} for the multinomial-Poisson
 model is to specify the particular type of data as either
 \code{removal}, \code{double}, or \code{userDefined}.
 
+
 \begin{Schunk}
 \begin{Sinput}
-R> ovenFrame <- unmarkedFrameMPois(ovendata.list$data, siteCovs = ovendata.list$covariates, 
+R> ovenFrame <- unmarkedFrameMPois(ovendata.list$data, 
++     siteCovs = ovendata.list$covariates, 
 +     type = "removal")
 R> ovenFrame[1:5, ]
 \end{Sinput}
@@ -895,6 +897,8 @@ Data frame representation of unmarkedFrame object.
 5   0   0   0   0 CAT017 25.00 122.5
 \end{Soutput}
 \end{Schunk}
+
+
 
 Notice the bracket method of subsetting used to display data from the first
 five sites.
@@ -1322,7 +1326,7 @@ the \code{predict} method (Figure~\ref{fig:pred}).
 
 \begin{figure}[th!]
   \centering
-\includegraphics{unmarked-032}
+\includegraphics{unmarked-034}
 \caption{Examine estimated abundance for Ovenbird removal data.  Band
   is 95\% confidence interval.}
 \label{fig:pred}
@@ -1332,11 +1336,13 @@ the \code{predict} method (Figure~\ref{fig:pred}).
 Next, we organize the fitted models with the \code{fitList} function and
 the use the \code{modSel} method to rank the models by AIC.
 
+
+
 \begin{Schunk}
 \begin{Sinput}
-R> fmList <- fitList(`lam(ufp+trba)p(.)` = fm.oven.1, `lam(ufp*trba)p(.)` = fm.oven.2, 
-+     `lam(ufp)p(.)` = fm.oven.3, `lam(trba)p(.)` = fm.oven.4, 
-+     `lam(.)p(.)` = fm.oven.5)
+R> fmList <- fitList(`lam(ufp+trba)p(.)` = fm.oven.1, 
++     `lam(ufp*trba)p(.)` = fm.oven.2, `lam(ufp)p(.)` = fm.oven.3, 
++     `lam(trba)p(.)` = fm.oven.4, `lam(.)p(.)` = fm.oven.5)
 R> modSel(fmList)
 \end{Sinput}
 \begin{Soutput}
@@ -1370,10 +1376,10 @@ Pearson's $\chi^2$.
 
 \begin{figure}[th!]
   \centering
-\includegraphics{unmarked-035}
+\includegraphics{unmarked-039}
 \caption{Graphical assessment of model fit by parametric bootstrapping.  The dashed
 line is the observed chi-squared statistic. The histogram approximates the
-expected sampling distribution}
+expected sampling distribution.}
 \label{fig:pb}
 \end{figure}
 
@@ -1440,7 +1446,7 @@ a natural framework for incorporating additional sources of random variation.
 For example, one could model heterogeneity among sites not accounted for by
 covariates alone.
 
-\begin{table}[bt] \small
+\begin{table}[bt] %\small
 \begin{centering}
 \begin{tabular}{lccc}
 \hline
