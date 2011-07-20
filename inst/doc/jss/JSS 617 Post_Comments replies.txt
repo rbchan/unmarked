@@ -28,9 +28,8 @@ which contains useful information such as how to set up an
 unmarkedFrame object from scratch in the package docs. Can it be
 bundled along with the paper?
 
-
-!!!!!!! ATTN !!!!!!!!!!!
-
+IN LOOKING AT THE Overview.Rnw, I FOUND THAT THE INFORMATIO WAS
+REDUNDANT AND CLEARER IN THE PRESENT DOCUMENT.
 
 
 o Please fix the title such that it is formatted in title style.
