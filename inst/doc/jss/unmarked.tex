@@ -9,7 +9,7 @@
 \usepackage{rotating}
 \usepackage{float}
 
-%% \usepackage{Sweave}
+%% need no \usepackage{Sweave.sty}
 
 \DeclareMathOperator{\logit}{logit}
 \DeclareMathOperator{\Bern}{Bernoulli}
@@ -29,7 +29,7 @@
   Wildlife Occurrence and Abundance}
 
 \Plainauthor{Ian Fiske, Richard Chandler}
-\Plaintitle{unmarked: An R Package for Fitting Hierarchical Models of
+\Plaintitle{Unmarked: An R Package for Fitting Hierarchical Models of
   Wildlife Occurrence and Abundance}
 \Shorttitle{\um: Analyze Wildlife Data in \proglang{R}}
 
@@ -105,8 +105,9 @@ which $J$ ``observations'' are made at $M$ spatial sample units during each of
 $T$ seasons. As an example, Table~\ref{tab:exdata} shows a typical
 repeated count dataset.
 
-\begin{table}[h] %\small
+\begin{table}[h]
 \begin{centering}
+%\footnotesize
 \begin{tabular}{lccccccc}
 \hline
 & \multicolumn{3}{c}{Season 1} && \multicolumn{3}{c}{Season 2} \\
@@ -149,7 +150,7 @@ are implemented in the software program \emph{MARK}
 arose to fill the void of models for data from studies of unmarked
 individuals involving explicit spatial sampling.
 
-\subsection{Hierarchical Models for Metapopulation Designs}
+\subsection{Hierarchical models for metapopulation designs}
 
 While many ecological studies produce data consistent with a
 metapopulation design, the development and implementation of
@@ -190,7 +191,7 @@ to resemble the syntax of \rlang's common fitting functions such as \code{lm}
 for fitting linear models.
 
 Although there is existing software for fitting some of these models
-\citetext{e.g. \citet{Hines2002}}, there are a number of advantages to a unified
+\citetext{e.g., \citet{Hines2002}}, there are a number of advantages to a unified
 framework within \rlang.  Many researchers are already familiar with \rlang\
 and use its powerful data manipulation and plotting capabilities.  Sometimes
 many species are analyzed in tandem, so that a common method of aggregating
@@ -219,19 +220,20 @@ developed. Table~\ref{tab:models} shows the models available as of version
 provides a summary of several of the most common sampling techniques and how
 \um\ can be used to model the resulting data.
 
-\begin{table}[ht] \footnotesize
+\begin{table}[ht] \small
 %\begin{sidewaystable} \small
 %\begin{tabular}{lp{2cm}cc}
-\begin{tabular}{lccc}
+\centering
+\begin{tabular}{p{4cm} c c c }
 \hline
 \textbf{Model} & \textbf{Fitting} & \textbf{Data} & \textbf{Citation} \\
                & \textbf{function}&& \\ \hline
-Occupancy from detection/non-detection & \code{occu} & unmarkedFrameOccu & \citealt{MacKenzie2002} \\
-Abundance from detection/non-detection & \code{occuRN}& unmarkedFrameOccu & \citealt{Royle2003} \\
+Occupancy from detection / non-detection data & \code{occu} & unmarkedFrameOccu & \citealt{MacKenzie2002} \\
+Abundance from detection / non-detection data & \code{occuRN}& unmarkedFrameOccu & \citealt{Royle2003} \\
 Abundance from repeated counts &\code{pcount}& unmarkedFramePCount & \citealt{Royle2004} \\
 Abundance from distance sampling &\code{distsamp}& unmarkedFrameDS & \citealt{Royle2004b} \\
 Abundance from multinomial counts &\code{multinomPois}& unmarkedFrameMPois & \citealt{Royle2004a} \\
-Repeated multinomial counts &\code{gmultmix} & unmarkedFrameGMM & \citealt{chandlerEAip_TempEm} \\
+Abundance from repeated multinomial counts &\code{gmultmix} & unmarkedFrameGMM & \citealt{chandlerEAip_TempEm} \\
 Multi-season occupancy &\code{colext}& unmarkedMultFrame & \citealt{MacKenzie2003} \\
 Multi-season abundance & \code{pcountOpen} & unmarkedFramePCO & \citealt{DailMadsen2011} \\
 \hline
@@ -718,8 +720,8 @@ Mallard ({\it Anas platyrhynchos}) point count dataset described in
 
 \begin{Schunk}
 \begin{Sinput}
-> library(unmarked)
-> data(mallard)
+R> library("unmarked")
+R> data("mallard")
 \end{Sinput}
 \end{Schunk}
 
@@ -730,7 +732,7 @@ the first five sites are shown below:
 
 \begin{Schunk}
 \begin{Sinput}
-> mallard.y[1:5, ]
+R> mallard.y[1:5, ]
 \end{Sinput}
 \begin{Soutput}
      y.1 y.2 y.3
@@ -747,7 +749,7 @@ The site-level covariates are columns of the \code{mallard.site}
 
 \begin{Schunk}
 \begin{Sinput}
-> mallard.site[1:5, ]
+R> mallard.site[1:5, ]
 \end{Sinput}
 \begin{Soutput}
     elev length forest
@@ -770,7 +772,7 @@ a mean of zero and unit variance.
 
 \begin{Schunk}
 \begin{Sinput}
-> mallard.obs$ivel[1:5, ]
+R> mallard.obs$ivel[1:5, ]
 \end{Sinput}
 \begin{Soutput}
      ivel.1 ivel.2 ivel.3
@@ -781,7 +783,7 @@ a mean of zero and unit variance.
 [5,]  0.638  0.880  1.042
 \end{Soutput}
 \begin{Sinput}
-> mallard.obs$date[1:5, ]
+R> mallard.obs$date[1:5, ]
 \end{Sinput}
 \begin{Soutput}
      date.1 date.2 date.3
@@ -803,14 +805,14 @@ the fitting function \code{pcount}.
 
 \begin{Schunk}
 \begin{Sinput}
-> mallardUMF <- unmarkedFramePCount(y = mallard.y, siteCovs = mallard.site, 
+R> mallardUMF <- unmarkedFramePCount(y = mallard.y, siteCovs = mallard.site, 
 +     obsCovs = mallard.obs)
 \end{Sinput}
 \end{Schunk}
 
 \begin{Schunk}
 \begin{Sinput}
-> summary(mallardUMF)
+R> summary(mallardUMF)
 \end{Sinput}
 \begin{Soutput}
 unmarkedFrame Object
@@ -867,7 +869,7 @@ information.
 
 \begin{Schunk}
 \begin{Sinput}
-> data(ovendata)
+R> data("ovendata")
 \end{Sinput}
 \end{Schunk}
 
@@ -879,9 +881,9 @@ model is to specify the particular type of data as either
 
 \begin{Schunk}
 \begin{Sinput}
-> ovenFrame <- unmarkedFrameMPois(ovendata.list$data, siteCovs = ovendata.list$covariates, 
+R> ovenFrame <- unmarkedFrameMPois(ovendata.list$data, siteCovs = ovendata.list$covariates, 
 +     type = "removal")
-> ovenFrame[1:5, ]
+R> ovenFrame[1:5, ]
 \end{Sinput}
 \begin{Soutput}
 Data frame representation of unmarkedFrame object.
@@ -909,7 +911,7 @@ dataset has dimensions $M=4$ sites, $T=2$ seasons, and $J=3$ visits per season.
 
 \begin{Schunk}
 \begin{Sinput}
-> y
+R> y
 \end{Sinput}
 \begin{Soutput}
       season1v1 season1v2 season1v3 season2v1 season2v2 season2v3
@@ -919,7 +921,7 @@ site3         0         0         0         0         0         0
 site4         1         1         1         1         1         1
 \end{Soutput}
 \begin{Sinput}
-> umf <- unmarkedMultFrame(y = y, numPrimary = 2)
+R> umf <- unmarkedMultFrame(y = y, numPrimary = 2)
 \end{Sinput}
 \end{Schunk}
 
@@ -940,7 +942,7 @@ removal occasions can be extracted from the ovenbird removal study using
 
 \begin{Schunk}
 \begin{Sinput}
-> ovenFrame[1:5, 1:3]
+R> ovenFrame[1:5, 1:3]
 \end{Sinput}
 \begin{Soutput}
 Data frame representation of unmarkedFrame object.
@@ -961,9 +963,9 @@ continuous (columns 2 and 3), and reinsert them back into the
 
 \begin{Schunk}
 \begin{Sinput}
-> sc <- siteCovs(ovenFrame)
-> sc[, 2:3] <- scale(sc[, 2:3])
-> siteCovs(ovenFrame) <- sc
+R> sc <- siteCovs(ovenFrame)
+R> sc[, 2:3] <- scale(sc[, 2:3])
+R> siteCovs(ovenFrame) <- sc
 \end{Sinput}
 \end{Schunk}
 
@@ -998,29 +1000,10 @@ repeated count model.
 
 \begin{Schunk}
 \begin{Sinput}
-> fm.mallard.1 <- pcount(~date + I(date^2) ~ elev + forest, 
+R> fm.mallard.1 <- pcount(~date + I(date^2) ~ elev + forest, 
 +     data = mallardUMF, K = 50)
-> fm.mallard.1
+R> fm.mallard.1
 \end{Sinput}
-\begin{Soutput}
-Call:
-pcount(formula = ~date + I(date^2) ~ elev + forest, data = mallardUMF, 
-    K = 50)
-
-Abundance:
-            Estimate    SE     z  P(>|z|)
-(Intercept)   -1.853 0.236 -7.87 3.62e-15
-elev          -1.232 0.234 -5.27 1.36e-07
-forest        -0.756 0.165 -4.60 4.32e-06
-
-Detection:
-            Estimate     SE       z P(>|z|)
-(Intercept)   0.3071 0.2149  1.4290 0.15301
-date         -0.4091 0.1482 -2.7612 0.00576
-I(date^2)    -0.0077 0.0853 -0.0903 0.92801
-
-AIC: 521.2001 
-\end{Soutput}
 \end{Schunk}
 
 This initial fit suggests that Mallard abundance decreases with
@@ -1031,27 +1014,10 @@ linear detection model as follows:
 
 \begin{Schunk}
 \begin{Sinput}
-> fm.mallard.2 <- pcount(~date ~ elev + forest, data = mallardUMF, 
+R> fm.mallard.2 <- pcount(~date ~ elev + forest, data = mallardUMF, 
 +     K = 50)
-> fm.mallard.2
+R> fm.mallard.2
 \end{Sinput}
-\begin{Soutput}
-Call:
-pcount(formula = ~date ~ elev + forest, data = mallardUMF, K = 50)
-
-Abundance:
-            Estimate    SE     z  P(>|z|)
-(Intercept)   -1.857 0.232 -7.99 1.37e-15
-elev          -1.236 0.230 -5.38 7.59e-08
-forest        -0.756 0.164 -4.60 4.23e-06
-
-Detection:
-            Estimate    SE     z  P(>|z|)
-(Intercept)    0.298 0.188  1.58 0.113983
-date          -0.401 0.114 -3.51 0.000449
-
-AIC: 519.2081 
-\end{Soutput}
 \end{Schunk}
 
 This seems to be a better model according to both the Wald p-value and
@@ -1072,25 +1038,9 @@ and average basal tree area (\code{trba}).
 
 \begin{Schunk}
 \begin{Sinput}
-> fm.oven.1 <- multinomPois(~1 ~ ufp + trba, ovenFrame)
-> fm.oven.1
+R> fm.oven.1 <- multinomPois(~1 ~ ufp + trba, ovenFrame)
+R> fm.oven.1
 \end{Sinput}
-\begin{Soutput}
-Call:
-multinomPois(formula = ~1 ~ ufp + trba, data = ovenFrame)
-
-Abundance:
-            Estimate    SE      z P(>|z|)
-(Intercept)    0.102 0.119  0.864   0.388
-ufp            0.100 0.126  0.794   0.427
-trba          -0.171 0.135 -1.262   0.207
-
-Detection:
- Estimate    SE    z P(>|z|)
-    0.288 0.233 1.24   0.217
-
-AIC: 326.1387 
-\end{Soutput}
 \end{Schunk}
 
 
@@ -1109,14 +1059,14 @@ entire model, or from the state or detection levels by specifying the
 
 \begin{Schunk}
 \begin{Sinput}
-> coef(fm.mallard.2)
+R> coef(fm.mallard.2)
 \end{Sinput}
 \begin{Soutput}
    lam(Int)   lam(elev) lam(forest)      p(Int)     p(date) 
  -1.8565048  -1.2355497  -0.7555178   0.2977558  -0.4006066 
 \end{Soutput}
 \begin{Sinput}
-> coef(fm.mallard.2, type = "state")
+R> coef(fm.mallard.2, type = "state")
 \end{Sinput}
 \begin{Soutput}
    lam(Int)   lam(elev) lam(forest) 
@@ -1128,7 +1078,7 @@ To check which types are available for a model, use the \code{names} method.
 
 \begin{Schunk}
 \begin{Sinput}
-> names(fm.mallard.2)
+R> names(fm.mallard.2)
 \end{Sinput}
 \begin{Soutput}
 [1] "state" "det"  
@@ -1143,7 +1093,7 @@ of the covariance matrix.
 
 \begin{Schunk}
 \begin{Sinput}
-> vcov(fm.mallard.2, type = "det")
+R> vcov(fm.mallard.2, type = "det")
 \end{Sinput}
 \begin{Soutput}
             p(Int)    p(date)
@@ -1157,7 +1107,7 @@ fashion.  By default, the asymptotic normal approximation is used.
 
 \begin{Schunk}
 \begin{Sinput}
-> confint(fm.oven.1, type = "state", level = 0.95)
+R> confint(fm.oven.1, type = "state", level = 0.95)
 \end{Sinput}
 \begin{Soutput}
                   0.025      0.975
@@ -1174,18 +1124,13 @@ profile limit.
 
 \begin{Schunk}
 \begin{Sinput}
-> ci <- confint(fm.oven.1, type = "state", level = 0.95, 
+R> ci <- confint(fm.oven.1, type = "state", level = 0.95, 
 +     method = "profile")
 \end{Sinput}
-\begin{Soutput}
-Profiling parameter 1 of 3 ... done.
-Profiling parameter 2 of 3 ... done.
-Profiling parameter 3 of 3 ... done.
-\end{Soutput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
-> ci
+R> ci
 \end{Sinput}
 \begin{Soutput}
                   0.025      0.975
@@ -1214,21 +1159,21 @@ bootstrapping is available for any of the models in \um.
 
 \begin{Schunk}
 \begin{Sinput}
-> set.seed(1234)
-> fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
+R> set.seed(1234)
+R> fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
 \end{Sinput}
 \end{Schunk}
 
 \begin{Schunk}
 \begin{Sinput}
-> SE(fm.oven.1, type = "state")
+R> SE(fm.oven.1, type = "state")
 \end{Sinput}
 \begin{Soutput}
  lambda(Int)  lambda(ufp) lambda(trba) 
    0.1185431    0.1262615    0.1353444 
 \end{Soutput}
 \begin{Sinput}
-> SE(fm.oven.1, type = "state", method = "nonparboot")
+R> SE(fm.oven.1, type = "state", method = "nonparboot")
 \end{Sinput}
 \begin{Soutput}
  lambda(Int)  lambda(ufp) lambda(trba) 
@@ -1241,7 +1186,7 @@ bootstrap samples can be drawn by calling \code{nonparboot} again.
 
 \begin{Schunk}
 \begin{Sinput}
-> fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
+R> fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
 \end{Sinput}
 \end{Schunk}
 
@@ -1257,7 +1202,7 @@ example, the following code estimates the log-abundance rate for a site with
 
 \begin{Schunk}
 \begin{Sinput}
-> (lc <- linearComb(fm.oven.1, type = "state", coefficients = c(1, 
+R> (lc <- linearComb(fm.oven.1, type = "state", coefficients = c(1, 
 +     0.5, 0)))
 \end{Sinput}
 \begin{Soutput}
@@ -1274,7 +1219,7 @@ following code requests the estimated log-abundance for sites with
 
 \begin{Schunk}
 \begin{Sinput}
-> (lc <- linearComb(fm.oven.1, type = "state", coefficients = matrix(c(1, 
+R> (lc <- linearComb(fm.oven.1, type = "state", coefficients = matrix(c(1, 
 +     0.5, 0, 1, 1, 0), 2, 3, byrow = TRUE)))
 \end{Sinput}
 \begin{Soutput}
@@ -1292,7 +1237,7 @@ standard errors, \um\ uses the samples that were drawn earlier.
 
 \begin{Schunk}
 \begin{Sinput}
-> SE(lc, method = "nonparboot")
+R> SE(lc, method = "nonparboot")
 \end{Sinput}
 \begin{Soutput}
 [1] 0.1354092 0.1659877
@@ -1312,7 +1257,7 @@ confidence interval of the original linear combination.
 
 \begin{Schunk}
 \begin{Sinput}
-> (btlc <- backTransform(lc))
+R> (btlc <- backTransform(lc))
 \end{Sinput}
 \begin{Soutput}
 Backtransformed linear combination(s) of Abundance estimate(s)
@@ -1324,13 +1269,13 @@ Backtransformed linear combination(s) of Abundance estimate(s)
 Transformation: exp 
 \end{Soutput}
 \begin{Sinput}
-> SE(btlc)
+R> SE(btlc)
 \end{Sinput}
 \begin{Soutput}
 [1] 0.1510141 0.2032272
 \end{Soutput}
 \begin{Sinput}
-> confint(btlc)
+R> confint(btlc)
 \end{Sinput}
 \begin{Soutput}
       0.025    0.975
@@ -1348,19 +1293,19 @@ single predictors, and a model with no predictors.
 
 \begin{Schunk}
 \begin{Sinput}
-> fm.oven.2 <- update(fm.oven.1, formula = ~1 ~ ufp * trba)
-> fm.oven.3 <- update(fm.oven.1, formula = ~1 ~ ufp)
-> fm.oven.4 <- update(fm.oven.1, formula = ~1 ~ trba)
-> fm.oven.5 <- update(fm.oven.1, formula = ~1 ~ 1)
+R> fm.oven.2 <- update(fm.oven.1, formula = ~1 ~ ufp * trba)
+R> fm.oven.3 <- update(fm.oven.1, formula = ~1 ~ ufp)
+R> fm.oven.4 <- update(fm.oven.1, formula = ~1 ~ trba)
+R> fm.oven.5 <- update(fm.oven.1, formula = ~1 ~ 1)
 \end{Sinput}
 \end{Schunk}
 
 
 \begin{Schunk}
 \begin{Sinput}
-> preddata <- predict(fm.oven.4, type = "state", appendData = TRUE)
-> library(ggplot2)
-> qplot(trba, Predicted, data = preddata, geom = "line", 
+R> preddata <- predict(fm.oven.4, type = "state", appendData = TRUE)
+R> library(ggplot2)
+R> qplot(trba, Predicted, data = preddata, geom = "line", 
 +     xlab = "Scaled Basal Tree Area", ylab = "Estimated Abundance") + 
 +     geom_ribbon(aes(x = trba, ymin = lower, ymax = upper), 
 +         alpha = 0.1) + theme_bw()
@@ -1389,10 +1334,10 @@ the use the \code{modSel} method to rank the models by AIC.
 
 \begin{Schunk}
 \begin{Sinput}
-> fmList <- fitList(`lam(ufp+trba)p(.)` = fm.oven.1, `lam(ufp*trba)p(.)` = fm.oven.2, 
+R> fmList <- fitList(`lam(ufp+trba)p(.)` = fm.oven.1, `lam(ufp*trba)p(.)` = fm.oven.2, 
 +     `lam(ufp)p(.)` = fm.oven.3, `lam(trba)p(.)` = fm.oven.4, 
 +     `lam(.)p(.)` = fm.oven.5)
-> modSel(fmList)
+R> modSel(fmList)
 \end{Sinput}
 \begin{Soutput}
                   nPars    AIC delta AICwt cumltvWt
@@ -1434,18 +1379,18 @@ expected sampling distribution}
 
 \begin{Schunk}
 \begin{Sinput}
-> set.seed(1234)
-> chisq <- function(fm) {
+R> set.seed(1234)
+R> chisq <- function(fm) {
 +     observed <- getY(fm@data)
 +     expected <- fitted(fm)
 +     sum((observed - expected)^2/expected)
 + }
-> pb <- parboot(fm.oven.1, statistic = chisq, nsim = 200)
+R> pb <- parboot(fm.oven.1, statistic = chisq, nsim = 200)
 \end{Sinput}
 \end{Schunk}
 \begin{Schunk}
 \begin{Sinput}
-> plot(pb, main = "")
+R> plot(pb, main = "")
 \end{Sinput}
 \end{Schunk}
 

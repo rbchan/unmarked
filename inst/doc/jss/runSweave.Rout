@@ -1,0 +1,90 @@
+
+R version 2.13.0 (2011-04-13)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-pc-mingw32/x64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(cacheSweave)
+Loading required package: filehash
+filehash: Simple key-value database (2.1-1 2010-10-04)
+Loading required package: stashR
+A Set of Tools for Administering SHared Repositories (0.3-3 2009-03-26)
+Warning messages:
+1: package 'cacheSweave' was built under R version 2.13.1 
+2: package 'filehash' was built under R version 2.13.1 
+3: package 'stashR' was built under R version 2.13.1 
+> Sweave("unmarked.Rnw", driver=cacheSweaveDriver)
+Writing to file unmarked.tex
+Processing code chunks with options ...
+ 1 : term verbatim
+ 2 : echo term verbatim
+Loading required package: reshape
+Loading required package: plyr
+
+Attaching package: 'reshape'
+
+The following object(s) are masked from 'package:plyr':
+
+    rename, round_any
+
+Loading required package: lattice
+Loading required package: Rcpp
+Loading required package: RcppArmadillo
+ 3 : echo term verbatim
+ 4 : echo term verbatim
+ 5 : echo term verbatim
+ 6 : echo term verbatim
+ 7 : echo term verbatim
+ 8 : echo term verbatim
+ 9 : echo term verbatim
+10 : term verbatim
+11 : echo term verbatim
+12 : echo term verbatim
+13 : echo term verbatim
+14 : echo term verbatim
+15 : echo term verbatim
+16 : echo term verbatim
+17 : echo term verbatim
+18 : echo term verbatim
+19 : echo term verbatim
+20 : echo term verbatim
+21 : echo term verbatim
+22 : echo term verbatim
+23 : echo term verbatim
+24 : echo term verbatim
+25 : echo term verbatim
+26 : echo term verbatim
+27 : echo term verbatim
+28 : echo term verbatim
+29 : echo term verbatim
+30 : echo term verbatim
+31 : echo
+32 : term verbatim pdf
+Loading required package: grid
+Loading required package: proto
+33 : echo term verbatim
+34 : term verbatim
+35 : term verbatim pdf
+36 : echo term verbatim
+37 : echo
+
+You can now run (pdf)latex on 'unmarked.tex'
+R> tools:::texi2dvi("unmarked.tex", pdf=TRUE)
+R> 
+> proc.time()
+   user  system elapsed 
+   7.55    0.59    9.84 

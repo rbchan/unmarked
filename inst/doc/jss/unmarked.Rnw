@@ -5,6 +5,7 @@
 <<echo=FALSE>>=
 options(device.ask.default=FALSE)
 options(width=70)
+options(prompt="R> ")
 @
 
 \documentclass[article,shortnames]{jss}
@@ -13,7 +14,7 @@ options(width=70)
 \usepackage{rotating}
 \usepackage{float}
 
-%% \usepackage{Sweave}
+%% need no \usepackage{Sweave.sty}
 
 \DeclareMathOperator{\logit}{logit}
 \DeclareMathOperator{\Bern}{Bernoulli}
@@ -33,7 +34,7 @@ options(width=70)
   Wildlife Occurrence and Abundance}
 
 \Plainauthor{Ian Fiske, Richard Chandler}
-\Plaintitle{unmarked: An R Package for Fitting Hierarchical Models of
+\Plaintitle{Unmarked: An R Package for Fitting Hierarchical Models of
   Wildlife Occurrence and Abundance}
 \Shorttitle{\um: Analyze Wildlife Data in \proglang{R}}
 
@@ -109,8 +110,9 @@ which $J$ ``observations'' are made at $M$ spatial sample units during each of
 $T$ seasons. As an example, Table~\ref{tab:exdata} shows a typical
 repeated count dataset.
 
-\begin{table}[h] %\small
+\begin{table}[h]
 \begin{centering}
+%\footnotesize
 \begin{tabular}{lccccccc}
 \hline
 & \multicolumn{3}{c}{Season 1} && \multicolumn{3}{c}{Season 2} \\
@@ -153,7 +155,7 @@ are implemented in the software program \emph{MARK}
 arose to fill the void of models for data from studies of unmarked
 individuals involving explicit spatial sampling.
 
-\subsection{Hierarchical Models for Metapopulation Designs}
+\subsection{Hierarchical models for metapopulation designs}
 
 While many ecological studies produce data consistent with a
 metapopulation design, the development and implementation of
@@ -194,7 +196,7 @@ to resemble the syntax of \rlang's common fitting functions such as \code{lm}
 for fitting linear models.
 
 Although there is existing software for fitting some of these models
-\citetext{e.g. \citet{Hines2002}}, there are a number of advantages to a unified
+\citetext{e.g., \citet{Hines2002}}, there are a number of advantages to a unified
 framework within \rlang.  Many researchers are already familiar with \rlang\
 and use its powerful data manipulation and plotting capabilities.  Sometimes
 many species are analyzed in tandem, so that a common method of aggregating
@@ -223,19 +225,20 @@ developed. Table~\ref{tab:models} shows the models available as of version
 provides a summary of several of the most common sampling techniques and how
 \um\ can be used to model the resulting data.
 
-\begin{table}[ht] \footnotesize
+\begin{table}[ht] \small
 %\begin{sidewaystable} \small
 %\begin{tabular}{lp{2cm}cc}
-\begin{tabular}{lccc}
+\centering
+\begin{tabular}{p{4cm} c c c }
 \hline
 \textbf{Model} & \textbf{Fitting} & \textbf{Data} & \textbf{Citation} \\
                & \textbf{function}&& \\ \hline
-Occupancy from detection/non-detection & \code{occu} & unmarkedFrameOccu & \citealt{MacKenzie2002} \\
-Abundance from detection/non-detection & \code{occuRN}& unmarkedFrameOccu & \citealt{Royle2003} \\
+Occupancy from detection / non-detection data & \code{occu} & unmarkedFrameOccu & \citealt{MacKenzie2002} \\
+Abundance from detection / non-detection data & \code{occuRN}& unmarkedFrameOccu & \citealt{Royle2003} \\
 Abundance from repeated counts &\code{pcount}& unmarkedFramePCount & \citealt{Royle2004} \\
 Abundance from distance sampling &\code{distsamp}& unmarkedFrameDS & \citealt{Royle2004b} \\
 Abundance from multinomial counts &\code{multinomPois}& unmarkedFrameMPois & \citealt{Royle2004a} \\
-Repeated multinomial counts &\code{gmultmix} & unmarkedFrameGMM & \citealt{chandlerEAip_TempEm} \\
+Abundance from repeated multinomial counts &\code{gmultmix} & unmarkedFrameGMM & \citealt{chandlerEAip_TempEm} \\
 Multi-season occupancy &\code{colext}& unmarkedMultFrame & \citealt{MacKenzie2003} \\
 Multi-season abundance & \code{pcountOpen} & unmarkedFramePCO & \citealt{DailMadsen2011} \\
 \hline
@@ -721,8 +724,8 @@ Mallard ({\it Anas platyrhynchos}) point count dataset described in
 \citet{Kery2005}.
 
 <<>>=
-library(unmarked)
-data(mallard)
+library("unmarked")
+data("mallard")
 @
 
 Loading the mallard data makes three objects available within the \rlang\
@@ -793,7 +796,7 @@ a matrix named \code{data} containing the removal counts for 4 visits and a
 information.
 
 <<>>=
-data(ovendata)
+data("ovendata")
 @
 
 This loads a \code{list} named ovendata.list with components for the
@@ -1078,7 +1081,7 @@ removal data, including an interaction model, two models with
 single predictors, and a model with no predictors.
 
 <<cache=true>>=
-fm.oven.2 <- update(fm.oven.1, formula = ~ 1 ~ ufp*trba)
+fm.oven.2 <- update(fm.oven.1, formula = ~ 1 ~ ufp * trba)
 fm.oven.3 <- update(fm.oven.1, formula = ~ 1 ~ ufp)
 fm.oven.4 <- update(fm.oven.1, formula = ~ 1 ~ trba)
 fm.oven.5 <- update(fm.oven.1, formula = ~ 1 ~ 1)
@@ -1165,7 +1168,7 @@ plot(pb, main = "", xlab=expression(chi^2))
 @
 \caption{Graphical assessment of model fit by parametric bootstrapping.  The dashed
 line is the observed chi-squared statistic. The histogram approximates the
-expected sampling distribution}
+expected sampling distribution.}
 \label{fig:pb}
 \end{figure}
 

@@ -1,0 +1,78 @@
+617 Fiske, Chandler
+
+unmarked: An R package for Fitting Hierarchical Models of Wildlife Occurrence and Abundance
+
+For further instruction on JSS style requirements please see the JSS style
+manual (in particular section 2.1 Style Checklist) at http://www.jstatsoft.org/downloads/JSSstyle.zip
+
+Please see FAQ at: http://www.jstatsoft.org/style
+And for further references please see RECENT JSS papers for detailed documentation and examples.
+
+Manuscript:
+o As a reminder, please make sure that:
+  - \proglang, \pkg and \code have been used for highlighting throughout
+the paper (including titles and references), except where explicitly escaped.
+
+o Please incorporate the information from the "Overview.Rnw" vignette which contains useful information such as how to set up an unmarkedFrame object from scratch in the package docs. Can it be bundled along with the paper?
+
+o Please fix the title such that it is formatted in title style.
+i.e. Title style: All principal words should be capitalized. Please
+see FAQ for more details.
+
+DONE
+
+o When using "e.g." and "i.e." add a comma after the period to keep
+LaTeX from interpreting them as the end of a sentence, i.e.: "e.g., "
+and "i.e., ".
+
+DONE
+
+o The first argument of data() and library() should always be quoted,
+e.g., library("foo").
+
+DONE
+
+o Please use "R>" as the command prompt instead of ">".
+
+DONE
+
+o For code within the manuscript, please make sure to see the FAQ on
+"How should code be formatted within the manuscript?"
+
+DONE
+
+o All captions should appear below the corresponding figure/table. The
+captions should be in sentence style and end with a period. See page
+22. Please fix in all places that apply.
+
+DONE
+
+o All text must be within the margins of the manuscript. For example,
+page 20 is outside the margins. Please fix all places that
+apply. Please see FAQ.
+
+
+
+Please make sure that:
+o Figures, tables and equations are marked with a \label and referred to by
+    \ref, e.g., "Figure~\ref{...}".
+o To refer to equations, one can use either
+      Equation~\ref{...}
+    (with capitalization) or
+      (\ref{...})
+    with the former being preferred if the number of equation references is
+	not too large.
+
+o All titles in the BibTex file should be in title style.
+i.e. Title style: All principal words should be capitalized. Please see FAQ for more details.
+
+o In References please correct the following:
+  - Springer-Verlag (not: Springer)
+
+o The reference for R is missing. Please add it to the References section.
+
+o Please include a standalone replication of all code/examples used within the manuscript.
+
+o Please include all files that are referenced in the manuscript.
+
+o Please include a BibTex file (.bib).
