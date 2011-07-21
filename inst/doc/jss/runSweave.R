@@ -1,4 +1,4 @@
 library(cacheSweave)
-Sweave("unmarked.Rnw", driver=cacheSweaveDriver)
-tools:::texi2dvi("unmarked.tex", pdf=TRUE)
+Sweave("jss617.Rnw", driver=cacheSweaveDriver)
+tools:::texi2dvi("jss617.tex", pdf=TRUE)
 

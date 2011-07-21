@@ -1,7 +1,12 @@
 %% use
 %% library(cacheSweave)
-%% Sweave("unmarked.Rnw", driver = cacheSweaveDriver)
+%% Sweave("jss617.Rnw", driver = cacheSweaveDriver)
 
+<<echo=FALSE>>=
+options(device.ask.default=FALSE)
+options(width=70)
+options(prompt="R> ")
+@
 
 \documentclass[article,shortnames]{jss}
 \usepackage{amsmath,amssymb}
@@ -718,48 +723,26 @@ Here is an example of creating an \code{unmarkedFrame} for repeated count data
 Mallard ({\it Anas platyrhynchos}) point count dataset described in
 \citet{Kery2005}.
 
-\begin{Schunk}
-\begin{Sinput}
-R> library("unmarked")
-R> data("mallard")
-\end{Sinput}
-\end{Schunk}
+<<>>=
+library("unmarked")
+data("mallard")
+@
 
 Loading the mallard data makes three objects available within the \rlang\
 workspace. The matrix \code{mallard.y} contains the number of mallards counted
 at each of $M=239$ sites (rows) on $J=3$ visits (columns).  Counts from
 the first five sites are shown below:
 
-\begin{Schunk}
-\begin{Sinput}
-R> mallard.y[1:5, ]
-\end{Sinput}
-\begin{Soutput}
-     y.1 y.2 y.3
-[1,]   0   0   0
-[2,]   0   0   0
-[3,]   3   2   1
-[4,]   0   0   0
-[5,]   3   0   3
-\end{Soutput}
-\end{Schunk}
+<<>>=
+mallard.y[1:5,]
+@
 
 The site-level covariates are columns of the \code{mallard.site}
 \code{data.frame}, which also has $M=239$ rows.
 
-\begin{Schunk}
-\begin{Sinput}
-R> mallard.site[1:5, ]
-\end{Sinput}
-\begin{Soutput}
-    elev length forest
-1 -1.173  0.801 -1.156
-2 -1.127  0.115 -0.501
-3 -0.198 -0.479 -0.101
-4 -0.105  0.315  0.008
-5 -1.034 -1.102 -1.193
-\end{Soutput}
-\end{Schunk}
+<<>>=
+mallard.site[1:5,]
+@
 
 The site-level covariates are elevation (elev), transect length (length),
 and the proportion of forest covering the site (forest).
@@ -770,30 +753,10 @@ Here, the two observation-level covariates are a measure of survey effort
 (ivel) and the date of the survey (date). Both have been standardized to
 a mean of zero and unit variance.
 
-\begin{Schunk}
-\begin{Sinput}
-R> mallard.obs$ivel[1:5, ]
-\end{Sinput}
-\begin{Soutput}
-     ivel.1 ivel.2 ivel.3
-[1,] -0.506 -0.506 -0.506
-[2,] -0.934 -0.991 -1.162
-[3,] -1.136 -1.339 -1.610
-[4,] -0.819 -0.927 -1.197
-[5,]  0.638  0.880  1.042
-\end{Soutput}
-\begin{Sinput}
-R> mallard.obs$date[1:5, ]
-\end{Sinput}
-\begin{Soutput}
-     date.1 date.2 date.3
-[1,] -1.761  0.310  1.381
-[2,] -2.904 -1.047  0.596
-[3,] -1.690 -0.476  1.453
-[4,] -2.190 -0.690  1.239
-[5,] -1.833  0.167  1.381
-\end{Soutput}
-\end{Schunk}
+<<>>=
+mallard.obs$ivel[1:5,]
+mallard.obs$date[1:5,]
+@
 
 The unmarkedFrame constructors can accept \ocovs\ in this \code{list} format or
 as a \code{data.frame} in the format described in
@@ -803,49 +766,14 @@ The following call to \code{unmarkedFramePCount} organizes the observations
 and covariates into an object that can be passed to the data argument of
 the fitting function \code{pcount}.
 
-\begin{Schunk}
-\begin{Sinput}
-R> mallardUMF <- unmarkedFramePCount(y = mallard.y, siteCovs = mallard.site, 
-+     obsCovs = mallard.obs)
-\end{Sinput}
-\end{Schunk}
+<<>>=
+mallardUMF <- unmarkedFramePCount(y = mallard.y,
+    siteCovs = mallard.site, obsCovs = mallard.obs)
+@
 
-\begin{Schunk}
-\begin{Sinput}
-R> summary(mallardUMF)
-\end{Sinput}
-\begin{Soutput}
-unmarkedFrame Object
-
-239 sites
-Maximum number of observations per site: 3 
-Mean number of observations per site: 2.76 
-Sites with at least one detection: 40 
-
-Tabulation of y observations:
-   0    1    2    3    4    7   10   12 <NA> 
- 576   54   11    9    6    1    1    1   58 
-
-Site-level covariates:
-      elev                length               forest          
- Min.   :-1.436e+00   Min.   :-4.945e+00   Min.   :-1.265e+00  
- 1st Qu.:-9.565e-01   1st Qu.:-5.630e-01   1st Qu.:-9.560e-01  
- Median :-1.980e-01   Median : 4.500e-02   Median :-6.500e-02  
- Mean   :-4.603e-05   Mean   :-2.929e-05   Mean   : 6.695e-05  
- 3rd Qu.: 9.940e-01   3rd Qu.: 6.260e-01   3rd Qu.: 7.900e-01  
- Max.   : 2.434e+00   Max.   : 2.255e+00   Max.   : 2.299e+00  
-
-Observation-level covariates:
-      ivel                 date           
- Min.   :-1.753e+00   Min.   :-2.904e+00  
- 1st Qu.:-6.660e-01   1st Qu.:-1.119e+00  
- Median :-1.390e-01   Median :-1.190e-01  
- Mean   : 1.504e-05   Mean   : 7.259e-05  
- 3rd Qu.: 5.490e-01   3rd Qu.: 1.310e+00  
- Max.   : 5.980e+00   Max.   : 3.810e+00  
- NA's   : 5.200e+01   NA's   : 4.200e+01  
-\end{Soutput}
-\end{Schunk}
+<<>>=
+summary(mallardUMF)
+@
 
 The summary reveals that only 40 sites have at least one
 detection. Note that the ``number of observations'' in this case refers to
@@ -867,11 +795,9 @@ a matrix named \code{data} containing the removal counts for 4 visits and a
 \code{data.frame} called \code{covariates} containing site-level covariates
 information.
 
-\begin{Schunk}
-\begin{Sinput}
-R> data("ovendata")
-\end{Sinput}
-\end{Schunk}
+<<>>=
+data("ovendata")
+@
 
 This loads a \code{list} named ovendata.list with components for the
 observed count data and covariates.  The only additional specification
@@ -879,25 +805,18 @@ required when creating an \code{unmarkedFrame} for the multinomial-Poisson
 model is to specify the particular type of data as either
 \code{removal}, \code{double}, or \code{userDefined}.
 
+<<echo=false>>=
+options(width=50)
+@
 
-\begin{Schunk}
-\begin{Sinput}
-R> ovenFrame <- unmarkedFrameMPois(ovendata.list$data, 
-+     siteCovs = ovendata.list$covariates, 
-+     type = "removal")
-R> ovenFrame[1:5, ]
-\end{Sinput}
-\begin{Soutput}
-Data frame representation of unmarkedFrame object.
-  y.1 y.2 y.3 y.4   site   ufp  trba
-1   0   0   0   0 CAT003 23.43  62.5
-2   1   0   0   0 CAT004 15.62  70.0
-3   0   0   0   0 CAT011 35.54  90.0
-4   0   0   0   0 CAT013 25.78  60.0
-5   0   0   0   0 CAT017 25.00 122.5
-\end{Soutput}
-\end{Schunk}
+<<>>=
+ovenFrame <- unmarkedFrameMPois(ovendata.list$data, siteCovs = ovendata.list$covariates, type="removal")
+ovenFrame[1:5,]
+@
 
+<<echo=false>>=
+options(width=70)
+@
 
 
 Notice the bracket method of subsetting used to display data from the first
@@ -910,24 +829,23 @@ than one season. The following example demonstrates how to prepare a toy
 dataset for the \code{colext} fitting function. This detection/non-detection
 dataset has dimensions $M=4$ sites, $T=2$ seasons, and $J=3$ visits per season.
 
+<<echo=false>>=
+M <- 4
+J <- 2
+T <- 3
+y <- matrix(0:1, nrow=M, ncol=J*T)
+rownames(y) <- paste("site", 1:M, sep="")
+cn <- paste("season", rep(1:2, each=3), sep="")
+cn <- paste(cn, paste("v", rep(1:3, 2), sep=""), sep="")
+colnames(y) <- cn
+@
 
 \newpage
 
-\begin{Schunk}
-\begin{Sinput}
-R> y
-\end{Sinput}
-\begin{Soutput}
-      season1v1 season1v2 season1v3 season2v1 season2v2 season2v3
-site1         0         0         0         0         0         0
-site2         1         1         1         1         1         1
-site3         0         0         0         0         0         0
-site4         1         1         1         1         1         1
-\end{Soutput}
-\begin{Sinput}
-R> umf <- unmarkedMultFrame(y = y, numPrimary = 2)
-\end{Sinput}
-\end{Schunk}
+<<>>=
+y
+umf <- unmarkedMultFrame(y=y, numPrimary=2)
+@
 
 The function \code{unmarkedMultFrame} accepts \scovs\ and \ocovs\ like all
 other unmarkedFrame classes, and it also has an argument \code{yearlySiteCovs}
@@ -944,20 +862,9 @@ subsetted in a manner similar to the methods used to manipulate standard
 notation. For example, the first five rows of data and all three
 removal occasions can be extracted from the ovenbird removal study using
 
-\begin{Schunk}
-\begin{Sinput}
-R> ovenFrame[1:5, 1:3]
-\end{Sinput}
-\begin{Soutput}
-Data frame representation of unmarkedFrame object.
-  y.1 y.2 y.3   site   ufp  trba
-1   0   0   0 CAT003 23.43  62.5
-2   1   0   0 CAT004 15.62  70.0
-3   0   0   0 CAT011 35.54  90.0
-4   0   0   0 CAT013 25.78  60.0
-5   0   0   0 CAT017 25.00 122.5
-\end{Soutput}
-\end{Schunk}
+<<eval=true>>=
+ovenFrame[1:5, 1:3]
+@
 
 In some cases, the covariate data may need to be manipulated after the
 \code{unmarkedFrame} has been created. The following code demonstrates
@@ -965,13 +872,11 @@ how to extract the site-level covariates, standardize those that are
 continuous (columns 2 and 3), and reinsert them back into the
 \code{unmarkedFrame}.
 
-\begin{Schunk}
-\begin{Sinput}
-R> sc <- siteCovs(ovenFrame)
-R> sc[, 2:3] <- scale(sc[, 2:3])
-R> siteCovs(ovenFrame) <- sc
-\end{Sinput}
-\end{Schunk}
+<<>>=
+sc <- siteCovs(ovenFrame)
+sc[,2:3] <- scale(sc[,2:3])
+siteCovs(ovenFrame) <- sc
+@
 
 
 
@@ -1002,13 +907,10 @@ Section~\ref{sec:repeated-count-data}, covariates of detection are on the
 logit-scale and covariates of abundance are on the log scale for the
 repeated count model.
 
-\begin{Schunk}
-\begin{Sinput}
-R> fm.mallard.1 <- pcount(~date + I(date^2) ~ elev + forest, 
-+     data = mallardUMF, K = 50)
-R> fm.mallard.1
-\end{Sinput}
-\end{Schunk}
+<<cache=TRUE,eval=TRUE>>=
+fm.mallard.1 <- pcount(~ date + I(date^2) ~ elev + forest, data = mallardUMF, K=50)
+fm.mallard.1
+@
 
 This initial fit suggests that Mallard abundance decreases with
 increasing elevation and forest.  It also looks like a linear model
@@ -1016,13 +918,10 @@ might suffice for the detection model, so we subsequently fit the
 linear detection model as follows:
 
 
-\begin{Schunk}
-\begin{Sinput}
-R> fm.mallard.2 <- pcount(~date ~ elev + forest, data = mallardUMF, 
-+     K = 50)
-R> fm.mallard.2
-\end{Sinput}
-\end{Schunk}
+<<cache=TRUE,eval=TRUE>>=
+fm.mallard.2 <- pcount(~ date ~ elev + forest, data = mallardUMF, K=50)
+fm.mallard.2
+@
 
 This seems to be a better model according to both the Wald p-value and
 AIC.  The result suggests that detection probability decreases during the
@@ -1040,12 +939,10 @@ because this information is already stored in the \code{ovenFrame} data.
 We model abundance as a function of understory forest coverage (\code{ufp})
 and average basal tree area (\code{trba}).
 
-\begin{Schunk}
-\begin{Sinput}
-R> fm.oven.1 <- multinomPois(~1 ~ ufp + trba, ovenFrame)
-R> fm.oven.1
-\end{Sinput}
-\end{Schunk}
+<<cache=true>>=
+fm.oven.1 <- multinomPois(~ 1 ~ ufp + trba, ovenFrame)
+fm.oven.1
+@
 
 
 \subsection{Examining fitted models}
@@ -1061,33 +958,16 @@ For example, we can extract estimated coefficients either from the
 entire model, or from the state or detection levels by specifying the
 \code{type} argument.
 
-\begin{Schunk}
-\begin{Sinput}
-R> coef(fm.mallard.2)
-\end{Sinput}
-\begin{Soutput}
-   lam(Int)   lam(elev) lam(forest)      p(Int)     p(date) 
- -1.8565048  -1.2355497  -0.7555178   0.2977558  -0.4006066 
-\end{Soutput}
-\begin{Sinput}
-R> coef(fm.mallard.2, type = "state")
-\end{Sinput}
-\begin{Soutput}
-   lam(Int)   lam(elev) lam(forest) 
- -1.8565048  -1.2355497  -0.7555178 
-\end{Soutput}
-\end{Schunk}
+<<>>=
+coef(fm.mallard.2)
+coef(fm.mallard.2, type = "state")
+@
 
 To check which types are available for a model, use the \code{names} method.
 
-\begin{Schunk}
-\begin{Sinput}
-R> names(fm.mallard.2)
-\end{Sinput}
-\begin{Soutput}
-[1] "state" "det"  
-\end{Soutput}
-\end{Schunk}
+<<>>=
+names(fm.mallard.2)
+@
 
 Similarly, the \code{vcov} function extracts the covariance matrix of
 the estimates, using the observed Fisher information by default. \code{vcov}
@@ -1095,54 +975,28 @@ also accepts a \code{type} argument, as does the convenience method
 \code{SE}, which returns standard errors from the square root of the diagonal
 of the covariance matrix.
 
-\begin{Schunk}
-\begin{Sinput}
-R> vcov(fm.mallard.2, type = "det")
-\end{Sinput}
-\begin{Soutput}
-            p(Int)    p(date)
-p(Int)  0.03549024 0.00344853
-p(date) 0.00344853 0.01302865
-\end{Soutput}
-\end{Schunk}
+<<>>=
+vcov(fm.mallard.2, type = "det")
+@
 
 Extracting confidence intervals proceeds in a similar
 fashion.  By default, the asymptotic normal approximation is used.
 
-\begin{Schunk}
-\begin{Sinput}
-R> confint(fm.oven.1, type = "state", level = 0.95)
-\end{Sinput}
-\begin{Soutput}
-                  0.025      0.975
-lambda(Int)  -0.1299722 0.33470834
-lambda(ufp)  -0.1471741 0.34776195
-lambda(trba) -0.4361311 0.09440937
-\end{Soutput}
-\end{Schunk}
+<<>>=
+confint(fm.oven.1, type = "state", level = 0.95)
+@
 
 Profile confidence intervals are also available upon request.  This
 can take some time, however, because for each parameter, a nested
 optimization within a root-finding algorithm is being used to find the
 profile limit.
 
-\begin{Schunk}
-\begin{Sinput}
-R> ci <- confint(fm.oven.1, type = "state", level = 0.95, 
-+     method = "profile")
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> ci
-\end{Sinput}
-\begin{Soutput}
-                  0.025      0.975
-lambda(Int)  -0.1390786 0.32676614
-lambda(ufp)  -0.1477724 0.34811770
-lambda(trba) -0.4368444 0.09469605
-\end{Soutput}
-\end{Schunk}
+<<cache=TRUE>>=
+ci <- confint(fm.oven.1, type = "state", level = 0.95, method = "profile")
+@
+<<>>=
+ci
+@
 
 The profile confidence intervals and normal approximations are quite
 similar here.
@@ -1161,38 +1015,22 @@ summaries.  To illustrate, we use the removal sampling data instead of the
 repeated count data because computations are much faster; however,
 bootstrapping is available for any of the models in \um.
 
-\begin{Schunk}
-\begin{Sinput}
-R> set.seed(1234)
-R> fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
-\end{Sinput}
-\end{Schunk}
+<<cache=TRUE>>=
+set.seed(1234)
+fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
+@
 
-\begin{Schunk}
-\begin{Sinput}
-R> SE(fm.oven.1, type = "state")
-\end{Sinput}
-\begin{Soutput}
- lambda(Int)  lambda(ufp) lambda(trba) 
-   0.1185431    0.1262615    0.1353444 
-\end{Soutput}
-\begin{Sinput}
-R> SE(fm.oven.1, type = "state", method = "nonparboot")
-\end{Sinput}
-\begin{Soutput}
- lambda(Int)  lambda(ufp) lambda(trba) 
-   0.1256949    0.1156153    0.1197142 
-\end{Soutput}
-\end{Schunk}
+<<>>=
+SE(fm.oven.1, type = "state")
+SE(fm.oven.1, type = "state", method = "nonparboot")
+@
 
 The bootstrapping and asymptotic standard errors are similar. Additional
 bootstrap samples can be drawn by calling \code{nonparboot} again.
 
-\begin{Schunk}
-\begin{Sinput}
-R> fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
-\end{Sinput}
-\end{Schunk}
+<<cache=TRUE>>=
+fm.oven.1 <- nonparboot(fm.oven.1, B = 100)
+@
 
 
 
@@ -1204,49 +1042,26 @@ estimates can be requested with \code{linearComb}. Continuing the Ovenbird
 example, the following code estimates the log-abundance rate for a site with
 \code{ufp = 0.5} and \code{trba= 0}.
 
-\begin{Schunk}
-\begin{Sinput}
-R> (lc <- linearComb(fm.oven.1, type = "state", coefficients = c(1, 
-+     0.5, 0)))
-\end{Sinput}
-\begin{Soutput}
-Linear combination(s) of Abundance estimate(s)
-
- Estimate   SE (Intercept) ufp trba
-    0.153 0.13           1 0.5    0
-\end{Soutput}
-\end{Schunk}
+<<>>=
+(lc <- linearComb(fm.oven.1, type="state", coefficients=c(1,0.5,0)))
+@
 
 Multiple sets of coefficients may be supplied as a design matrix.  The
 following code requests the estimated log-abundance for sites with
 \code{ufp = 0.5} and \code{trba = 1}.
 
-\begin{Schunk}
-\begin{Sinput}
-R> (lc <- linearComb(fm.oven.1, type = "state", coefficients = matrix(c(1, 
-+     0.5, 0, 1, 1, 0), 2, 3, byrow = TRUE)))
-\end{Sinput}
-\begin{Soutput}
-Linear combination(s) of Abundance estimate(s)
-
-  Estimate    SE (Intercept) ufp trba
-1    0.153 0.130           1 0.5    0
-2    0.203 0.166           1 1.0    0
-\end{Soutput}
-\end{Schunk}
+<<>>=
+(lc <- linearComb(fm.oven.1, type = "state",
+    coefficients = matrix(c(1, 0.5, 0, 1, 1, 0), 2, 3, byrow = TRUE)))
+@
 
 Standard errors and confidence intervals are also available for linear
 combinations of parameters.  By requesting nonparametric bootstrapped
 standard errors, \um\ uses the samples that were drawn earlier.
 
-\begin{Schunk}
-\begin{Sinput}
-R> SE(lc, method = "nonparboot")
-\end{Sinput}
-\begin{Soutput}
-[1] 0.1354092 0.1659877
-\end{Soutput}
-\end{Schunk}
+<<>>=
+SE(lc, method = "nonparboot")
+@
 
 \subsubsection{Back-transforming linear combinations of coefficients}
 
@@ -1259,34 +1074,11 @@ errors of back-transformed estimates are estimated using the delta
 method.  Confidence intervals are estimated by back-transforming the
 confidence interval of the original linear combination.
 
-\begin{Schunk}
-\begin{Sinput}
-R> (btlc <- backTransform(lc))
-\end{Sinput}
-\begin{Soutput}
-Backtransformed linear combination(s) of Abundance estimate(s)
-
-  Estimate    SE LinComb (Intercept) ufp trba
-1     1.16 0.151   0.153           1 0.5    0
-2     1.22 0.203   0.203           1 1.0    0
-
-Transformation: exp 
-\end{Soutput}
-\begin{Sinput}
-R> SE(btlc)
-\end{Sinput}
-\begin{Soutput}
-[1] 0.1510141 0.2032272
-\end{Soutput}
-\begin{Sinput}
-R> confint(btlc)
-\end{Sinput}
-\begin{Soutput}
-      0.025    0.975
-1 0.9033915 1.501747
-2 0.8846296 1.695386
-\end{Soutput}
-\end{Schunk}
+<<>>=
+(btlc <- backTransform(lc))
+SE(btlc)
+confint(btlc)
+@
 
 \subsection{Model selection}
 
@@ -1295,26 +1087,23 @@ unmarkedFit objects.  To demonstrate, we fit a few more models to the Ovenbird
 removal data, including an interaction model, two models with
 single predictors, and a model with no predictors.
 
-\begin{Schunk}
-\begin{Sinput}
-R> fm.oven.2 <- update(fm.oven.1, formula = ~1 ~ ufp * trba)
-R> fm.oven.3 <- update(fm.oven.1, formula = ~1 ~ ufp)
-R> fm.oven.4 <- update(fm.oven.1, formula = ~1 ~ trba)
-R> fm.oven.5 <- update(fm.oven.1, formula = ~1 ~ 1)
-\end{Sinput}
-\end{Schunk}
+<<cache=true>>=
+fm.oven.2 <- update(fm.oven.1, formula = ~ 1 ~ ufp * trba)
+fm.oven.3 <- update(fm.oven.1, formula = ~ 1 ~ ufp)
+fm.oven.4 <- update(fm.oven.1, formula = ~ 1 ~ trba)
+fm.oven.5 <- update(fm.oven.1, formula = ~ 1 ~ 1)
+@
 
 
-\begin{Schunk}
-\begin{Sinput}
-R> preddata <- predict(fm.oven.4, type = "state", appendData = TRUE)
-R> library(ggplot2)
-R> qplot(trba, Predicted, data = preddata, geom = "line", 
-+     xlab = "Scaled Basal Tree Area", ylab = "Estimated Abundance") + 
-+     geom_ribbon(aes(x = trba, ymin = lower, ymax = upper), 
-+         alpha = 0.1) + theme_bw()
-\end{Sinput}
-\end{Schunk}
+<<eval=FALSE,fig=FALSE>>=
+preddata <- predict(fm.oven.4, type = "state", appendData = TRUE)
+library(ggplot2)
+qplot(trba, Predicted, data = preddata, geom = "line",
+      xlab = "Scaled Basal Tree Area",
+      ylab = "Estimated Abundance") +
+  geom_ribbon(aes(x = trba, ymin = lower, ymax = upper),
+              alpha = 0.1) + theme_bw()
+@
 
 
 
@@ -1326,7 +1115,15 @@ the \code{predict} method (Figure~\ref{fig:pred}).
 
 \begin{figure}[th!]
   \centering
-\includegraphics{unmarked-034}
+<<eval=true,echo=false,fig=true>>=
+preddata <- predict(fm.oven.4, type = "state", appendData = TRUE)
+library(ggplot2)
+print(qplot(trba, Predicted, data = preddata, geom = "line",
+      xlab = "Scaled Basal Tree Area",
+      ylab = "Estimated Abundance") +
+  geom_ribbon(aes(x = trba, ymin = lower, ymax = upper),
+              alpha = 0.1) + theme_bw())
+@
 \caption{Examine estimated abundance for Ovenbird removal data.  Band
   is 95\% confidence interval.}
 \label{fig:pred}
@@ -1337,24 +1134,19 @@ Next, we organize the fitted models with the \code{fitList} function and
 the use the \code{modSel} method to rank the models by AIC.
 
 
+<<echo=false>>=
+options(width=60)
+@
 
-\begin{Schunk}
-\begin{Sinput}
-R> fmList <- fitList(`lam(ufp+trba)p(.)` = fm.oven.1, 
-+     `lam(ufp*trba)p(.)` = fm.oven.2, `lam(ufp)p(.)` = fm.oven.3, 
-+     `lam(trba)p(.)` = fm.oven.4, `lam(.)p(.)` = fm.oven.5)
-R> modSel(fmList)
-\end{Sinput}
-\begin{Soutput}
-                  nPars    AIC delta AICwt cumltvWt
-lam(trba)p(.)         3 324.77  0.00  0.35     0.35
-lam(ufp)p(.)          3 325.73  0.96  0.21     0.56
-lam(ufp+trba)p(.)     4 326.14  1.37  0.17     0.73
-lam(.)p(.)            2 326.28  1.51  0.16     0.90
-lam(ufp*trba)p(.)     5 327.17  2.40  0.10     1.00
-\end{Soutput}
-\end{Schunk}
+<<>>=
+fmList <- fitList("lam(ufp+trba)p(.)"=fm.oven.1, "lam(ufp*trba)p(.)"=fm.oven.2,
+    "lam(ufp)p(.)"=fm.oven.3, "lam(trba)p(.)"=fm.oven.4, "lam(.)p(.)"=fm.oven.5)
+modSel(fmList)
+@
 
+<<echo=false>>=
+options(width=70)
+@
 
 
 \code{predict} functions much like \code{linearComb} except that new data can be
@@ -1372,33 +1164,41 @@ bootstrapping function \code{parboot}.  It simulates data from the fitted model 
 applies a user-defined function that returns a fit-statistic such as the
 Pearson's $\chi^2$.
 
+<<cache=true,echo=false>>=
+set.seed(1234)
+chisq <- function(fm) {
+    observed <- getY(fm@data)
+    expected <- fitted(fm)
+    sum((observed - expected)^2 / expected)
+    }
+pb <- parboot(fm.oven.1, statistic = chisq, nsim = 200)
+@
 
 
 \begin{figure}[th!]
   \centering
-\includegraphics{unmarked-039}
+<<fig=TRUE,echo=FALSE>>=
+set.seed(1234)
+plot(pb, main = "", xlab=expression(chi^2))
+@
 \caption{Graphical assessment of model fit by parametric bootstrapping.  The dashed
 line is the observed chi-squared statistic. The histogram approximates the
 expected sampling distribution.}
 \label{fig:pb}
 \end{figure}
 
-\begin{Schunk}
-\begin{Sinput}
-R> set.seed(1234)
-R> chisq <- function(fm) {
-+     observed <- getY(fm@data)
-+     expected <- fitted(fm)
-+     sum((observed - expected)^2/expected)
-+ }
-R> pb <- parboot(fm.oven.1, statistic = chisq, nsim = 200)
-\end{Sinput}
-\end{Schunk}
-\begin{Schunk}
-\begin{Sinput}
-R> plot(pb, main = "")
-\end{Sinput}
-\end{Schunk}
+<<cache=true>>=
+set.seed(1234)
+chisq <- function(fm) {
+    observed <- getY(fm@data)
+    expected <- fitted(fm)
+    sum((observed - expected)^2 / expected)
+    }
+pb <- parboot(fm.oven.1, statistic = chisq, nsim = 200)
+@
+<<eval=FALSE>>=
+plot(pb, main = "")
+@
 
 
 The above call to \code{plot} with a parametric bootstrap object as
@@ -1480,6 +1280,6 @@ inspiration for this work. Andy Royle and Robert Dorazio made valuable
 suggestions that greatly improved an earlier version of the manuscript.
 
 %%\bibliographystyle{jss}
-\bibliography{unmarked}
+\bibliography{jss617}
 
 \end{document}

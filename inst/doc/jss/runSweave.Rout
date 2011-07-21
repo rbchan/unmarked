@@ -27,8 +27,8 @@ Warning messages:
 1: package 'cacheSweave' was built under R version 2.13.1 
 2: package 'filehash' was built under R version 2.13.1 
 3: package 'stashR' was built under R version 2.13.1 
-> Sweave("unmarked.Rnw", driver=cacheSweaveDriver)
-Writing to file unmarked.tex
+> Sweave("jss617.Rnw", driver=cacheSweaveDriver)
+Writing to file jss617.tex
 Processing code chunks with options ...
  1 : term verbatim
  2 : echo term verbatim
@@ -86,9 +86,10 @@ Loading required package: proto
 40 : echo term verbatim
 41 : echo
 
-You can now run (pdf)latex on 'unmarked.tex'
-R> tools:::texi2dvi("unmarked.tex", pdf=TRUE)
+You can now run (pdf)latex on 'jss617.tex'
+R> tools:::texi2dvi("jss617.tex", pdf=TRUE)
+R> 
 R> 
 > proc.time()
    user  system elapsed 
-   7.23    0.43    9.18 
+   7.47    0.28    9.95 
