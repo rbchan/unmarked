@@ -7,7 +7,7 @@ occu <- function(formula, data, knownOcc = numeric(0), starts, method = "BFGS",
 	if(!is(data, "unmarkedFrameOccu"))
     stop("Data is not an unmarkedFrameOccu object.")
 
-	designMats <- getDesign(data, formula)
+	designMats <- unmarked:::getDesign(data, formula)
 	X <- designMats$X; V <- designMats$V; y <- designMats$y
   removed <- designMats$removed.sites
   X.offset <- designMats$X.offset; V.offset <- designMats$V.offset
@@ -18,14 +18,15 @@ occu <- function(formula, data, knownOcc = numeric(0), starts, method = "BFGS",
       V.offset <- rep(0, nrow(V))
       }
 
-	y <- truncateToBinary(y)
+	y <- unmarked:::truncateToBinary(y)
 	J <- ncol(y)
 	M <- nrow(y)
 
 	## convert knownOcc to logical so we can subset correctly to handle NAs.
 	knownOccLog <- rep(FALSE, numSites(data))
 	knownOccLog[knownOcc] <- TRUE
-	knownOccLog <- knownOccLog[-removed]
+        if(length(removed)>0)
+            knownOccLog <- knownOccLog[-removed]
 
 	occParms <- colnames(X)
 	detParms <- colnames(V)
@@ -47,7 +48,7 @@ occu <- function(formula, data, knownOcc = numeric(0), starts, method = "BFGS",
 		cp <- (pvec^yvec) * ((1 - pvec)^(1 - yvec))
 		cp[navec] <- 1  # so that NA's don't modify likelihood
 		cpmat <- matrix(cp, M, J, byrow = TRUE) # put back into matrix to multiply appropriately
-		loglik <- log(rowProds(cpmat) * psi + nd * (1 - psi))
+		loglik <- log(unmarked:::rowProds(cpmat) * psi + nd * (1 - psi))
 		-sum(loglik)
 	}
 
@@ -74,7 +75,7 @@ occu <- function(formula, data, knownOcc = numeric(0), starts, method = "BFGS",
 		covMat = as.matrix(covMat[(nOP + 1) : nP, (nOP + 1) : nP]),
 		invlink = "logistic", invlinkGrad = "logistic.grad")
 
-	estimateList <- unmarkedEstimateList(list(state=state, det=det))
+	estimateList <- unmarked:::unmarkedEstimateList(list(state=state, det=det))
 
 	umfit <- new("unmarkedFitOccu", fitType = "occu", call = match.call(),
 		formula = formula, data = data, sitesRemoved = designMats$removed.sites,
@@ -121,7 +122,8 @@ occuRcpp <- function(formula, data, knownOcc = numeric(0), starts,
     ## convert knownOcc to logical so we can correctly to handle NAs.
     knownOccLog <- rep(FALSE, numSites(data))
     knownOccLog[knownOcc] <- TRUE
-    knownOccLog <- knownOccLog[-removed]
+    if(length(removed>0))
+        knownOccLog <- knownOccLog[-removed]
 
     occParms <- colnames(X)
     detParms <- colnames(V)
@@ -136,21 +138,10 @@ occuRcpp <- function(formula, data, knownOcc = numeric(0), starts,
     navec <- is.na(yvec)
     nd <- ifelse(rowSums(y,na.rm=TRUE) == 0, 1, 0) # no det at site i
 
-#    nll <- function(params) {
-#        psi <- plogis(X %*% params[1 : nOP] + X.offset)
-#        psi[knownOccLog] <- 1
-#        pvec <- plogis(V %*% params[(nOP + 1) : nP] + V.offset)
-#        cp <- (pvec^yvec) * ((1 - pvec)^(1 - yvec))
-#        cp[navec] <- 1  # so that NA's don't modify likelihood
-#        cpmat <- matrix(cp, M, J, byrow = TRUE) # put back into matrix to multiply appropriately
-#        loglik <- log(rowProds(cpmat) * psi + nd * (1 - psi))
-#        -sum(loglik)
-#    }
-
     nll <- function(params) {
         beta.psi <- params[1:nOP]
         beta.p <- params[(nOP+1):nP]
-        nll.occu(yvec, X, V, beta.psi, beta.p, nd)
+        nll.occu(yvec, X, V, beta.psi, beta.p, nd, knownOccLog, navec)
     }
 
     if(missing(starts)) starts <- rep(0, nP)	#rnorm(nP)
@@ -205,6 +196,8 @@ src <-  "
         arma::rowvec beta_psi = as<arma::rowvec>(beta_psiR);
         arma::rowvec beta_p = as<arma::rowvec>(beta_pR);
         Rcpp::IntegerVector nd(ndR);
+        Rcpp::LogicalVector knownOcc(knownOccR);
+        Rcpp::LogicalVector navec(navecR);
         int R = X.n_rows;
         int J = y.n_elem / R;
         arma::vec logit_psi = X*beta_psi;
@@ -215,10 +208,13 @@ src <-  "
         int k=0; // counter
         for(int i=0; i<R; i++) {
             double cp=1.0;
-            for(int j=0; j<J; j++) {
-               cp *= pow(p(k),y(k)) * pow(1-p(k), 1-y(k));
-               k++;
-               }
+               for(int j=0; j<J; j++) {
+                  if(!navec(k))
+                     cp *= pow(p(k),y(k)) * pow(1-p(k), 1-y(k));
+                  k++;
+                  }
+            if(knownOcc(i))
+               psi(i) = 1.0;
             if(nd(i)==0)
                ll += log(cp * psi(i));
             else //if(nd(i)==1)
@@ -229,6 +225,22 @@ src <-  "
 
 
 nll.occu <- cxxfunction(signature(yR="numeric", Xr="matrix", Vr="matrix",
-                          beta_psiR="numeric",
-                          beta_pR="numeric", ndR="integer"),
+                                  beta_psiR="numeric", beta_pR="numeric",
+                                  ndR="integer", knownOccR="logical",
+                                  navecR="logical"),
                         body=src, plugin="RcppArmadillo")
+
+
+
+
+
+
+
+s <- "
+  Rcpp::LogicalVector lv(lvR);
+  return lv;
+  "
+
+lv <- cxxfunction(signature(lvR="logical"), s, plugin="Rcpp")
+
+lv(rep(TRUE, 3))
