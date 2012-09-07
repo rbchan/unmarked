@@ -21,7 +21,7 @@ Objects can be created by calls of the form \code{\link{ranef}}.
 
 \section{Slots}{
   \describe{
-    \item{\code{post}:}{A \code{\link{array}} with nSites rows and Nmax
+    \item{\code{post}:}{An \code{\link{array}} with nSites rows and Nmax
   (K+1) columns and nPrimaryPeriod slices }
   }
 }

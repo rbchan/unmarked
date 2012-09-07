@@ -2,47 +2,53 @@
 \alias{distsamp}
 \title{Fit the hierarchical distance sampling model of Royle et al. (2004)}
 \usage{distsamp(formula, data, keyfun=c("halfnorm", "exp",
-    "hazard", "uniform"), output=c("density", "abund"),
-    unitsOut=c("ha", "kmsq"), starts, method="BFGS", se=TRUE, ...)}
+  "hazard", "uniform"), output=c("density", "abund"),
+  unitsOut=c("ha", "kmsq"), starts, method="BFGS", se=TRUE,
+  engine=c("C", "R"), rel.tol=0.001, ...)
+}
 
 \description{
-Fit the hierarchical distance sampling model of Royle et al. (2004)
-to line or point transect data recorded in discrete distance intervals.
+  Fit the hierarchical distance sampling model of Royle et al. (2004)
+  to line or point transect data recorded in discrete distance intervals.
 }
 
 \arguments{
-\item{formula}{Double right-hand formula describing detection
-covariates followed by abundance covariates. ~1 ~1 would be a null model.}
-\item{data}{object of class \code{unmarkedFrameDS}, containing response matrix,
-covariates, distance interval cut points, survey type ("line" or "point"),
-transect lengths (for survey = "line"), and units ("m" or "km") for cut
-points and transect lengths. See example for set up.}
-\item{keyfun}{One of the following detection functions:
-"halfnorm", "hazard", "exp", or "uniform." See details.}
-\item{output}{Model either "density" or "abund"}
-\item{unitsOut}{Units of density. Either "ha" or "kmsq" for hectares and
-square kilometers, respectively.}
-\item{starts}{Vector of starting values for parameters.}
-\item{method}{Optimization method used by \code{\link{optim}}.}
-\item{se}{logical specifying whether or not to compute standard errors.}
-\item{\dots}{Additional arguments to optim, such as lower and upper
-      bounds}
-
+  \item{formula}{Double right-hand formula describing detection
+    covariates followed by abundance covariates. ~1 ~1 would be a null
+    model.}
+  \item{data}{object of class \code{unmarkedFrameDS}, containing response
+    matrix, covariates, distance interval cut points, survey type ("line"
+    or "point"), transect lengths (for survey = "line"), and units ("m"
+    or "km") for cut points and transect lengths. See example for set up.}
+  \item{keyfun}{One of the following detection functions:
+    "halfnorm", "hazard", "exp", or "uniform." See details.}
+  \item{output}{Model either "density" or "abund"}
+  \item{unitsOut}{Units of density. Either "ha" or "kmsq" for hectares and
+    square kilometers, respectively.}
+  \item{starts}{Vector of starting values for parameters.}
+  \item{method}{Optimization method used by \code{\link{optim}}.}
+  \item{se}{logical specifying whether or not to compute standard errors.}
+  \item{engine}{Use code written in C++ or R}
+  \item{rel.tol}{Requested relative accuracy of the integral, see
+    \code{\link{integrate}}}
+  \item{\dots}{Additional arguments to optim, such as lower and upper
+    bounds}
 }
 
 \details{
 Unlike conventional distance sampling, which uses the 'conditional on
-detection' likelihood formulation, this model is based upon the unconditional
-likelihood and thus allows for modeling both abundance and detection
-function parameters.
+detection' likelihood formulation, this model is based upon the
+unconditional likelihood and allows for modeling both abundance and
+detection  function parameters.
 
 The latent transect-level abundance distribution
-\eqn{f(N | \mathbf{\theta})}{f(N | theta)} is currently assumed to be Poisson
-with mean \eqn{\lambda}{lambda}.
+\eqn{f(N | \mathbf{\theta})}{f(N | theta)} assumed to be
+Poisson with mean \eqn{\lambda}{lambda} (but see \code{\link{gdistsamp}}
+for alternatives).
 
 The detection process is modeled as multinomial:
-\eqn{y_{ij} \sim Multinomial(N_i, pi_{ij})}{y_ij ~ Multinomial(N_i, pi_i1, pi_i2, ..., pi_iJ)},
-where \eqn{pi_ij} is the multinomial cell probability for transect i in
+\eqn{y_{ij} \sim Multinomial(N_i, \pi_{ij})}{y_ij ~ Multinomial(N_i, pi_i1, pi_i2, ..., pi_iJ)},
+where \eqn{\pi_{ij}}{pi_ij} is the multinomial cell probability for transect i in
 distance class j. These are computed based upon a detection function
 \eqn{g(x | \mathbf{\sigma})}{g(x | sigma)}, such as the half-normal,
 negative exponential, or hazard rate.
@@ -62,7 +68,12 @@ You cannot use obsCovs.
 \references{
 
 Royle, J. A., D. K. Dawson, and S. Bates (2004) Modeling
-abundance effects in distance sampling. \emph{Ecology} 85, pp. 1591-1597.
+  abundance effects in distance sampling. \emph{Ecology} 85, pp. 1591-1597.
+
+Sillett, S. and Chandler, R.B. and Royle, J.A. and Kery, M. and
+  Morrison, S.A. In Press. Hierarchical distance sampling models to
+  estimate population size and habitat-specific abundance of an island
+  endemic. \emph{Ecological Applications}
 
 }
 
@@ -122,9 +133,27 @@ fmhz.scale <- exp(coef(fm3, type="scale"))
 plot(function(x) gxhaz(x, shape=fmhz.shape, scale=fmhz.scale), 0, 25,
 	xlab="Distance (m)", ylab="Detection probability")
 
-## Point transect example
+
+
+## Point transect examples
+
+# Analysis of the Island Scrub-jay data.
+# See Sillett et al. (In press)
+
+data(issj)
+str(issj)
+
+jayumf <- unmarkedFrameDS(y=as.matrix(issj[,1:3]),
+ siteCovs=data.frame(scale(issj[,c("elevation","forest","chaparral")])),
+ dist.breaks=c(0,100,200,300), unitsIn="m", survey="point")
+
+(fm1jay <- distsamp(~chaparral ~chaparral, jayumf))
+
+
+
 
 \dontrun{
+
 data(pointtran)
 
 ptUMF <- with(pointtran, {

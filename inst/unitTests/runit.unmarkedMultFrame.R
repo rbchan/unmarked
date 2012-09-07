@@ -37,3 +37,123 @@ test.umarkedMultFrame.subset <- function() {
     umf1.sites1and3 <- umf1[c(1,3),]
 
     }
+
+
+
+
+
+
+test.umarkedFrameGMM.subset <- function() {
+
+    y <- matrix(1:27, 3)
+    sc <- data.frame(x1 = 1:3)
+    ysc <- list(x2 = matrix(1:9, 3))
+    oc <- list(x3 = matrix(1:27, 3))
+
+    umf1 <- unmarkedFrameGMM(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        obsCovs = oc,
+        numPrimary = 3,
+        type="removal")
+
+    dat <- as(umf1, "data.frame")
+
+    umf1.site1 <- umf1[1,]
+    checkEquals(umf1.site1@y, y[1,, drop=FALSE])
+    checkEquals(umf1.site1@siteCovs, sc[1,, drop=FALSE])
+    checkEqualsNumeric(unlist(umf1.site1@obsCovs), oc$x3[1,])
+    checkEqualsNumeric(unlist(umf1.site1@yearlySiteCovs),
+        ysc$x2[1,, drop=FALSE])
+    checkEquals(umf1.site1@numPrimary, 3)
+
+    umf1.sites1and3 <- umf1[c(1,3),]
+
+    }
+
+
+
+
+test.umarkedFrameGDS.subset <- function() {
+
+    y <- matrix(1:27, 3)
+    sc <- data.frame(x1 = 1:3)
+    ysc <- list(x2 = matrix(1:9, 3))
+
+    umf1 <- unmarkedFrameGDS(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        numPrimary = 3,
+        survey="point",
+        dist.breaks=c(0, 10, 20, 30),
+        unitsIn="m")
+
+    dat <- as(umf1, "data.frame")
+    checkEquals(nrow(dat), nrow(y))
+
+    umf1.site1 <- umf1[1,]
+    checkEquals(umf1.site1@y, y[1,, drop=FALSE])
+    checkEquals(umf1.site1@siteCovs, sc[1,, drop=FALSE])
+    checkEqualsNumeric(unlist(umf1.site1@yearlySiteCovs),
+        ysc$x2[1,, drop=FALSE])
+    checkEquals(umf1.site1@numPrimary, 3)
+    checkEquals(umf1.site1@survey, "point")
+
+    umf1.sites1and3 <- umf1[c(1,3),]
+
+
+    umf2 <- unmarkedFrameGDS(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        numPrimary = 3,
+        survey="line",
+        dist.breaks=c(0, 10, 20, 30),
+        tlength=rep(1,nrow(y)),
+        unitsIn="m")
+
+    dat <- as(umf2, "data.frame")
+
+    umf2.site1 <- umf2[1,]
+    checkEquals(umf2.site1@y, y[1,, drop=FALSE])
+    checkEquals(umf2.site1@siteCovs, sc[1,, drop=FALSE])
+    checkEqualsNumeric(unlist(umf2.site1@yearlySiteCovs),
+        ysc$x2[1,, drop=FALSE])
+    checkEquals(umf2.site1@numPrimary, 3)
+    checkEquals(umf2.site1@survey, "line")
+
+    umf2.sites1and3 <- umf2[c(1,3),]
+
+    }
+
+
+
+test.umarkedFramePCO.subset <- function() {
+
+    y <- matrix(1:27, 3)
+    sc <- data.frame(x1 = 1:3)
+    ysc <- list(x2 = matrix(1:9, 3))
+    oc <- list(x3 = matrix(1:27, 3))
+
+    umf1 <- unmarkedFramePCO(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        obsCovs = oc,
+        numPrimary = 3)
+
+    dat <- as(umf1, "data.frame")
+
+    umf1.site1 <- umf1[1,]
+    checkEquals(umf1.site1@y, y[1,, drop=FALSE])
+    checkEquals(umf1.site1@siteCovs, sc[1,, drop=FALSE])
+    checkEqualsNumeric(unlist(umf1.site1@obsCovs), oc$x3[1,])
+    checkEqualsNumeric(unlist(umf1.site1@yearlySiteCovs),
+        ysc$x2[1,, drop=FALSE])
+    checkEquals(umf1.site1@numPrimary, 3)
+
+    umf1.sites1and3 <- umf1[c(1,3),]
+
+    }

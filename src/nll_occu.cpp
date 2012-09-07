@@ -31,7 +31,7 @@ SEXP nll_occu( SEXP yR, SEXP Xr, SEXP Vr, SEXP beta_psiR, SEXP beta_pR, SEXP ndR
     if(knownOcc(i))
       psi(i) = 1.0;
     if(nd(i)==0)
-      ll += log(cp * psi(i));
+      ll += log(cp * psi(i) + DOUBLE_XMIN);
     else if(nd(i)==1)
       ll += log(cp * psi(i) + (1-psi(i)) + DOUBLE_XMIN);
   }

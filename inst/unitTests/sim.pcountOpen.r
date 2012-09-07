@@ -87,12 +87,12 @@ sim2 <- function(lam=c(0,1), gam=c(-1,-1), om=c(2,-1), p=c(-1,1), M=100,
 
 
 
-nsim2 <- 50
+nsim2 <- 20
 simout2 <- matrix(NA, nsim2, 8)
 colnames(simout2) <- c('lam0', 'lam1', 'gam0', 'gam1', 'om0', 'om1',
                        'p0', 'p1')
 for(i in 1:nsim2) {
-    cat("sim2:", i, "\n"); flush.console()
+    cat("sim2:", i, "\n")
     lam <- c(-2, 1)
     gam <- c(-1, -1)
     om <- c(0, -1)
@@ -108,7 +108,7 @@ for(i in 1:nsim2) {
     umf2 <- unmarkedFramePCO(y = y.sim2, siteCovs=siteCovs,
         yearlySiteCovs=yearlySiteCovs, obsCovs=obsCovs, numPrimary=T)
     m2 <- pcountOpen(~veght, ~isolation, ~isolation, ~time, umf2,
-                     K=40, se=F, starts=c(lam, gam, om, p),
+                     K=40, se=FALSE, starts=c(lam, gam, om, p),
                      control=list(trace=TRUE, REPORT=1))
     e <- coef(m2)
     simout2[i, ] <- e
@@ -211,26 +211,6 @@ hist(simout3[,4], xlab=expression(p)); abline(v=p, lwd=2, col=4)
 dev.off()
 
 
-# v0.9-3
-#> summary(simout3)
-#     lambda          gamma            omega              p
-# Min.   :2.938   Min.   :0.1786   Min.   :0.6422   Min.   :0.4938
-# 1st Qu.:3.753   1st Qu.:0.2477   1st Qu.:0.7274   1st Qu.:0.6178
-# Median :4.225   Median :0.2840   Median :0.7471   Median :0.6676
-# Mean   :4.183   Mean   :0.2887   Mean   :0.7464   Mean   :0.6764
-# 3rd Qu.:4.589   3rd Qu.:0.3276   3rd Qu.:0.7749   3rd Qu.:0.7379
-# Max.   :5.770   Max.   :0.4769   Max.   :0.8343   Max.   :0.8915
-
-
-# v0.9-4
-#> summary(simout3)
-#     lambda           gamma            omega              p
-# Min.   : 2.513   Min.   :0.1321   Min.   :0.6100   Min.   :0.3015
-# 1st Qu.: 3.761   1st Qu.:0.1831   1st Qu.:0.7713   1st Qu.:0.5155
-# Median : 4.510   Median :0.2217   Median :0.8154   Median :0.6099
-# Mean   : 4.671   Mean   :0.2350   Mean   :0.8039   Mean   :0.6311
-# 3rd Qu.: 5.270   3rd Qu.:0.2771   3rd Qu.:0.8535   3rd Qu.:0.7302
-# Max.   :10.123   Max.   :0.4180   Max.   :0.9228   Max.   :0.9997
 
 
 
@@ -347,7 +327,7 @@ par(mfrow=c(2,2))
 hist(simout5[,1], xlab=expression(lambda)); abline(v=lambda, lwd=2, col=4)
 hist(simout5[,2], xlab=expression(omega)); abline(v=omega, lwd=2, col=4)
 hist(simout5[,3], xlab=expression(p)); abline(v=p, lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
 
@@ -361,7 +341,7 @@ dev.off()
 
 
 ## Simulate data with some dates[i,1] > 1
-set.seed(333)
+
 
 sim6 <- function(lambda=4, gamma=0.1, omega=0.8, p=0.7, M=100, T=5)
 {
@@ -425,34 +405,9 @@ hist(simout6[,1], xlab=expression(lambda)); abline(v=lambda, lwd=2, col=4)
 hist(simout6[,2], xlab=expression(gamma)); abline(v=gamma, lwd=2, col=4)
 hist(simout6[,3], xlab=expression(omega)); abline(v=omega, lwd=2, col=4)
 hist(simout6[,4], xlab=expression(p)); abline(v=p, lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
-#>   summary(simout6)
-#     lambda              gamma               omega
-# Min.   :7.235e-05   Min.   :2.084e-04   Min.   :6.247e-05
-# 1st Qu.:4.116e-01   1st Qu.:2.332e-01   1st Qu.:5.597e-01
-# Median :1.017e+00   Median :4.769e-01   Median :7.806e-01
-# Mean   :1.432e+00   Mean   :1.262e+00   Mean   :7.159e-01
-# 3rd Qu.:1.789e+00   3rd Qu.:8.638e-01   3rd Qu.:9.953e-01
-# Max.   :1.130e+01   Max.   :1.057e+01   Max.   :9.999e-01
-#       p
-# Min.   :0.004766
-# 1st Qu.:0.330542
-# Median :0.657263
-# Mean   :0.613498
-# 3rd Qu.:0.973869
-# Max.   :0.999867
-
-
-#> summary(simout6)
-#     lambda             gamma            omega              p
-# Min.   :0.001087   Min.   :0.2722   Min.   :0.6449   Min.   :0.5396
-# 1st Qu.:0.369777   1st Qu.:0.4154   1st Qu.:0.7728   1st Qu.:0.6475
-# Median :0.695017   Median :0.4741   Median :0.8080   Median :0.6933
-# Mean   :0.704249   Mean   :0.4751   Mean   :0.8046   Mean   :0.6928
-# 3rd Qu.:0.991107   3rd Qu.:0.5226   3rd Qu.:0.8476   3rd Qu.:0.7332
-# Max.   :1.859574   Max.   :0.6904   Max.   :0.9234   Max.   :0.8579
 
 
 
@@ -515,7 +470,7 @@ hist(simout7[,1], xlab=expression(lambda)); abline(v=lambda, lwd=2, col=4)
 hist(simout7[,2], xlab=expression(gamma)); abline(v=gamma, lwd=2, col=4)
 hist(simout7[,3], xlab=expression(omega)); abline(v=omega, lwd=2, col=4)
 hist(simout7[,4], xlab=expression(p)); abline(v=p, lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
 
@@ -585,8 +540,7 @@ for(i in 1:nsim8) {
     umf8 <- unmarkedFramePCO(y = y.sim8, siteCovs=siteCovs,
         yearlySiteCovs=yearlySiteCovs, obsCovs=obsCovs, numPrimary=T)
     m8 <- pcountOpen(~veght, ~isolation, ~isolation, ~time, umf8, K=30,
-                     se=F,
-        starts=c(lam, gam, om, p))
+                     se=F, starts=c(lam, gam, om, p))
     e <- coef(m8)
     simout8[i, ] <- e
     cat("  mle=", e, "\n")
@@ -602,7 +556,7 @@ hist(simout8[,5], xlab=expression(omega)); abline(v=om[1], lwd=2, col=4)
 hist(simout8[,6], xlab=expression(omega)); abline(v=om[2], lwd=2, col=4)
 hist(simout8[,7], xlab=expression(p)); abline(v=p[1], lwd=2, col=4)
 hist(simout8[,8], xlab=expression(p)); abline(v=p[2], lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
 
@@ -670,7 +624,7 @@ hist(simout9[,1], xlab=expression(lambda)); abline(v=lambda, lwd=2, col=4)
 hist(simout9[,2], xlab=expression(gamma)); abline(v=gamma, lwd=2, col=4)
 hist(simout9[,3], xlab=expression(omega)); abline(v=omega, lwd=2, col=4)
 hist(simout9[,4], xlab=expression(p)); abline(v=p, lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
 
@@ -765,7 +719,7 @@ hist(simout10[,5], xlab=expression(omega)); abline(v=om[1], lwd=2, col=4)
 hist(simout10[,6], xlab=expression(omega)); abline(v=om[2], lwd=2, col=4)
 hist(simout10[,7], xlab=expression(p)); abline(v=p[1], lwd=2, col=4)
 hist(simout10[,8], xlab=expression(p)); abline(v=p[2], lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
 m10 <- pcountOpen(~veght, ~1, ~1, ~time, umf10, K=30,
@@ -827,7 +781,7 @@ par(mfrow=c(2,2))
 hist(simout11[,1], xlab=expression(lambda)); abline(v=lambda, lwd=2, col=4)
 hist(simout11[,2], xlab=expression(gamma)); abline(v=gamma, lwd=2, col=4)
 hist(simout11[,3], xlab=expression(p)); abline(v=p, lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
 
@@ -886,7 +840,7 @@ hist(simout12[,1], xlab=expression(lambda)); abline(v=lambda, lwd=2, col=4)
 hist(simout12[,2], xlab=expression(gamma)); abline(v=gamma, lwd=2, col=4)
 hist(simout12[,3], xlab=expression(p)); abline(v=p, lwd=2, col=4)
 hist(simout12[,4], xlab=expression(psi)); abline(v=psi, lwd=2, col=4)
-dev.off()
+#dev.off()
 
 
 

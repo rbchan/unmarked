@@ -63,6 +63,15 @@ test.distsamp.line.keyfuns <- function()
     D <- backTransform(fm.unif, type="state")
     checkEqualsNumeric(coef(D), 107.5000, tol=1e-4)
 
+    checkEqualsNumeric(coef(fm.halfnorm),
+                       coef(update(fm.halfnorm, engine="R")))
+    checkEqualsNumeric(coef(fm.exp),
+                       coef(update(fm.exp, engine="R")))
+    checkEqualsNumeric(coef(fm.halfnorm),
+                       coef(update(fm.halfnorm, engine="R")))
+    checkEqualsNumeric(coef(fm.halfnorm),
+                       coef(update(fm.halfnorm, engine="R")))
+
 }
 
 
@@ -106,6 +115,15 @@ test.distsamp.point.keyfuns <- function()
     fm.unif <- distsamp(~1~1, umf, keyfun="uniform")
     D <- backTransform(fm.unif, type="state")
     checkEqualsNumeric(coef(D), 236.3451, tol=1e-4)
+
+    checkEqualsNumeric(coef(fm.halfnorm),
+                       coef(update(fm.halfnorm, engine="R")))
+    checkEqualsNumeric(coef(fm.exp),
+                       coef(update(fm.exp, engine="R")))
+    checkEqualsNumeric(coef(fm.halfnorm),
+                       coef(update(fm.halfnorm, engine="R")))
+    checkEqualsNumeric(coef(fm.halfnorm),
+                       coef(update(fm.halfnorm, engine="R")))
 
 }
 

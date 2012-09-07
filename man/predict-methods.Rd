@@ -3,6 +3,7 @@
 \alias{predict-methods}
 \alias{predict,ANY-method}
 \alias{predict,unmarkedFit-method}
+\alias{predict,unmarkedFitPCount-method}
 \alias{predict,unmarkedFitColExt-method}
 \alias{predict,unmarkedFitGMM-method}
 \alias{predict,unmarkedFitGDS-method}
@@ -16,18 +17,16 @@ These methods return predicted values from fitted model objects.
 \describe{
 
 \item{\code{signature(object = "unmarkedFit")}}{
-Type must be either `state' or `det'.
+"type" must be either `state' or `det'.
 }
 \item{\code{signature(object = "unmarkedFitColExt")}}{
-Type must be either `state' or `det'.
+"type" must be 'psi', 'col', 'ext', or 'det'.
 }
-
 \item{\code{signature(object = "unmarkedFitGMM")}}{
-%%  ~~describe this method here~~
+"type" must be 'lambda', 'psi', 'det'
 }
-
 \item{\code{signature(object = "unmarkedFitList")}}{
-%%  ~~describe this method here~~
+"type" depends upon the fitted models
 }
 }}
 \keyword{methods}

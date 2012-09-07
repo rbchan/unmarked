@@ -653,6 +653,8 @@ setMethod("handleNA", "unmarkedFrameG3",
     function(umf, Xlam, Xlam.offset, Xphi, Xphi.offset, Xdet, Xdet.offset)
 {
 
+#    browser()
+
     obsToY <- obsToY(umf)
     if(is.null(obsToY)) stop("obsToY cannot be NULL to clean data.")
 

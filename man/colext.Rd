@@ -1,6 +1,6 @@
 \name{colext}
 \alias{colext}
-\title{Fit the colonization-extinction model.}
+\title{Fit the dynamic occupancy model of MacKenzie et. al (2003)}
 \usage{colext(psiformula= ~1, gammaformula =  ~ 1, epsilonformula = ~ 1,
     pformula = ~ 1, data, starts, method="BFGS", se=TRUE, ...)}
 

@@ -85,6 +85,9 @@ with a call to the appropriate type of \textbf{unmarkedFrame}. For
 example, to prepare the data for a single-season site-occupancy
 analysis, the function \textbf{unmarkedFrameOccu} is used.
 
+
+\subsection{Importing and formatting data}
+
 <<>>=
 library(unmarked)
 wt <- read.csv(system.file("csv","widewt.csv", package="unmarked"))
@@ -99,7 +102,8 @@ summary(wt)
 Alternatively, the convenience function \textbf{csvToUMF} can be used
 
 <<>>=
-wt <- csvToUMF(system.file("csv","widewt.csv", package="unmarked"), long = FALSE, type = "unmarkedFrameOccu")
+wt <- csvToUMF(system.file("csv","widewt.csv", package="unmarked"),
+               long = FALSE, type = "unmarkedFrameOccu")
 @
 
 If not all sites have the same numbers of observations, then manual
@@ -107,7 +111,8 @@ importation of data in long format can be tricky.  \textbf{csvToUMF}
 seamlessly handles this situation.
 
 <<>>=
-pcru <- csvToUMF(system.file("csv","frog2001pcru.csv", package="unmarked"), long = TRUE, type = "unmarkedFrameOccu")
+pcru <- csvToUMF(system.file("csv","frog2001pcru.csv", package="unmarked"),
+                 long = TRUE, type = "unmarkedFrameOccu")
 @
 
 To help stabilize the numerical optimization algorithm, we recommend
@@ -117,6 +122,8 @@ standardizing the covariates.
 obsCovs(pcru) <- scale(obsCovs(pcru))
 @
 
+
+\subsection{Fitting models}
 
 Occupancy models can then be fit with the occu() function:
 
@@ -130,6 +137,9 @@ Here, we have specified that the detection process is modeled with the
 MinAfterSunset and Temperature covariates.  No covariates are
 specified for occupancy here.  See ?occu for more details.
 
+
+\subsection{Back-transforming parameter estimates}
+
 Unmarked fitting functions return unmarkedFit objects which can be
 queried to investigate the model fit.  Variables can be
 back-transformed to the unconstrained scale using backTransform.
@@ -138,9 +148,19 @@ Standard errors are computed using the delta method.
 <<>>=
 backTransform(fm2, 'state')
 @
+The expected probability that a site was
+occupied is 0.823. This estimate applies to the hypothetical
+population of all possible sites, not the sites found in our sample.
+For a good discussion of population-level vs finite-sample inference,
+see Royle and Dorazio \citep{royle_dorazio:2008} page 117. Note also that finite-sample
+quantities can be computed in \texttt{unmarked} using empirical Bayes
+methods as demonstrated at the end of this document.
 
-Because the detection component was modeled with covariates, covariate
-coefficients must be specified to back-transform.  Here, we request
+Back-transforming the estimate of $\psi$ was easy because there were
+no covariates. Because the detection component was modeled with
+covariates, $p$ is a function, not just a scalar quantity, and so we
+need to be provide values of our covariates to obtain an
+estimate of $p$. Here, we request
 the probability of detection given a site is occupied and all
 covariates are set to 0.
 
@@ -148,7 +168,10 @@ covariates are set to 0.
 backTransform(linearComb(fm2, coefficients = c(1,0,0), type = 'det'))
 @
 
-A predict method also exists.
+Thus, we can say that the expected probability of detection was 0.552
+when time of day and temperature are fixed at their mean value. A
+predict method also exists, which can be used to obtain estimates of
+parameters at specific covariate values.
 
 <<>>=
 newData <- data.frame(MinAfterSunset = 0, Temperature = -2:2)
@@ -164,6 +187,9 @@ asymptotic normal approximation or profiling.
 confint(fm2, type='det')
 confint(fm2, type='det', method = "profile")
 @
+
+
+\subsection{Model selection and model fit}
 
 Model selection and multi-model inference can be implemented after
 organizing models using the fitList function.
@@ -196,6 +222,39 @@ chisq <- function(fm) {
 
 We fail to reject the null hypothesis, and conclude that the model fit
 is adequate.
+
+\subsection{Derived parameters and empirical Bayes methods}
+
+The \texttt{parboot} function can be also be used to compute confidence
+intervals for estimates of derived parameters, such as the proportion
+of sites occupied $\mbox{PAO} = \sum_i z_i$ where $z_i$ is the true
+occurrence state at site $i$, which is unknown at sites where no individuals
+were detected. The ``colext'' vignette shows examples of using
+\texttt{parboot} to obtain confidence intervals for such derived
+quantities. An alternative way achieving this goal is to use empirical Bayes
+methods, which were introduced in \texttt{unmarked} version 0.9-5. These methods estimate
+the posterior distribution of the latent variable given the data and
+the estimates of the fixed effects (the MLEs). The mean or the mode of
+the estimated posterior distibution is referred to as the empirical
+best unbiased predictor (EBUP), which in \texttt{unmarked} can be
+obtained by applying the \texttt{bup} function to the estimates of the
+posterior distributions returned by the \texttt{ranef} function. The
+following code returns the estimate of PAO and a 90\% confidence
+interval.
+
+<<>>=
+re <- ranef(fm2)
+EBUP <- bup(re, stat="mode")
+CI <- confint(re, level=0.9)
+rbind(PAO = c(Estimate = sum(EBUP), colSums(CI)) / 130)
+@
+Note that this is similar, but slightly lower than the
+population-level estimate of $\psi$ obtained above.
+
+A plot method also exists for objects returned by \texttt{ranef}, but
+distributions of binary variables are not so pretty. Try it out on a
+fitted abundance model instead.
+
 
 \bibliography{unmarked}
 

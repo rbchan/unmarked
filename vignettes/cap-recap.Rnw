@@ -29,7 +29,8 @@ library(tools)
 \maketitle
 
 \abstract{The ``{\tt un}'' in {\tt unmarked} is somewhat misleading
-  because the package can be used to analyze data from marked animals. The three
+  because the package can be used to analyze data from marked
+  animals. The three
   most common sampling methods that produce suitable data are removal
   sampling, double observer sampling, and capture-recapture
   methods. This document focuses on the analysis of capture-recapture
@@ -40,7 +41,7 @@ library(tools)
   can be fitted with
   constant parameters ($M_0$), time-specific parameters ($M_t$),
   and behavioral responses ($M_b$). In addition, spatial
-  variation in abundance or capture probability can also be
+  variation in abundance and capture probability can also be
   modeled using covariates. \texttt{unmarked} has two
   functions for fitting
   capture-recapture models: \texttt{multinomPois} and
@@ -68,7 +69,7 @@ research.
 modeling variation in both abundance and capture
 probability when capture-recapture data are collected at a set of
 $R$ sites. Site-specific abundance ($N_i; i=1,2,...,R$) is regarded
-as latent variable following a discrete distrubution such as the
+as latent variable following a discrete distribution such as the
 Poisson or negative binomial. The encounter histories are then
 tabulated at each site so that they can be regarded as an outcome of a
 multinomial distribution with cell probabilities {$\bf \pi$}
@@ -92,7 +93,7 @@ of individuals expected to have capture history $k$. For example, the
 cell probabilities corresponding to the capture histories listed above
 are
 \[
-{\bf \pi(p)} = \{ p^2, p(1-p), (1-p)p \}.
+{\bf \pi}(p) = \{ p^2, p(1-p), (1-p)p \}.
 \]
 The probability of not capturing an individual in this case ($H=00$)
 is $(1-p)^2$.
@@ -118,7 +119,7 @@ often referred to as model $M_0$. Alternatively, $p$ may be
 occasion-specific
 (model $M_t$) or may be influenced by animal behavior (model
 $M_b$). \citet{otis_etal:1978} and \citet{williams_etal:2002} are
-comprehesive references.
+comprehensive references.
 
 \section{Data}
 As previously mentioned, the data required by \texttt{unmarked} are an $R
@@ -197,7 +198,7 @@ flycatchers (\emph{Empidonax alnorum}) by
 \citet{chandler_etal:2009}. Point count data such as these are
 collected on unmarked animals, but one can apply
 capture-recapture models because it is possible to keep track of
-inidividual birds during a short period of time. That is, we can
+individual birds during a short period of time \citep{alldredge_etal:2007}. That is, we can
 pretend like birds are marked by noting which time intervals they are
 detected in during a short survey. The alder flycatcher data were
 collected using fixed-area 15-minute point counts, which were divided
@@ -272,9 +273,16 @@ Now we are almost ready to create our \texttt{unmarkedFrame} and begin
 fitting models. We will fit our first series of models using the
 \texttt{multinomPois} function, which requires data formated using the
 \texttt{unmarkedFrameMPois} function. This constructor function
-recognizes two types of capture-recapture data: removal sampling
-data and double observer sampling data. In the future, we may add an
-option to automatically handle standard capture-recapture data too,
+has an argument \texttt{type}, which currently can be set to
+\texttt{"removal"} or \texttt{"double"}, corresponding to removal sampling
+data and double observer sampling respectively. In doing so, the
+function automatically creates the function to convert $p$ to
+${\bf \pi}$. If \texttt{type} is missing, however, the user needs to
+specify
+a function to convert detection probability to multinomial cell
+probabilities. In the future, we may add an
+\texttt{type} option to automatically handle standard
+capture-recapture data too,
 but here we show how to supply it using a user-defined \texttt{piFun},
 which allows flexibility in converting detection probability
 to multinomial cell probabilities $\bf \pi$. The \texttt{piFun} must
@@ -305,8 +313,8 @@ crPiFun <- function(p) {
 To demonstrate how this works, imagine that we surveyed 2 sites and
 detection probability was constant ($p=0.2$) among sites and survey
 occasions. The function converts these capture probabilities to
-multinomial cell probabilites. Note that these cell probabilites will
-sum to $< 1$ if capture probability less than 1 over the 3 occasions.
+multinomial cell probabilities. Note that these cell probabilities will
+sum to $< 1$ if capture probability is less than 1 over the 3 occasions.
 
 <<>>=
 p <- matrix(0.4, 2, 3)
@@ -325,9 +333,10 @@ the number of rows equal to the number of columns for some obsCov, and
 the number columns equal to the number of columns in {\bf y}.
 If \texttt{obsToY[j,k]}=1, then a missing value in {\tt obsCov[i,j]}
 translates to
-a missing value in {\tt y[i,k]}. For capture-recapture data, all
+a missing value in {\tt y[i,k]}. For the capture-recapture data
+considered here, we can set all
 elements of
-\texttt{obsToY} should be 1.
+\texttt{obsToY} to 1.
 
 <<>>=
 o2y <- matrix(1, 3, 7)
@@ -344,7 +353,7 @@ library(unmarked)
 intervalMat <- matrix(c('1','2','3'), 50, 3, byrow=TRUE)
 class(alfl.H1) <- "matrix"
 umf.cr1 <- unmarkedFrameMPois(y=alfl.H1,
-    siteCovs=alfl.covs[,c("woody", "struct", "time.1")],
+    siteCovs=alfl.covs[,c("woody", "struct", "time.1", "date.1")],
     obsCovs=list(interval=intervalMat),
     obsToY=o2y, piFun="crPiFun")
 @
@@ -360,13 +369,13 @@ functions is evident.
 
 Now that we have our data formatted we can fit some models. The
 following correspond to model $M_0$, model $M_t$, and a model with a
-continous covariate effect on $p$.
+continuous covariate effect on $p$.
 
 
 <<>>=
 M0 <- multinomPois(~1 ~1, umf.cr1)
 Mt <- multinomPois(~interval-1 ~1, umf.cr1)
-Mc <- multinomPois(~time.1 ~1, umf.cr1)
+Mx <- multinomPois(~time.1 ~1, umf.cr1)
 @
 
 The first two models can be fit in other software programs. What is
@@ -382,7 +391,7 @@ a function of the percent cover of woody vegetation.
 
 This final model has a much lower AIC score than the other models, and
 it indicates
-that ALFL abundance increases with the percent cover
+that alder flycatcher abundance increases with the percent cover
 of woody vegetation. We can plot this relationship by predicting
 abundance at a sequence of woody vegetation values.
 <<woody,fig=TRUE,include=FALSE,width=5,height=5>>=
@@ -410,7 +419,7 @@ backTransform(M0.woody, type="det")
 @
 
 As suggested by the raw data, detection probability was very high. The
-cooresponding multinomial cell probabilities can be computed by
+corresponding multinomial cell probabilities can be computed by
 plugging this estimate of detection probability into our
 \texttt{piFun}. This \texttt{getP} function makes this easy.
 
@@ -437,7 +446,8 @@ cases, such as when traps are baited, we might observed $p_{wise} >
 p_{naive}$ in which case the animals are said to be ``trap-happy''.
 
 To fit model $M_b$ in \texttt{unmarked}, we need to create a new
-\texttt{piFun} and we need to provide an \texttt{obsCov} that
+\texttt{piFun} and we need to provide an occasion-specific covariate
+(\texttt{obsCov}) that
 distinguishes the two capture probabilities, $p_{naive}$ and
 $p_{wise}$. The simplest possible approach is the following
 
@@ -481,11 +491,166 @@ M0 <- multinomPois(~1 ~1, umf.cr1Mb)
 @
 AIC gives us no reason to favor model $M_b$ over model $M_0$. This is
 perhaps not too surprising given that the alder
-flycathers were not actually captured. Here is a command to compute
+flycatchers were not actually captured. Here is a command to compute
 95\% confidence intervals for the two detection probabilities.
 <<>>=
 plogis(confint(Mb, type="det", method="profile"))
 @
+
+\subsection{Caution, Warning, Danger}
+The function \texttt{crPiFun.Mb} is not generic and could easily be
+abused. For example, you would get bogus results if you tried to use
+this function to fit model $M_{bt}$, or if you incorrectly formatted
+the \texttt{behavior} covariate. Thus, extreme caution is advised when
+writing user-defined \texttt{piFun}s.
+
+There are also a few limitations regarding user-defined
+\texttt{piFun}s. First, they can only take a single argument \verb+p+,
+which must be the $R \times J$ matrix of detection probabilities. This
+makes it cumbersome to fit models such as model $M_h$ as described
+below. It also makes it impossible to fit models such as model
+$M_{bt}$. It
+would be better if \texttt{piFun}s could accept multiple
+arguments, but this would require some modifications to
+\texttt{multinomPois} and \texttt{gmultmix}, which we may do in the
+future.
+
+\subsection{Individual Heterogeneity in Capture Probability, Model $M_h$}
+
+The capture-recapture models covered thus far assume
+that variation in capture probability can be
+explained by site-specific covariates, time, or behavior. Currently,
+\texttt{unmarked} can not fit so-called individual covariate models,
+in which heterogeneity in $p$ is attributable to animal-specific
+covariates. However, one could
+partition the data into strata and analyze the strata separately. For
+example, sex-specific
+differences could be studied by dividing the data on males and females
+into 2 subsets.
+
+Although individual covariate models cannot be considered, it is possible
+to fit model $M_h$, which assumes
+random variation in capture probability among individuals.
+Here is a \texttt{piFun}, based on code by Andy Royle. It assumes
+a logit-normal distribution for the random effects
+\[
+\mbox{logit}(p_i) \sim Normal(\mu, \sigma^2).
+\]
+These random effects are integrated out of the likelihood to obtain the
+marginal probability of capture.
+
+\newpage
+
+<<>>=
+MhPiFun <- function(p) {
+mu <- qlogis(p[,1]) # logit(p)
+sig <- exp(qlogis(p[1,2]))
+J <- ncol(p)
+M <- nrow(p)
+il <- matrix(NA, nrow=M, ncol=7)
+dimnames(il) <- list(NULL, c("001","010","011","100","101","110","111"))
+for(i in 1:M) {
+  il[i,1] <- integrate( function(x) {
+    (1-plogis(mu[i]+x))*(1-plogis(mu[i]+x))*plogis(mu[i]+x)*dnorm(x,0,sig)
+  }, lower=-Inf, upper=Inf, stop.on.error=FALSE)$value
+  il[i,2] <- integrate( function(x) {
+    (1-plogis(mu[i]+x))*plogis(mu[i]+x)*(1-plogis(mu[i]+x))*dnorm(x,0,sig)
+  }, lower=-Inf, upper=Inf, stop.on.error=FALSE)$value
+  il[i,3] <- integrate( function(x) {
+    (1-plogis(mu[i]+x))*plogis(mu[i]+x)*plogis(mu[i]+x)*dnorm(x,0,sig)
+  }, lower=-Inf, upper=Inf, stop.on.error=FALSE)$value
+  il[i,4] <- integrate( function(x) {
+    plogis(mu[i]+x)*(1-plogis(mu[i]+x))*(1-plogis(mu[i]+x))*dnorm(x,0,sig)
+  }, lower=-Inf, upper=Inf, stop.on.error=FALSE)$value
+  il[i,5] <- integrate( function(x) {
+    plogis(mu[i]+x)*(1-plogis(mu[i]+x))*plogis(mu[i]+x)*dnorm(x,0,sig)
+  }, lower=-Inf, upper=Inf, stop.on.error=FALSE)$value
+  il[i,6] <- integrate( function(x) {
+    plogis(mu[i]+x)*plogis(mu[i]+x)*(1-plogis(mu[i]+x))*dnorm(x,0,sig)
+  }, lower=-Inf, upper=Inf, stop.on.error=FALSE)$value
+  il[i,7] <- integrate( function(x) {
+    plogis(mu[i]+x)*plogis(mu[i]+x)*plogis(mu[i]+x)*dnorm(x,0,sig)
+  }, lower=-Inf, upper=Inf, stop.on.error=FALSE)$value
+}
+return(il)
+}
+@
+
+This function does not allow for temporal variation in capture
+probability because we are using the second column of \verb+p+ as
+$\sigma$, the parameter governing the variance of the random
+effects. Once again, this is somewhat clumsy and it would be better to
+allow \texttt{piFun} to accept additional arguments, which could be
+controlled from \texttt{multinomPois} using an additional
+\texttt{formula}. Such features may be added evenually.
+
+Having defined our new \texttt{piFun}, we can fit the model as follows
+%<<>>=
+%library(unmarked)
+%parID <- matrix(c('p','sig','sig'), 50, 3, byrow=TRUE)
+%umf.cr2 <- unmarkedFrameMPois(y=alfl.H1,
+%       siteCovs=alfl.covs[,c("woody", "struct", "time.1")],
+%       obsCovs=list(parID=parID),
+%       obsToY=o2y, piFun="MhPiFun")
+%multinomPois(~parID-1 ~woody, umf.cr2)
+%@
+\begin{Schunk}
+\begin{Sinput}
+> library(unmarked)
+> parID <- matrix(c('p','sig','sig'), 50, 3, byrow=TRUE)
+> umf.cr2 <- unmarkedFrameMPois(y=alfl.H1,
+        siteCovs=alfl.covs[,c("woody", "struct", "time.1")],
+        obsCovs=list(parID=parID),
+        obsToY=o2y, piFun="MhPiFun")
+> multinomPois(~parID-1 ~woody, umf.cr2)
+\end{Sinput}
+\begin{Soutput}
+Call:
+multinomPois(formula = ~parID - 1 ~ woody, data = umf.cr2)
+
+Abundance:
+            Estimate    SE     z P(>|z|)
+(Intercept)    -0.84 0.363 -2.31 0.02078
+woody           2.59 0.680  3.81 0.00014
+
+Detection:
+         Estimate    SE    z P(>|z|)
+parIDp      1.637 0.645 2.54  0.0112
+parIDsig    0.841 0.622 1.35  0.1762
+
+AIC: 242.3731
+\end{Soutput}
+\end{Schunk}
+The estimate of $\sigma$ is high, indicating the existence of substantial
+heterogeneity in detection probability. However, one should be aware of the
+concerns about $M_h$ raised by \citet{link:2003} who demonstrated that
+population size $N$ is not an identifiable parameter among various
+classes of models assumed for the random effects. For example, we
+might use a beta distribution rather than a logit-normal distribution,
+and obtain very different estimates of abundance. \citet{link:2003}
+demonstrated that conventional methods such as AIC cannot be used to
+discriminate among these models.
+
+
+\subsection{Distance-related heterogeneity}
+
+Another source of individual heterogeneity in capture probability
+arises from the distance between animal activity centers and
+sample locations. Traditional capture-recapture models ignore this
+important source of variation in capture probability, but
+recently developed spatial capture-recapture (SCR) models overcome this
+limitation
+\citep{efford:2004,royle_young:2008,royle_dorazio:2008}. Distance-related
+heterogeneity in detection
+probability was probably not an important concern in the alder
+flycatcher dataset because the plots were very small (0.785 ha) and
+only singing birds were included in the analysis. If it were a
+concern, we could of course collect distance data and use the
+\verb+gdistsamp+ function to fit a distance sampling model.
+In other contexts, such as when using arrays of live traps,
+distance sampling is not an option and
+SCR models offer numerous advantages over traditional
+capture-recapture models.
 
 
 \section{Modeling Temporary Emigration}
@@ -568,38 +733,6 @@ either the Poisson or negative binomial distribution. We might
 eventually add other options such as the zero-inflated Poisson.
 
 
-\section{Individual Heteogeneity in Capture Probability}
-
-The capture-recapture models that can be fit in \texttt{unmarked} assume
-that variation in capture probability can be
-explained by site, time, or behavior. Currently, individual
-heterogeneity cannot be explicitly modeled, although, one could
-partition the data into strata and analyze the strata separately. For
-example, sex-specific
-differences could be studied by dividing the data into 2 subsets.
-The so-called model $M_h$, which assumes
-random variation in capture probability among individuals is also not
-currently implemented. Some might find comfort in this given the
-concerns about $M_h$ raised by \citet{link:2003}.
-
-Another source of individual heterogeneity in capture probability
-arises from the distance between animal activity centers and
-sample locations. Traditional capture-recapture models ignore this
-important source of variation in capture probability, but
-recently developed spatial capture-recapture models overcome this
-limitation
-\citep{efford:2004,royle_young:2008,royle_dorazio:2008}. Distance-related
-heterogeneity in detection
-probability was probably not an important concern in the alder
-flycatcher dataset because the plots were very small (0.785 ha) and
-only singing birds were included in the analysis. In addition, SCR
-models would not work well for this dataset because they
-require ``spatial recaptures'' to work effectively. That is,
-SCR models work best when individuals are encountered at multiple
-locations, but the points in the alder flycatcher dataset were
-independent of one another. Nonetheless, we recommend the use of SCR
-models in other contexts such as when using camera traps or fixed
-arrays of live traps.
 
 \bibliography{unmarked}
 

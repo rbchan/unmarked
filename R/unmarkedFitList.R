@@ -58,9 +58,9 @@ setMethod("summary", "unmarkedFitList", function(object) {
     for(i in 1:length(fits))
         summary(fits[[i]])
     })
-    
-    
-setMethod("coef", "unmarkedFitList", function(object) 
+
+
+setMethod("coef", "unmarkedFitList", function(object)
 {
     fits <- object@fits
     coef.list <- lapply(fits, coef)
@@ -75,7 +75,7 @@ setMethod("coef", "unmarkedFitList", function(object)
 })
 
 
-setMethod("SE", "unmarkedFitList", function(obj) 
+setMethod("SE", "unmarkedFitList", function(obj)
 {
     fits <- obj@fits
     se.list <- lapply(fits, function(x) {
@@ -94,15 +94,15 @@ setMethod("SE", "unmarkedFitList", function(obj)
         se.out[i, names(se.list[[i]])] <- se.list[[i]]
     return(se.out)
 })
-    
 
 
 
-setMethod("predict", "unmarkedFitList", function(object, type, newdata=NULL, 
-    backTransform = TRUE, appendData = FALSE) {
+
+setMethod("predict", "unmarkedFitList", function(object, type, newdata=NULL,
+    backTransform = TRUE, appendData = FALSE, level=0.95) {
         fitList <- object@fits
-        ese <- lapply(fitList, predict, type = type, newdata = newdata, 
-            backTransform = backTransform)
+        ese <- lapply(fitList, predict, type = type, newdata = newdata,
+            backTransform = backTransform, level=level)
         E <- sapply(ese, function(x) x[,"Predicted"])
         SE <- sapply(ese, function(x) x[,"SE"])
         ic <- sapply(fitList, slot, "AIC")
@@ -140,7 +140,7 @@ cn <- function(object) {
 
 
 
-# R-squared index from Nagelkerke (1991)				  
+# R-squared index from Nagelkerke (1991)
 nagR2 <- function(fit, nullfit)
 {
     n <- sampleSize(fit)
@@ -159,7 +159,7 @@ setGeneric("modSel",
             }
         )
 
-setClass("unmarkedModSel", 
+setClass("unmarkedModSel",
     representation(
         Full = "data.frame",
         Names = "matrix"
@@ -169,8 +169,8 @@ setClass("unmarkedModSel",
 
 
 # Model selection results from an unmarkedFitList
-setMethod("modSel", "unmarkedFitList", 
-	function(object, nullmod=NULL) 
+setMethod("modSel", "unmarkedFitList",
+	function(object, nullmod=NULL)
 {
     if (!is.character(nullmod) && !is.null(nullmod)) {
         stop("nullmod must be character name of null model fit in the fitlist.")
@@ -223,7 +223,7 @@ setMethod("modSel", "unmarkedFitList",
         }
     out <- out[order(out$AIC),]
     out$cumltvWt <- cumsum(out$AICwt)
-    msout <- new("unmarkedModSel", Full = out, 
+    msout <- new("unmarkedModSel", Full = out,
         Names = rbind(Coefs = eNames, SEs = seNames))
     return(msout)
 })
@@ -238,7 +238,7 @@ setAs("unmarkedModSel", "data.frame", function(from) {
 
 
 
-setMethod("show", "unmarkedModSel", function(object) 
+setMethod("show", "unmarkedModSel", function(object)
 {
     out <- as(object, "data.frame")
     rownames(out) <- out$model
@@ -249,7 +249,7 @@ setMethod("show", "unmarkedModSel", function(object)
 
 
 
-setMethod("coef", "unmarkedModSel", function(object) 
+setMethod("coef", "unmarkedModSel", function(object)
 {
     coefNames <- object@Names["Coefs",]
     msdf <- as(object, "data.frame")
@@ -259,7 +259,7 @@ setMethod("coef", "unmarkedModSel", function(object)
 })
 
 
-setMethod("SE", "unmarkedModSel", function(obj) 
+setMethod("SE", "unmarkedModSel", function(obj)
 {
     seNames <- obj@Names["SEs",]
     msdf <- as(obj, "data.frame")

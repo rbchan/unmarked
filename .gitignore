@@ -10,3 +10,7 @@ NAMESPACE~
 *.aux
 *.log
 *.blg
+*.pdf
+auto/
+*.bbl
+

@@ -77,6 +77,7 @@ pp. 375--386.
 
 Chandler, R. B., J. A. Royle, and D. I. King. In Press. Inference about
 density and temporary emigration in unmarked populations. Ecology
+92:1429-1435.
 
 }
 \author{

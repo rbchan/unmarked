@@ -1,23 +1,43 @@
 test.gdistsamp.covs <- function() {
-    y <- matrix(rep(12:1, 10), 5, 6, byrow=TRUE)
-    siteCovs <- data.frame(x = c(-2, 2, 3, 4, 1))
-    umf <- unmarkedFrameGDS(y = y, siteCovs = siteCovs,
-        dist.breaks=c(0, 5, 10, 15)/1000, survey="line", tlength=rep(1, 5),
-        unitsIn="km", numPrimary=2)
-    fm <- gdistsamp(~x, ~x, ~x, data = umf, starts=c(3,0,-1,0,9,-3),
-                    K=50, se=FALSE)
+    set.seed(343)
+    R <- 30 # number of transects
+    T <- 3  # number of replicates
+    strip.width <- 50
+    transect.length <- 100
+    breaks <- seq(0, 50, by=10)
 
-    lam <- fm['lambda']
-    phi <- fm['phi']
-    det <- fm['det']
+    lambda <- 5 # Abundance
+    phi <- 0.6  # Availability
+    sigma <- 30 # Half-normal shape parameter
 
-    checkEqualsNumeric(coef(lam), c(3.72697705, -0.04497333),
-                       tolerance = 1e-4)
-    checkEqualsNumeric(coef(phi), c(0.41504254, -0.06105102),
-                       tolerance = 1e-3)
-    checkEqualsNumeric(coef(det), c(9.227672, -3.497148),
-                       tolerance = 1e-4)
-
+    J <- length(breaks)-1
+    y <- array(0, c(R, J, T))
+    for(i in 1:R) {
+        M <- rpois(1, lambda) # Individuals within the 1-ha strip
+        for(t in 1:T) {
+            # Distances from point
+            d <- runif(M, 0, strip.width)
+            # Detection process
+            if(length(d)) {
+                cp <- phi*exp(-d^2 / (2 * sigma^2)) # half-normal w/ g(0)<1
+                d <- d[rbinom(length(d), 1, cp) == 1]
+                y[i,,t] <- table(cut(d, breaks, include.lowest=TRUE))
+            }
+        }
     }
+    y <- matrix(y, nrow=R) # convert array to matrix
 
+    # Organize data
+    umf <- unmarkedFrameGDS(y = y, survey="line", unitsIn="m",
+                            dist.breaks=breaks,
+                            tlength=rep(transect.length, R), numPrimary=T)
 
+    # Fit the model
+    fm1 <- gdistsamp(~1, ~1, ~1, umf, output="density", se=FALSE)
+
+    checkEqualsNumeric(coef(fm1), c( 1.71894803, -0.03744387, 3.54452329))
+
+    re1 <- ranef(fm1)
+    checkEqualsNumeric(bup(re1, "mode")[1:7], c(3,5,3,5,5,2,5))
+
+}

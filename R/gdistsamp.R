@@ -7,7 +7,7 @@ gdistsamp <- function(lambdaformula, phiformula, pformula, data,
     ...)
 {
 if(!is(data, "unmarkedFrameGDS"))
-    stop("Data is not of class unmarkedFrameGMM.")
+    stop("Data is not of class unmarkedFrameGDS.")
 
 keyfun <- match.arg(keyfun)
 if(!keyfun %in% c("halfnorm", "exp", "hazard", "uniform"))

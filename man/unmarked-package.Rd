@@ -17,7 +17,7 @@
 \details{\tabular{ll}{
 Package: \tab unmarked\cr
 Type: \tab Package\cr
-Version: \tab 0.9-5\cr
+Version: \tab 0.9-8\cr
 License: \tab GPL (>= 3)\cr
 }
 
@@ -96,6 +96,7 @@ components required by model-fitting functions.}
 ## An example site-occupancy analysis
 
 # Simulate occupancy data
+set.seed(344)
 nSites <- 100
 nReps <- 5
 covariates <- data.frame(veght=rnorm(nSites),
@@ -175,12 +176,16 @@ par(op)
 
 \references{
 
+Chandler, R. B., J. A. Royle, and D. I. King. 2011. Inference about
+  density and temporary emigration in unmarked populations. \emph{Ecology}
+  92:1429-1435.
+
 Dail, D. and L. Madsen. 2011. Models for estimating abundance from
-repeated counts of an open metapopulation. \emph{Biometrics} 67:577-587.
+  repeated counts of an open metapopulation. \emph{Biometrics} 67:577-587.
 
 Fiske, I. and R. B. Chandler. 2011. \emph{unmarked}: An R package for
-fitting hierarchical models of wildlife occurrence and
-abundance. \emph{Journal of Statistical Software} 43:1--23.
+  fitting hierarchical models of wildlife occurrence and
+  abundance. \emph{Journal of Statistical Software} 43:1--23.
 
 Kéry, M., Royle, J. A., and Schmid, H. 2005 Modeling avian abundance from
   replicated counts using binomial mixture models. \emph{Ecological
@@ -188,36 +193,47 @@ Kéry, M., Royle, J. A., and Schmid, H. 2005 Modeling avian abundance from
 
 MacKenzie, D. I., J. D. Nichols, G. B. Lachman, S. Droege,
   J. A. Royle, and C. A. Langtimm. 2002. Estimating site occupancy rates
-  when detection probabilities are less than one. \emph{Ecology} 83: 2248--2255.
+  when detection probabilities are less than one. \emph{Ecology} 83:
+  2248--2255.
 
-MacKenzie, D. I., J. D. Nichols, J. E. Hines, M. G. Knutson, and A. B. Franklin.
-  2003. Estimating site occupancy, colonization, and local extinction when a
-  species is detected imperfectly. \emph{Ecology} 84:2200--2207.
+MacKenzie, D. I., J. D. Nichols, J. E. Hines, M. G. Knutson, and
+  A. B. Franklin. 2003. Estimating site occupancy, colonization, and
+  local extinction when a species is detected
+  imperfectly. \emph{Ecology} 84:2200--2207.
 
-MacKenzie, D. I., J. D. Nichols, J. A. Royle, K. H. Pollock, L. L. Bailey, and
-  J. E. Hines. 2006. \emph{Occupancy Estimation and Modeling}.
-  Amsterdam: Academic Press.
+MacKenzie, D. I., J. D. Nichols, J. A. Royle, K. H. Pollock,
+  L. L. Bailey, and J. E. Hines. 2006. \emph{Occupancy Estimation and
+  Modeling}. Amsterdam: Academic Press.
 
 Royle, J. A. 2004a. N-Mixture models for estimating population size from
   spatially replicated counts. \emph{Biometrics} 60:108--105.
 
 Royle, J. A. 2004b. Generalized estimators of avian abundance from
-  count survey data. \emph{Animal Biodiversity and Conservation} 27:375--386.
+  count survey data. \emph{Animal Biodiversity and Conservation}
+  27:375--386.
 
-Royle, J. A., D. K. Dawson, and S. Bates. 2004. Modeling abundance effects in
-  distance sampling. \emph{Ecology} 85:1591--1597.
+Royle, J. A., D. K. Dawson, and S. Bates. 2004. Modeling abundance
+  effects in distance sampling. \emph{Ecology} 85:1591--1597.
 
-Royle, J. A., and R. M. Dorazio. 2006. Hierarchical models of animal abundance
-  and occurrence. \emph{Journal Of Agricultural Biological And Environmental
-  Statistics} 11:249--263.
+Royle, J. A., and R. M. Dorazio. 2006. Hierarchical models of animal
+  abundance and occurrence. \emph{Journal Of Agricultural Biological And
+  Environmental Statistics} 11:249--263.
 
-Royle, J. A. and R. M. Dorazio. 2008. \emph{Hierarchical Modeling and Inference
-  in Ecology}. Academic Press.
+Royle, J. A. and R. M. Dorazio. 2008. \emph{Hierarchical Modeling and
+  Inference in Ecology}. Academic Press.
 
 Royle, J. A. and J. D. Nichols. 2003. Estimating Abundance from
-  Repeated Presence-Absence Data or Point Counts. \emph{Ecology}, 84:777--790.
+  Repeated Presence-Absence Data or Point Counts. \emph{Ecology},
+  84:777--790.
+
+Sillett, S. and Chandler, R.B. and Royle, J.A. and Kery, M. and
+  Morrison, S.A. In Press. Hierarchical distance sampling models to
+  estimate population size and habitat-specific abundance of an island
+  endemic. \emph{Ecological Applications}
 
 }
+
+
 \docType{package}
-\author{Ian Fiske, Richard Chandler, and Andy Royle}
+\author{Ian Fiske, Richard Chandler, Andy Royle, and Marc K\'{e}ry}
 \keyword{package}

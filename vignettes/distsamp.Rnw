@@ -8,7 +8,7 @@ options(continue=" ")
 \usepackage{Sweave}
 \usepackage{natbib}
 \usepackage{fullpage}
-\bibliographystyle{plain}
+\bibliographystyle{ecology}
 
 \DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em}
 \DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=2em}
@@ -16,7 +16,7 @@ options(continue=" ")
 \fvset{listparameters={\setlength{\topsep}{0pt}}}
 \renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
 
-%%\VignetteIndexEntry{Overview of distance sampling analysis in unmarked}
+%%\VignetteIndexEntry{Distance sampling analysis}
 
 \title{Distance sampling analysis in unmarked}
 \author{Richard Chandler\\USGS Patuxent Wildlife Research Center}
@@ -34,8 +34,8 @@ options(continue=" ")
   spatially is often of equal interest; however, conventional methods
   of analysis do not allow for explicit modeling of both density and
   detection probability. The function \code{distsamp} implements the
-  multinomial-Poisson mixture model of Royle et. al
-  \citep{royle_modeling_2004}, which was developed to overcome this
+  multinomial-Poisson mixture model of %Royle et. al
+  \citet{royle_modeling_2004}, which was developed to overcome this
   limitation. This model requires that line- or point-transects are
   spatially replicated and that distance data are recorded in discrete
   intervals. The function \code{gdistsamp} extends this basic model,
@@ -69,7 +69,7 @@ to be
 
 \begin{equation}
   \label{eq:1}
-  N_{i}\sim{Poisson}(\lambda)
+  N_{i} \sim \mathrm{Poisson}(\lambda)
   \quad  i=1,\dots,M\
 \end{equation}
 
@@ -77,13 +77,13 @@ The detection process is modeled as
 
 \begin{equation}
   \label{eq:2}
-  y_{ij}\sim{Multinomial}(N_{i}, \pi_{ij})
+  y_{ij} \sim \mathrm{Multinomial}(N_{i}, \pi_{ij})
   \quad  i=1,\dots,M\;j=1,\dots,J
 \end{equation}
 
 where $\pi_{ij}$ is the multinomial cell probability for transect $i$
 in distance class $j$. These are computed by integrating a detection
-function such as the half-normal (with shape parameter $\sigma$) over
+function such as the half-normal (with scale parameter $\sigma$) over
 each distance interval.
 
 Parameters $\lambda$ and $\sigma$ can be vectors affected by
@@ -158,7 +158,7 @@ hist(umf, xlab="distance (m)", main="", cex.lab=0.8, cex.axis=0.8)
 @
 \begin{figure}[!ht]
   \centering
-  \includegraphics{distsamp-umfhist}
+  \includegraphics[width=4in,height=4in]{distsamp-umfhist}
   \caption{Histogram of detection distances.}
   \label{fig:umfhist}
 \end{figure}
@@ -176,7 +176,7 @@ the half-normal detection function is used to model density in animals
 / ha. The detection function can be selected using the \code{keyfun}
 argument. The response can be changed from ``density", to ``abund"
 with the \code{output} argument. When modeling density, the output
-units can be changed from h``a" to ``kmsq" using the \code{unitsOut}
+units can be changed from ``ha" to ``kmsq" using the \code{unitsOut}
 argument. \code{distsamp} also includes the arguments \code{starts},
 \code{method}, and \code{control}, which are common to all unmarked
 fitting functions.
@@ -196,7 +196,7 @@ The first two models are the same, a null half-normal detection
 function with density returned in animals / ha (on the log-scale). The
 third model uses the hazard-rate detection function, and the fourth
 model includes covariates affecting the Poisson mean ($\lambda$) and
-the half-normal shape parameter ($\sigma$).
+the half-normal scale parameter ($\sigma$).
 
 
 Once a model has been fit, typing its name will display parameter
@@ -313,7 +313,7 @@ with(Elambda, {
 	})
 with(Esigma, {
 	plot(canopyHt, Predicted, type="l", xlab="Canopy height",
-		ylab=expression(paste("Half-normal shape parameter (", sigma, ")",
+		ylab=expression(paste("Half-normal scale parameter (", sigma, ")",
         sep="")), ylim=c(0, 20), cex=0.7, cex.lab=0.7,
     cex.axis=0.7)
 	lines(canopyHt, Predicted+SE, lty=2)

@@ -115,23 +115,23 @@ setMethod("show", signature(object = "unmarkedEstimate"),
 
 
 setMethod("summary", signature(object = "unmarkedEstimate"),
-	function(object)
+    function(object)
 {
-	ests <- object@estimates
-	SEs <- SE(object)
+    ests <- object@estimates
+    SEs <- SE(object)
     Z <- ests/SEs
-	p <- 2*pnorm(abs(Z), lower.tail = FALSE)
-	printRowNames <-
-		!(length(ests) == 1 | identical(names(ests), "(Intercept)") | identical(names(ests), "1"))
-	invlink <- object@invlink
-	link <- switch(invlink,
-		exp = "log",
-		logistic = "logit")
-	cat(object@name, " (", link, "-scale)", ":\n", sep="")
-	outDF <- data.frame(Estimate = ests, SE = SEs, z = Z, "P(>|z|)" = p,
-		check.names = FALSE)
-	print(outDF, row.names = printRowNames, digits = 3)
-	invisible(outDF)
+    p <- 2*pnorm(abs(Z), lower.tail = FALSE)
+    printRowNames <-
+        !(length(ests) == 1 | identical(names(ests), "(Intercept)") | identical(names(ests), "1"))
+    invlink <- object@invlink
+    link <- switch(invlink,
+                   exp = "log",
+                   logistic = "logit")
+    cat(object@name, " (", link, "-scale)", ":\n", sep="")
+    outDF <- data.frame(Estimate = ests, SE = SEs, z = Z, "P(>|z|)" = p,
+                        check.names = FALSE)
+    print(outDF, row.names = printRowNames, digits = 3)
+    invisible(outDF)
 })
 
 
@@ -139,25 +139,25 @@ setMethod("summary", signature(object = "unmarkedEstimate"),
 # Compute linear combinations of estimates in unmarkedEstimate objects.
 
 setMethod("linearComb",
-	signature(obj = "unmarkedEstimate", coefficients = "matrixOrVector"),
-	function(obj, coefficients, offset = NULL)
+    signature(obj = "unmarkedEstimate", coefficients = "matrixOrVector"),
+    function(obj, coefficients, offset = NULL)
 {
-	if(!is(coefficients, "matrix"))
+    if(!is(coefficients, "matrix"))
         coefficients <- t(as.matrix(coefficients))
-	stopifnot(ncol(coefficients) == length(obj@estimates))
+    stopifnot(ncol(coefficients) == length(obj@estimates))
     if (is.null(offset))
         offset <- rep(0, nrow(coefficients))
-	e <- as.vector(coefficients %*% obj@estimates) + offset
-	v <- coefficients %*% obj@covMat %*% t(coefficients)
+    e <- as.vector(coefficients %*% obj@estimates) + offset
+    v <- coefficients %*% obj@covMat %*% t(coefficients)
     if (!is.null(obj@covMatBS)) {
         v.bs <- coefficients %*% obj@covMatBS %*% t(coefficients)
     } else {
         v.bs <- NULL
-        }
-	umelc <- new("unmarkedLinComb", parentEstimate = obj,
-		estimate = e, covMat = v, covMatBS = v.bs,
-		coefficients = coefficients)
-	umelc
+    }
+    umelc <- new("unmarkedLinComb", parentEstimate = obj,
+                 estimate = e, covMat = v, covMatBS = v.bs,
+                 coefficients = coefficients)
+    umelc
 })
 
 
@@ -191,68 +191,74 @@ setMethod("linearComb",
 # backTransform is only valid for an unmarkedEstimate of length = 1.
 # can backtranform a fit directly if it has length 1
 # o.w. give error
-setMethod("backTransform", "unmarkedEstimate",
-	function(obj)
+setMethod("backTransform", "unmarkedEstimate", function(obj)
 {
-	if(length(obj@estimates) == 1) {
-	   lc <- linearComb(obj, 1)
-	   return(backTransform(lc))
-	} else {
-		stop("Cannot directly back-transform an unmarkedEstimate with length > 1.\nUse linearComb() and then backTransform() the resulting scalar linear combination.")
-		}
+    if(length(obj@estimates) == 1) {
+        lc <- linearComb(obj, 1)
+        return(backTransform(lc))
+    } else {
+        stop("Cannot directly back-transform an unmarkedEstimate with length > 1.\nUse linearComb() and then backTransform() the resulting scalar linear combination.")
+    }
 })
+
 
 # Compute standard error of an unmarkedEstimate object.
-
-setMethod("SE",
-    signature(obj = "unmarkedEstimate"),
-    function(obj) {
-			sqrt(diag(vcov(obj)))
-		})
-
-
-setMethod("[",
-    signature("unmarkedEstimateList"),
-    function(x, i, j, drop) {
-      x@estimates[[i]]
-    })
-
-setMethod("names", "unmarkedEstimateList",
-    function(x) {
-      names(x@estimates)
-    })
-
-setMethod("coef", "unmarkedEstimate",
-	function(object, altNames = TRUE, ...)
+setMethod("SE", signature(obj = "unmarkedEstimate"), function(obj)
 {
-	coefs <- object@estimates
-	names(coefs)[names(coefs) == "(Intercept)"] <- "Int"
-	if(altNames) {
-		names(coefs) <- paste(object@short.name, "(", names(coefs), ")", sep="")
-		}
-	coefs
+    sqrt(diag(vcov(obj)))
 })
 
+
+setMethod("[", signature("unmarkedEstimateList"),
+    function(x, i, j, drop)
+{
+    x@estimates[[i]]
+})
+
+
+setMethod("names", "unmarkedEstimateList",
+    function(x)
+{
+    names(x@estimates)
+})
+
+
+setMethod("coef", "unmarkedEstimate",
+    function(object, altNames = TRUE, ...)
+{
+    coefs <- object@estimates
+    names(coefs)[names(coefs) == "(Intercept)"] <- "Int"
+    if(altNames) {
+        names(coefs) <- paste(object@short.name, "(", names(coefs), ")",
+                              sep="")
+    }
+    coefs
+})
+
+
 setMethod("vcov", "unmarkedEstimate",
-		function(object,...) {
-			v <- object@covMat
-			rownames(v) <- colnames(v) <- names(coef(object))
-			v
-		})
+    function(object,...)
+{
+        v <- object@covMat
+        rownames(v) <- colnames(v) <- names(coef(object))
+        v
+})
+
 
 setMethod("confint", "unmarkedEstimate",
-		function(object, parm, level = 0.95) {
-			if(missing(parm)) parm <- 1:length(object@estimates)
-			ests <- object@estimates[parm]
-			ses <- SE(object)[parm]
-			z <- qnorm((1-level)/2, lower.tail = FALSE)
-			lower.lim <- ests - z*ses
-			upper.lim <- ests + z*ses
-			ci <- as.matrix(cbind(lower.lim, upper.lim))
-			rownames(ci) <- names(coef(object))[parm]
-			colnames(ci) <- c((1-level)/2, 1- (1-level)/2)
-			ci
-		})
+    function(object, parm, level = 0.95)
+{
+    if(missing(parm)) parm <- 1:length(object@estimates)
+    ests <- object@estimates[parm]
+    ses <- SE(object)[parm]
+    z <- qnorm((1-level)/2, lower.tail = FALSE)
+    lower.lim <- ests - z*ses
+    upper.lim <- ests + z*ses
+    ci <- as.matrix(cbind(lower.lim, upper.lim))
+    rownames(ci) <- names(coef(object))[parm]
+    colnames(ci) <- c((1-level)/2, 1- (1-level)/2)
+    ci
+})
 
 
 

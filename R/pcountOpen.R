@@ -116,11 +116,11 @@ ym <- matrix(y, nrow=M)
 I <- cbind(rep(k, times=lk),
            rep(k, each=lk))
 I1 <- I[I[,1] <= I[,2],]
-Z <- Ib <- Ip <- list()
+Ib <- Ip <- list()
 for(i in 1:nrow(I)) {
-    Z[[i]] <- 0:min(I[i,])
-    Ib[[i]] <- which((I1[,1] %in% Z[[i]]) & (I1[,2]==I[i,1]))
-    Ip[[i]] <- as.integer(I[i,2]-Z[[i]]+1)
+    Z <- 0:min(I[i,])
+    Ib[[i]] <- which((I1[,1] %in% Z) & (I1[,2]==I[i,1])) - 1
+    Ip[[i]] <- as.integer(I[i,2]-Z)
 }
 
 
@@ -142,13 +142,13 @@ nll <- function(parms) {
           ytna, yna,
           lk, mixture, first, last, M, J, T,
           delta, dynamics, fix, go.dims,
-          I, I1, Z, Ib, Ip,
+          I, I1, Ib, Ip,
           PACKAGE = "unmarked")
 }
-
 if(missing(starts))
     starts <- rep(0, nP)
 fm <- optim(starts, nll, method=method, hessian=se, ...)
+
 opt <- fm
 ests <- fm$par
 if(identical(mixture,"NB"))

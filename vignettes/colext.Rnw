@@ -21,7 +21,7 @@ options(continue=" ")
 \fvset{listparameters={\setlength{\topsep}{0pt}}}
 \renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
 
-%%\VignetteIndexEntry{Dynamic occupancy models in unmarked}
+%%\VignetteIndexEntry{Dynamic occupancy models}
 
 
 \usepackage{amsmath}
@@ -74,7 +74,7 @@ options(continue=" ")
 
 \vspace{1 cm}
 \begin{center}
- \textbf{10 May 2011}
+ \textbf{29 March 2012}
 \end{center}
 
 % \today
@@ -644,16 +644,69 @@ time-dependent parameters.
 
 \begin{small}
 
-<<eval=true>>=
+<<eval=false>>=
 m1 <- colext(psiformula = ~1,   # First-year occupancy
     gammaformula = ~ year-1,    # Colonization
     epsilonformula = ~ year-1,  # Extinction
     pformula = ~ year-1,        # Detection
     data = simUMF)
 @
-<<>>=
+<<eval=false,echo=false>>=
 m1
 @
+\begin{Schunk}
+\begin{Sinput}
+> m1
+\end{Sinput}
+\begin{Soutput}
+Call:
+colext(psiformula = ~1, gammaformula = ~year - 1, epsilonformula = ~year -
+    1, pformula = ~year - 1, data = simUMF)
+
+Initial:
+ Estimate    SE      z P(>|z|)
+   -0.273 0.302 -0.906   0.365
+
+Colonization:
+       Estimate    SE     z  P(>|z|)
+year01    -2.08 0.951 -2.19 2.86e-02
+year02    -2.18 0.365 -5.96 2.52e-09
+year03    -1.98 0.274 -7.23 4.88e-13
+year04    -2.32 0.678 -3.42 6.37e-04
+year05    -1.89 0.478 -3.95 7.78e-05
+year06    -1.76 0.294 -5.97 2.44e-09
+year07    -1.55 0.230 -6.73 1.75e-11
+year08    -1.43 0.228 -6.29 3.19e-10
+year09    -2.35 0.470 -5.00 5.64e-07
+
+Extinction:
+       Estimate    SE      z  P(>|z|)
+year01  -1.4209 0.418 -3.401 6.72e-04
+year02  -0.4808 0.239 -2.009 4.45e-02
+year03  -1.2606 0.366 -3.440 5.83e-04
+year04  -0.0907 0.650 -0.139 8.89e-01
+year05  -0.6456 0.599 -1.078 2.81e-01
+year06  -0.9586 0.378 -2.539 1.11e-02
+year07  -1.2279 0.365 -3.362 7.74e-04
+year08  -1.1894 0.292 -4.076 4.58e-05
+year09  -0.6292 0.635 -0.991 3.22e-01
+
+Detection:
+       Estimate    SE      z  P(>|z|)
+year01  -1.0824 0.244 -4.434 9.26e-06
+year02  -0.2232 0.148 -1.508 1.32e-01
+year03   0.2951 0.154  1.918 5.52e-02
+year04   0.0662 0.161  0.412 6.81e-01
+year05  -2.0396 0.433 -4.706 2.52e-06
+year06  -0.6982 0.232 -3.005 2.66e-03
+year07   0.2413 0.165  1.466 1.43e-01
+year08   0.0847 0.155  0.548 5.84e-01
+year09   0.6052 0.140  4.338 1.44e-05
+year10  -1.1699 0.306 -3.828 1.29e-04
+
+AIC: 4779.172
+\end{Soutput}
+\end{Schunk}
 \end{small}
 
 
@@ -680,7 +733,7 @@ year `10' in \emph{nd}.
 
 \begin{small}
 
-<<eval=true>>=
+<<eval=false>>=
 nd <- data.frame(year=c('01','02','03','04','05','06','07','08','09'))
 E.ext <- predict(m1, type='ext', newdata=nd)
 E.col <- predict(m1, type='col', newdata=nd)
@@ -698,7 +751,7 @@ columns of data.frame returned by \emph{predict}.
 
 \begin{small}
 
-<<yearlysim,fig=true,include=false,width=3,height=7>>=
+<<yearlysim,eval=false,fig=true,include=false,width=3,height=7>>=
 op <- par(mfrow=c(3,1), mai=c(0.6, 0.6, 0.1, 0.1))
 
 with(E.ext, {   # Plot for extinction probability
@@ -964,9 +1017,8 @@ parameter model does not fit the data well.
 \section{Dynamic occupancy models for crossbill data from the Swiss MHB}
 
 \subsection{The crossbill data set}
-The crossbill data are in a comma-delimited text file called
-`crossbill.csv'.
-This file contains the results of nine years of surveys (1999--2007)
+The crossbill data are included with the \texttt{unmarked} package.
+The dataset contains the results of nine years of surveys (1999--2007)
 for the European crossbill (\emph{Loxia curvirostra}),
 a pine-seed eating finch, in 267 1-km$^2$ sample quadrats in Switzerland.
 Quadrats are surveyed annually as part of the Swiss breeding bird
@@ -980,14 +1032,12 @@ High-elevation sites are only surveyed twice per breeding season.
 
 
 \subsection{Importing, formatting, and summarizing data}
-We import the data into an open R workspace using a standard method,
-and display the column names.
+The data can be loaded into an open R workspace using the \verb+data+
+command.
 
 \begin{small}
-
-<<eval=true>>=
-crossbill <- read.csv(system.file("csv", "crossbill.csv",
-    package="unmarked"), header=TRUE)
+<<>>=
+data(crossbill)
 colnames(crossbill)
 @
 \end{small}
@@ -1076,7 +1126,7 @@ The latter is more useful for getting predictions in the presence of
 other explanatory variables for that parameter.
 For model fm5 with more complex covariate relationships, we use as
 starting values for the optimization routine
-the solution from a ``neighbouring'' model with slightly less
+the solution from a ``neighboring'' model with slightly less
 complexity, model fm4.
 Wise choice of starting values can be decisive for success or failure
 of maximum likelihood estimation.
@@ -1109,7 +1159,7 @@ fm4 <- colext(~forest, ~year-1, ~year-1, ~year, umf)
 fm5 <- colext(~forest, ~year-1, ~year-1, ~year + date + I(date^2),
               umf, starts=c(coef(fm4), 0, 0))
 @
-<<eval=true>>=
+<<eval=false>>=
 # Same as fm5, but with detection in addition depending on forest cover
 fm6 <- colext(~forest, ~year-1, ~year-1, ~year + date + I(date^2) +
               forest, umf)
@@ -1214,7 +1264,7 @@ standardized scale.
 
 \begin{small}
 
-<<cov,fig=true,include=false,width=6,height=3>>=
+<<cov,eval=false,fig=true,include=false,width=6,height=3>>=
 op <- par(mfrow=c(1,2), mai=c(0.8,0.8,0.1,0.1))
 
 nd <- data.frame(forest=seq(0, 100, length=50))
@@ -1259,7 +1309,7 @@ par(op)
 
 
 
-\section*{Acknowledgements}
+\section*{Acknowledgments}
 Special thanks goes to Ian Fiske, the author of \emph{colext} and the
 original developer of \textbf{unmarked}. Andy Royle provided the
 initial funding and support for the package. The questions of many

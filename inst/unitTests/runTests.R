@@ -91,3 +91,8 @@ if(require("RUnit", quietly = TRUE)) {
     "for package", pkg,"\n")
 }
 
+
+
+
+tests <- runTestSuite(testSuite)
+printTextProtocol(tests)

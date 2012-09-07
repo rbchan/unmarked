@@ -112,7 +112,6 @@ sim2 <- function(lambda=5, phi=0.5, shape=20, scale=10, R=100, T=3,
 
 
 
-source("../../R/gdistsamp.R")
 
 library(unmarked)
 

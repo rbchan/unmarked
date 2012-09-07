@@ -525,19 +525,53 @@ as.numeric(1 - exp(-lambda))
 # Convert individual-level distance data to the
 # transect-level format required by distsamp()
 
-formatDistData <- function(distData, distCol, transectNameCol, dist.breaks)
+formatDistData <- function(distData, distCol, transectNameCol, dist.breaks,
+                           occasionCol)
 {
+    if(!is.numeric(distData[,distCol]))
+        stop("The distances must be numeric")
     transects <- distData[,transectNameCol]
+    if(!is.factor(transects)) {
+        transects <- as.factor(transects)
+        warning("The transects were converted to a factor")
+    }
+    if(missing(occasionCol)) {
+        T <- 1
+        occasions <- factor(rep(1, nrow(distData)))
+    }
+    else {
+        occasions <- distData[,occasionCol]
+        if(!is.factor(occasions)) {
+            occasions <- as.factor(occasions)
+            warning("The occasions were converted to a factor")
+        }
+        T <- nlevels(occasions)
+    }
     M <- nlevels(transects)
     J <- length(dist.breaks) - 1
-    y <- matrix(NA, M, J,
+    dist.classes <- levels(cut(distData[,distCol], dist.breaks,
+                               include.lowest=TRUE))
+    ya <- array(NA, c(M, J, T),
                 dimnames = list(levels(transects),
-                paste("y", 1:J, sep=".")))
+                                dist.classes,
+                                paste("rep", 1:T, sep="")))
+    transect.levels <- levels(transects)
+    occasion.levels <- levels(occasions)
     for(i in 1:M) {
-        sub <- subset(distData, transects==rownames(y)[i])
-        y[i,] <- table(cut(sub[,distCol], dist.breaks,
-                           include.lowest=TRUE))
+        for(t in 1:T) {
+            sub <- distData[transects==transect.levels[i] &
+                            occasions==occasion.levels[t],,drop=FALSE]
+            ya[i,,t] <- table(cut(sub[,distCol], dist.breaks,
+                                  include.lowest=TRUE))
+        }
     }
+    y <- matrix(ya, nrow=M, ncol=J*T)
+    dn <- dimnames(ya)
+    rownames(y) <- dn[[1]]
+    if(T==1)
+        colnames(y) <- dn[[2]]
+    else
+        colnames(y) <- paste(rep(dn[[2]],times=T), rep(1:T, each=J), sep="")
     return(y)
 }
 
