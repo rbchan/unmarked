@@ -3,7 +3,7 @@
 
 pcountOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
     data, mixture=c("P", "NB", "ZIP"), K,
-    dynamics=c("constant", "autoreg", "notrend", "trend"),
+    dynamics=c("constant", "autoreg", "notrend", "trend", "exp-imm"),
     fix=c("none", "gamma", "omega"),
     starts, method="BFGS", se=TRUE, ...)
 {
@@ -182,7 +182,8 @@ gamName <- switch(dynamics,
                   constant = "gamConst",
                   autoreg = "gamAR",
                   notrend = "",
-                  trend = "gamTrend")
+                  trend = "gamTrend",
+                  exp-imm = "gamExpImm")
 if(!(identical(fix, "gamma") | identical(dynamics, "notrend")))
     estimateList@estimates$gamma <- unmarkedEstimate(name = "Recruitment",
         short.name = gamName, estimates = ests[(nAP+1) : (nAP+nGP)],
@@ -195,7 +196,7 @@ if(!(identical(fix, "omega") | identical(dynamics, "trend")))
         short.name = "omega", estimates = ests[(nAP+nGP+1) :(nAP+nGP+nOP)],
         covMat = as.matrix(covMat[(nAP+nGP+1) : (nAP+nGP+nOP),
             (nAP+nGP+1) : (nAP+nGP+nOP)]),
-        invlink = "logistic", invlinkGrad = "logistic.grad")
+        invlink = "logistic", invlinkGrad = "logistic.grad") # Change for exp-imm
 estimateList@estimates$det <- detEstimates
 if(identical(mixture, "NB")) {
     estimateList@estimates$alpha <- unmarkedEstimate(name = "Dispersion",

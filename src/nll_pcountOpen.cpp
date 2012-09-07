@@ -26,7 +26,6 @@ void tp1(arma::mat& g3, int nrI, int nrI1, Rcpp::IntegerVector N, arma::imat I, 
 
 
 
-
 // autoregressive model
 void tp2(arma::mat& g3, int lk, double gam, double om) {
     int Nmin=0;
@@ -43,15 +42,22 @@ void tp2(arma::mat& g3, int lk, double gam, double om) {
 
 
 
-
-
-
-
 // trend model (exponential growth)
 void tp3(arma::mat& g3, int lk, double gam) {
     for(int n1=0; n1<lk; n1++) {
 	for(int n2=0; n2<lk; n2++) {
 	  g3(n1, n2) = Rf_dpois(n2, gam*n1, false);
+	}
+    }
+}
+
+
+
+// exponential growth with immigration
+void tp4(arma::mat& g3, int lk, double gam, double iota) {
+    for(int n1=0; n1<lk; n1++) {
+	for(int n2=0; n2<lk; n2++) {
+	  g3(n1, n2) = Rf_dpois(n2, gam*n1+iota, false);
 	}
     }
 }
@@ -103,8 +109,12 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
   // linear predictors
   arma::colvec lam = exp(Xlam*beta_lam + Xlam_offset);
   arma::colvec omv = arma::ones<arma::colvec>(M*(T-1));
-  if((fix != "omega") && (dynamics != "trend"))
-    omv = 1.0/(1.0+exp(-1*(Xom*beta_om + Xom_offset)));
+  if((fix != "omega") && (dynamics != "trend")) {
+    if(dynamics != "exp-imm")
+      omv = 1.0/(1.0+exp(-1*(Xom*beta_om + Xom_offset)));
+    else if((dynamics == "exp-imm"))
+      omv = exp(Xom*beta_om + Xom_offset);
+  }
   omv.reshape(T-1, M);
   arma::mat om = arma::trans(omv);
   arma::mat gam = arma::zeros<arma::mat>(M, T-1);
@@ -154,16 +164,20 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
     }
   }
 
-   // compute g3 is there are no covariates of omega/gamma
-   if(go_dims == "scalar") {
-     if(dynamics=="constant" || dynamics=="notrend") {
-       tp1(g3, nrI, nrI1, N, I, I1, Ib, Ip, gam(first1,0), om(first1,0));
-     }
+  // compute g3 is there are no covariates of omega/gamma
+  if(go_dims == "scalar") {
+    if(dynamics=="constant" || dynamics=="notrend") {
+      tp1(g3, nrI, nrI1, N, I, I1, Ib, Ip, gam(first1,0), om(first1,0));
+    }
     else if(dynamics=="autoreg") {
       tp2(g3, lk, gam(first1,0), om(first1,0));
     }
-    else if(dynamics=="trend")
+    else if(dynamics=="trend") {
       tp3(g3, lk, gam(first1,0));
+    }
+    else if(dynamics=="exp-imm") {
+      tp4(g3, lk, gam(first1,0), om(first1,0)); // change to iota?
+    }
   } else if(go_dims == "rowvec") {
     for(int t=0; t<(T-1); t++) {
       if(ytna(first1,t)==1) { // FIXME: this is not generic!
@@ -174,9 +188,13 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
       }
       else if(dynamics=="autoreg") {
 	tp2(g3_t.slice(t), lk, gam(first1,t), om(first1,t));
-    }
-      else if(dynamics=="trend")
+      }
+      else if(dynamics=="trend") {
 	tp3(g3_t.slice(t), lk, gam(first1,t));
+      }
+      else if(dynamics=="exp-imm") {
+	tp4(g3_t.slice(t), lk, gam(first1,t), om(first1,t)); // change to iota?
+      }
     }
   }
   // loop over sites
@@ -211,8 +229,12 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
 	  else if(dynamics=="autoreg") {
 	    tp2(g3, lk, gam(i,t-1), om(i,t-1));
 	  }
-	  else if(dynamics=="trend")
+	  else if(dynamics=="trend") {
 	    tp3(g3, lk, gam(i,t-1));
+	  }
+	  else if(dynamics=="exp-imm") {
+	    tp4(g3, lk, gam(i,t-1), om(i,t-1)); // change to iota?
+	  }
 	} else if(go_dims == "rowvec") {
 	  g3 = g3_t.slice(t-1);
 	}

@@ -18,8 +18,14 @@ void tp2(arma::mat& g3, int lk, double gam, double om);
 
 
 
-// trend model
+// trend model, exponential growth
 void tp3(arma::mat& g3, int lk, double gam);
+
+
+
+// exponential growth with immigration
+void tp4(arma::mat& g3, int lk, double gam, double iota);
+
 
 
 #endif
