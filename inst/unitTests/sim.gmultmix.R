@@ -1,5 +1,5 @@
 
-# -------------------------- Null Poisson removal model ------------------------
+# -------------------------- Null Poisson removal model ------------------
 
 set.seed(26)
 
@@ -14,7 +14,7 @@ p <- 0.3
 y <- array(NA, c(n, T, J))
 M <- rpois(n, lam)          # Local population size
 N <- matrix(NA, n, T)       # Individuals availabe for detection
-    
+
 for(i in 1:n) {
     N[i,] <- rbinom(T, M[i], phi)
     y[i,,1] <- rbinom(T, N[i,], p)
@@ -23,7 +23,7 @@ for(i in 1:n) {
     Nleft2 <- Nleft1 - y[i,,2]
     y[i,,3] <- rbinom(T, Nleft2, p)
     }
-    
+
 y.ijt <- cbind(y[,1,], y[,2,], y[,3,], y[,4,])
 umf1 <- unmarkedFrameGMM(y=y.ijt, numPrimary=T, type="removal")
 
@@ -31,7 +31,7 @@ umf1 <- unmarkedFrameGMM(y=y.ijt, numPrimary=T, type="removal")
 system.time(m1 <- gmultmix(~1, ~1, ~1, data=umf1)) #2.3
 
 # Test 1
-checkEqualsNumeric(coef(m1), c(1.3923561, -0.3183231, -0.7864098), 
+checkEqualsNumeric(coef(m1), c(1.3923561, -0.3183231, -0.7864098),
     tolerance=1e-5)
 
 SSE(m1)
@@ -42,7 +42,7 @@ plot(pb1)
 
 
 
-# -------------------------- Null NegBin removal model ------------------------
+# -------------------------- Null NegBin removal model -------------------
 
 set.seed(73)
 
@@ -58,7 +58,7 @@ alpha <- 2
 y <- array(NA, c(n, T, J))
 M <- rnbinom(n, mu=lam, size=alpha)   # Local population size
 N <- matrix(NA, n, T)               # Individuals availabe for detection
-    
+
 for(i in 1:n) {
     N[i,] <- rbinom(T, M[i], phi)
     y[i,,1] <- rbinom(T, N[i,], p)
@@ -67,7 +67,7 @@ for(i in 1:n) {
     Nleft2 <- Nleft1 - y[i,,2]
     y[i,,3] <- rbinom(T, Nleft2, p)
     }
-    
+
 y.ijt <- cbind(y[,1,], y[,2,], y[,3,], y[,4,])
 umf2 <- unmarkedFrameGMM(y=y.ijt, numPrimary=T, type="removal")
 
@@ -89,7 +89,7 @@ plot(pb2)
 
 
 
-# --------------------- Poisson removal model w/ covariates -------------------
+# --------------------- Poisson removal model w/ covariates --------------
 
 set.seed(37)
 
@@ -123,28 +123,28 @@ for(i in 1:n) {
     y[i,3,] <- rbinom(T, Nleft2, p[i,3,])
     }
 
-umf3 <- unmarkedFrameGMM(y=matrix(y, nrow=n), 
-    siteCovs = data.frame(sc=sc), 
+umf3 <- unmarkedFrameGMM(y=matrix(y, nrow=n),
+    siteCovs = data.frame(sc=sc),
     obsCovs=list(oc=matrix(oc, nrow=n), int=int),
-    yearlySiteCovs=data.frame(ysc=as.numeric(t(ysc)), yr=yr), 
+    yearlySiteCovs=data.frame(ysc=as.numeric(t(ysc)), yr=yr),
     numPrimary=T, type="removal")
 
 (m3 <- gmultmix(~sc, ~ysc, ~oc, umf3))
 #system.time(m3 <- gmultmix(~sc, ~ysc, ~oc, umf3)) # 4.8
-            
+
 # Test
-checkEqualsNumeric(coef(m3), c(-1.2513974, 1.3585940, 2.2889517, -2.1197854, 
+checkEqualsNumeric(coef(m3), c(-1.2513974, 1.3585940, 2.2889517, -2.1197854,
     1.0450782, -0.8627125), tol=1e-5)
-    
-(pb3 <- parboot(m3, nsim=50, report=5))    
-    
-     
+
+(pb3 <- parboot(m3, nsim=50, report=5))
 
 
-umf4 <- unmarkedFrameGMM(y=matrix(y, nrow=n), 
-    siteCovs = data.frame(sc=sc), 
+
+
+umf4 <- unmarkedFrameGMM(y=matrix(y, nrow=n),
+    siteCovs = data.frame(sc=sc),
     obsCovs=list(oc=matrix(oc, nrow=n), int=int),
-    yearlySiteCovs=list(ysc=ysc), 
+    yearlySiteCovs=list(ysc=ysc),
     numPrimary=T, type="removal")
 
 
@@ -156,13 +156,13 @@ umf4 <- unmarkedFrameGMM(y=matrix(y, nrow=n),
 
 
 
-# ------------------------- double observer -----------------------------------
+# ------------------------- independent double observer ------------------
 
 
 
-sim.doub <- function(nSites=200, nReps=2, lambda=1, phi=0.6, pA=0.8, pB=0.6, 
-    alpha=0.5)
-{ 
+sim.doub <- function(nSites=200, nReps=2, lambda=1, phi=0.6,
+                     pA=0.8, pB=0.6, alpha=0.5)
+{
 
     N <- matrix(NA, nSites, nReps)
     y <- array(NA, c(nSites, 3, nReps))
@@ -186,15 +186,15 @@ sim.doub <- function(nSites=200, nReps=2, lambda=1, phi=0.6, pA=0.8, pB=0.6,
     return(matrix(y, nSites))
 }
 
-str(sim.doub())    
-    
+str(sim.doub())
+
 # Fit the model
 
 set.seed(4)
 y.sim <- sim.doub()
 T <- ncol(y.sim) / 3
 observer <- matrix(c("A", "B"), 200, T*2, byrow=TRUE)
-umf <- unmarkedFrameGMM(y = y.sim, 
+umf <- unmarkedFrameGMM(y = y.sim,
     obsCovs = list(observer=observer),
     numPrimary=2, type="double")
 summary(umf)
@@ -202,11 +202,11 @@ summary(umf)
 m4 <- gmultmix(~1, ~1, ~observer, umf, mixture="NB")
 m4
 
-checkEqualsNumeric(coef(m4), c(-0.06998556, 0.77150482, 1.31340048, 
+checkEqualsNumeric(coef(m4), c(-0.06998556, 0.77150482, 1.31340048,
     -0.94099309, -1.14215950), tol=1e-5)
 
 backTransform(m4, type="lambda")  # Average abundance per site
-backTransform(m4, type="phi")     # Availability    
+backTransform(m4, type="phi")     # Availability
 backTransform(linearComb(m4, c(1,0), type="det"))     # obsA detection prob
 backTransform(linearComb(m4, c(1,1), type="det"))     # obsB detection prob
 backTransform(m4, type="alpha")   # Over-dispersion
@@ -227,7 +227,7 @@ for(i in 1:nsim) {
     y.sim <- sim.doub()
     T <- ncol(y.sim)/3
     observer <- matrix(c("A", "B"), nrow(y.sim), T*2, byrow=TRUE)
-    umf <- unmarkedFrameGMM(y = y.sim, obsCovs=list(observer=observer), 
+    umf <- unmarkedFrameGMM(y = y.sim, obsCovs=list(observer=observer),
         type="double", numPrimary=T)
     m.sim4 <- gmultmix(~1, ~1, ~observer, umf, mixture="NB")
     e <- coef(m.sim4)
@@ -240,7 +240,6 @@ hist(simout[,3]); abline(v=0.8, col=4)
 hist(simout[,4]); abline(v=0.6, col=4)
 hist(simout[,5]); abline(v=0.5, col=4)
 
-    
 
 
 
@@ -252,4 +251,102 @@ hist(simout[,5]); abline(v=0.5, col=4)
 
 
 
+# ------------------------- dependent double observer ------------------
+
+
+
+sim.dep.double <- function(nSites=200, numPrimary=2, lambda=1, phi=0.6,
+                           pA=0.8, pB=0.6, alpha=0.5)
+{
+
+    N <- matrix(NA, nSites, numPrimary)
+    y <- array(NA, c(nSites, 2, numPrimary))
+
+    # Abundance at each site
+    M <- rnbinom(nSites, size=alpha, mu=lambda)
+
+    # Number available during each rep
+    for(i in 1:nSites) {
+        N[i,] <- rbinom(numPrimary, M[i], phi)
+        }
+
+    # Number observed
+    for(i in 1:nSites) {
+        for(t in 1:numPrimary) {
+            cp <- c(pA, pB * (1 - pA))
+            cp[3] <- 1 - sum(cp)
+            y[i,,t] <- c(rmultinom(1, N[i,t], cp)[1:2])
+            }
+        }
+    return(matrix(y, nSites))
+}
+
+str(sim.dep.double())
+
+
+# piFun
+
+depDoubPiFun <- function(p) {
+    M <- nrow(p)
+    pi <- matrix(NA, M, 2)
+    pi[,1] <- p[,1]
+    pi[,2] <- p[,2]*(1-p[,1])
+    return(pi)
+}
+
+obsToY <- matrix(1, 2, 2)
+numPrimary <- 2
+obsToY <- kronecker(diag(numPrimary), obsToY)
+
+
+
+# Fit the model
+
+set.seed(4)
+nSites <- 200
+T <- 10
+y.sim <- sim.dep.double(nSites=nSites, numPrimary=T, lambda=3)
+observer <- matrix(c("A", "B"), nSites, T*2, byrow=TRUE)
+obsToY <- matrix(1, 2, 2)
+obsToY <- kronecker(diag(T), obsToY)
+umf <- unmarkedFrameGMM(y = y.sim,
+    obsCovs = list(observer=observer),
+    numPrimary=T, obsToY=obsToY, piFun="depDoubPiFun")
+summary(umf)
+
+m5 <- gmultmix(~1, ~1, ~observer-1, umf, mixture="NB")
+m5
+
+plogis(1.429)
+plogis(0.395)
+
+
+
+
+
+
+
+nsim <- 50
+simout <- matrix(NA, nsim, 4)
+colnames(simout) <- c("lambda", "phi", "pA", "pB")
+for(i in 1:nsim) {
+    cat("sim", i, "\n"); flush.console()
+    y.sim <- sim.dep.double(nSites=200, alpha=1000, numPrimary=5)
+    T <- ncol(y.sim)/2
+    obsToY <- matrix(1, 2, 2)
+    obsToY <- kronecker(diag(T), obsToY)
+    observer <- matrix(c("A", "B", "B", "A"), nrow(y.sim), T*2, byrow=TRUE)
+    umf <- unmarkedFrameGMM(y = y.sim, obsCovs=list(observer=observer),
+        numPrimary=T, obsToY=obsToY, piFun="depDoubPiFun")
+    m.sim5 <- gmultmix(~1, ~1, ~observer-1, umf, mixture="P", se=FALSE)
+    e <- coef(m.sim5)
+    simout[i,] <- c(exp(e[1]), plogis(e[2:4]))
+    cat("   beta =", simout[i,], "\n")
+    }
+
+par(mfrow=c(2,2), mai=c(0.8,0.8,0.2,0.2))
+hist(simout[,1]); abline(v=1, col=4, lwd=2)
+hist(simout[,2]); abline(v=0.6, col=4, lwd=2)
+hist(simout[,3]); abline(v=0.8, col=4, lwd=2)
+hist(simout[,4]); abline(v=0.6, col=4, lwd=2)
 

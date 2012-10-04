@@ -2,61 +2,68 @@
 \alias{gmultmix}
 \title{Generalized multinomial-mixture model}
 \description{
-A three level hierarchical model for designs involving 
-repeated counts that yield multinomial outcomes. This model can be useful 
-if sites are not closed with respect to immigration and emigraion over the
-duration of sampling. Possible data collection 
-methods include removal sampling and double observer sampling. 
-The three model parameters are abundance, availability, and detection 
+A three level hierarchical model for designs involving
+repeated counts that yield multinomial outcomes.  Possible data collection
+methods include repeated removal sampling and double observer sampling.
+The three model parameters are abundance, availability, and detection
 probability.
 }
 \usage{
-gmultmix(lambdaformula, phiformula, pformula, data, mixture = c("P", "NB"), K, 
-    starts, method = "BFGS", control = list(), se = TRUE)
+gmultmix(lambdaformula, phiformula, pformula, data,
+mixture = c("P", "NB"), K, starts, method = "BFGS", se = TRUE, ...)
 }
 \arguments{
-    \item{lambdaformula}{Righthand side (RHS) formula describing abundance 
+    \item{lambdaformula}{Righthand side (RHS) formula describing abundance
         covariates}
     \item{phiformula}{RHS formula describing availability covariates}
     \item{pformula}{RHS formula describing detection covariates}
     \item{data}{An object of class unmarkedFrameGMM}
-    \item{mixture}{Either "P" or "NB" for Poisson and Negative Binomial mixing 
+    \item{mixture}{Either "P" or "NB" for Poisson and Negative Binomial mixing
         distributions.}
     \item{K}{The upper bound of integration}
     \item{starts}{Starting values}
     \item{method}{Optimization method used by \code{\link{optim}}}
-    \item{control}{List of control arguments passed to \code{\link{optim}}}
-    \item{se}{Logical. Should standard errors be calculated?}  
+    \item{se}{Logical. Should standard errors be calculated?}
+    \item{\dots}{Additional arguments to optim, such as lower and upper
+      bounds}
     }
 \details{
-The latent transect-level super-population abundance distribution 
-\eqn{f(M | \mathbf{\theta})}{f(M | theta)} can be set as either a Poisson or 
-a negative binomial random variable, depending on the setting of the 
-\code{mixture} argument. \code{mixture = "P"} or \code{mixture = "NB"} select 
-the Poisson or negative binomial distribution respectively.  The mean of 
-\eqn{M_i} is \eqn{\lambda_i}{lambda_i}.  If \eqn{M_i \sim NB}{M_i ~ NB}, then an
+The latent transect-level super-population abundance distribution
+\eqn{f(M | \mathbf{\theta})}{f(M | theta)} can be set as either a
+Poisson or
+a negative binomial random variable, depending on the setting of the
+\code{mixture} argument. \code{mixture = "P"} or \code{mixture = "NB"}
+select
+the Poisson or negative binomial distribution respectively.  The mean of
+\eqn{M_i} is \eqn{\lambda_i}{lambda_i}.  If \eqn{M_i \sim NB}{M_i ~ NB},
+then an
 additional parameter, \eqn{\alpha}{alpha}, describes dispersion (lower
 \eqn{\alpha}{alpha} implies higher variance).
 
-The number of individuals available for detection at time t 
-is a modeled as binomial: 
-\eqn{N_{it} \sim Binomial(M_i, \mathbf{\phi_ij})}{N_it ~ Binomial(M_i, phi_ij)}.
+The number of individuals available for detection at time t
+is a modeled as binomial:
+\eqn{N_{it} \sim Binomial(M_i, \mathbf{\phi_{ij}})}{N(i,t) ~
+  Binomial(M(i), phi(i,j))}.
 
-The detection process is modeled as multinomial: 
-\eqn{y_{ij} \sim 
-Multinomial(N_it, pi_{itj})}{y_itj ~ 
-Multinomial(N_it, pi_it1, pi_it2, ..., pi_itJ)}, 
-where \eqn{pi_itj} is the multinomial cell probability for plot i at time t on 
-occasion j. 
+The detection process is modeled as multinomial:
+\eqn{\mathbf{y_{it}} \sim
+Multinomial(N_{it}, \pi_{it})}{y(i,1:J,t) ~
+Multinomial(N(i,t), pi(i,1,t), pi(i,2,t), ..., pi(i,J,t))},
+where \eqn{\pi_{ijt}}{pi(ijt)} is the multinomial cell probability for
+plot i at time t on occasion j.
 
-Cell probabilities are computed via a user-defined function related to the 
-sampling design. Alternatively, the default functions \code{\link{removalPiFun}}
-or \code{\link{doublePiFun}} can be used for equal-interval removal sampling or
-double observer sampling. Note that the function for computing cell probabilites
+Cell probabilities are computed via a user-defined function related to the
+sampling design. Alternatively, the default functions
+\code{\link{removalPiFun}}
+or \code{\link{doublePiFun}} can be used for equal-interval removal
+sampling or
+double observer sampling. Note that the function for computing cell
+probabilites
 is specified when setting up the data using \code{\link{unmarkedFrameGMM}}.
 
-Parameters \eqn{\lambda}{lambda}, \eqn{\phi}{phi} and \eqn{p}{p} can be 
-modeled as linear functions of covariates using the log, logit and logit links
+Parameters \eqn{\lambda}{lambda}, \eqn{\phi}{phi} and \eqn{p}{p} can be
+modeled as linear functions of covariates using the log, logit and logit
+links
 respectively.
 
 }
@@ -64,28 +71,36 @@ respectively.
 An object of class unmarkedFitGMM.
 }
 \references{
-Royle, J. A. (2004) Generalized estimators of avian abundance from count 
-survey data. \emph{Animal Biodiversity and Conservation} 27, pp. 375--386.
+Royle, J. A. (2004) Generalized estimators of avian abundance from count
+survey data. \emph{Animal Biodiversity and Conservation} 27,
+pp. 375--386.
+
+Chandler, R. B., J. A. Royle, and D. I. King. In Press. Inference about
+density and temporary emigration in unmarked populations. Ecology
+92:1429-1435.
+
 }
 \author{
 Richard Chandler \email{rchandler@usgs.gov} and Andy Royle
 }
 \note{
-Three types of covariates can be supplied, site-level, site-by-year-level, and 
-observation-level. These must be formatted correctly when organizing the data
+Three types of covariates can be supplied, site-level,
+site-by-year-level, and
+observation-level. These must be formatted correctly when organizing the
+data
 with \code{\link{unmarkedFrameGMM}}
 }
 
 \seealso{
-\code{\link{unmarkedFrameGMM}} for setting up the data and metadata. 
+\code{\link{unmarkedFrameGMM}} for setting up the data and metadata.
 \code{\link{multinomPois}} for surveys where no secondary sampling periods were
-used. Example functions to calculate multinomial cell probabilities are 
-described \code{\link{piFuns}} 
+used. Example functions to calculate multinomial cell probabilities are
+described \code{\link{piFuns}}
 }
 \examples{
 
-# Simulate data using the multinomial-Poisson model with a 
-# repeated constant-interval removal design. 
+# Simulate data using the multinomial-Poisson model with a
+# repeated constant-interval removal design.
 
 n <- 100  # number of sites
 T <- 4    # number of primary periods
@@ -99,7 +114,7 @@ p <- 0.3
 y <- array(NA, c(n, T, J))
 M <- rpois(n, lam)          # Local population size
 N <- matrix(NA, n, T)       # Individuals available for detection
-    
+
 for(i in 1:n) {
     N[i,] <- rbinom(T, M[i], phi)
     y[i,,1] <- rbinom(T, N[i,], p)    # Observe some
@@ -108,7 +123,7 @@ for(i in 1:n) {
     Nleft2 <- Nleft1 - y[i,,2]
     y[i,,3] <- rbinom(T, Nleft2, p)
     }
-    
+
 y.ijt <- cbind(y[,1,], y[,2,], y[,3,], y[,4,])
 
 
@@ -126,6 +141,10 @@ c(p, (1-p) * p, (1-p)^2 * p)
 
 # Or more generally:
 head(getP(m1))
+
+# Empirical Bayes estimates of super-population size
+re <- ranef(m1)
+plot(re, layout=c(5,5), xlim=c(-1,20), subset=site\%in\%1:25)
 
 
 }

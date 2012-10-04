@@ -1,7 +1,16 @@
 *.so
 *.o
-*.pdf
 *.dll
 runit
 bc
 .Rhistory
+*.Rd~
+*.R~
+NAMESPACE~
+*.aux
+*.log
+*.blg
+*.pdf
+auto/
+*.bbl
+

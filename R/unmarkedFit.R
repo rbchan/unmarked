@@ -13,17 +13,18 @@ setClass("unmarkedFit",
         covMatBS = "optionalMatrix")) # list of bootstrap sample fits
 
 # constructor for unmarkedFit objects
-unmarkedFit <- function(fitType, call, formula, data, sitesRemoved, estimates, 
-    AIC, opt, negLogLike, nllFun) 
+unmarkedFit <- function(fitType, call, formula, data, sitesRemoved,
+    estimates, AIC, opt, negLogLike, nllFun)
 {
-    umfit <- new("unmarkedFit", fitType = fitType, call = call, 
-        formula = formula, data = data, sitesRemoved = sitesRemoved, 
-        estimates = estimates, AIC = AIC, opt = opt, negLogLike = negLogLike, 
+    umfit <- new("unmarkedFit", fitType = fitType, call = call,
+        formula = formula, data = data, sitesRemoved = sitesRemoved,
+        estimates = estimates, AIC = AIC, opt = opt,
+        negLogLike = negLogLike,
         nllFun = nllFun)
     return(umfit)
 }
 
-# ---------------------------- CHILD CLASSES -----------------------------------
+# ---------------------------- CHILD CLASSES ----------------------------
 
 
 setClass("unmarkedFitDS",
@@ -35,7 +36,7 @@ setClass("unmarkedFitDS",
 
 
 
-setClass("unmarkedFitPCount", 
+setClass("unmarkedFitPCount",
     representation(
         K = "numeric",
         mixture = "character"),
@@ -43,28 +44,28 @@ setClass("unmarkedFitPCount",
 
 
 
-setClass("unmarkedFitPCO", 
+setClass("unmarkedFitPCO",
         representation(
             formlist = "list",
             dynamics = "character"),
         contains = "unmarkedFitPCount")
 
 
-setClass("unmarkedFitOccu", 
+setClass("unmarkedFitOccu",
     representation(knownOcc = "logical"),
-    contains = "unmarkedFit")			
+    contains = "unmarkedFit")
 
 
-setClass("unmarkedFitMPois", 
-    contains = "unmarkedFit")			
+setClass("unmarkedFitMPois",
+    contains = "unmarkedFit")
 
 
-setClass("unmarkedFitOccuRN", 
+setClass("unmarkedFitOccuRN",
     contains = "unmarkedFit")
 
 setClass("unmarkedFitMNmix",
     representation(constraint = "numeric"),
-    contains = "unmarkedFit")					
+    contains = "unmarkedFit")
 
 setClass("unmarkedFitColExt",
     representation(
@@ -80,20 +81,28 @@ setClass("unmarkedFitColExt",
         projected.mean.bsse = "optionalMatrix",
         smoothed.mean.bsse = "optionalMatrix"),
     contains = "unmarkedFit")
-         
 
-setClass("unmarkedFitGMM", 
+
+setClass("unmarkedFitGMM",
     representation(
         formlist = "list",
         mixture = "character",
         K = "numeric"),
     contains = "unmarkedFit")
-        
-
-# -------------------------- Show and Summary ----------------------------------
 
 
-setMethod("show", "unmarkedFit", function(object) 
+setClass("unmarkedFitGDS",
+    representation(
+        keyfun = "character",
+        unitsOut = "character",
+        output = "character"),
+    contains = "unmarkedFitGMM")
+
+
+# -------------------------- Show and Summary ----------------------------
+
+
+setMethod("show", "unmarkedFit", function(object)
 {
     cat("\nCall:\n")
     print(object@call)
@@ -107,12 +116,12 @@ setMethod("show", "unmarkedFit", function(object)
 
 
 
-setMethod("summary", "unmarkedFit", function(object) 
+setMethod("summary", "unmarkedFit", function(object)
 {
     cat("\nCall:\n")
     print(object@call)
     cat("\n")
-    summaryOut <- summary(object@estimates)      	
+    summaryOut <- summary(object@estimates)
     cat("AIC:", object@AIC,"\n")
     cat("Number of sites:", sampleSize(object))
     if(length(object@sitesRemoved) > 0)
@@ -140,10 +149,9 @@ setMethod("summary", "unmarkedFitDS", function(object)
 
 
 # Compute linear combinations of estimates in unmarkedFit objects.
-
 setMethod("linearComb",
     signature(obj = "unmarkedFit", coefficients = "matrixOrVector"),
-    function(obj, coefficients, type, offset = NULL) 
+    function(obj, coefficients, type, offset = NULL)
 {
     stopifnot(!missing(type))
     stopifnot(type %in% names(obj))
@@ -152,7 +160,7 @@ setMethod("linearComb",
 })
 
 
-setMethod("backTransform", "unmarkedFit", function(obj, type) 
+setMethod("backTransform", "unmarkedFit", function(obj, type)
 {
     est <- obj[type]
     if(length(est@estimates) == 1) {
@@ -163,25 +171,27 @@ setMethod("backTransform", "unmarkedFit", function(obj, type)
         }
 })
 
-setMethod("[", "unmarkedFit", function(x, i, j, drop) 
-{
-    x@estimates[i]
-})
 
-setMethod("names", "unmarkedFit", function(x) 
-{
-    names(x@estimates)
-})
+setMethod("[", "unmarkedFit",
+          function(x, i, j, drop) {
+              x@estimates[i]
+          })
 
 
-
-# ----------------------------- Prediction ------------------------------------
+setMethod("names", "unmarkedFit",
+          function(x) {
+              names(x@estimates)
+          })
 
 
 
-setMethod("predict", "unmarkedFit", 
-    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE, 
-        appendData = FALSE, ...) 
+# ----------------------------- Prediction -----------------------------
+
+
+
+setMethod("predict", "unmarkedFit",
+    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE,
+        appendData = FALSE, level=0.95, ...)
 {
     if(missing(newdata) || is.null(newdata))
         newdata <- getData(object)
@@ -190,11 +200,16 @@ setMethod("predict", "unmarkedFit",
     stateformula <- as.formula(paste("~", formula[3], sep=""))
     if(inherits(newdata, "unmarkedFrame"))
         class(newdata) <- "unmarkedFrame"
-    cls <- class(newdata)
-    switch(cls, 
+    cls <- class(newdata)[1]
+    if(!cls %in% c("unmarkedFrame", "data.frame", "RasterStack"))
+        stop("newdata should be an unmarkedFrame, data.frame, or RasterStack", call.=FALSE)
+    if(identical(cls, "RasterStack"))
+        if(!require(raster))
+            stop("raster package is required")
+    switch(cls,
     unmarkedFrame = {
         designMats <- getDesign(newdata, formula, na.rm = na.rm)
-        switch(type, 
+        switch(type,
             state = {
                 X <- designMats$X
                 offset <- designMats$X.offset
@@ -205,7 +220,7 @@ setMethod("predict", "unmarkedFit",
                 })
         },
     data.frame = {
-        switch(type, 
+        switch(type,
             state = {
                 mf <- model.frame(stateformula, newdata)
                 X <- model.matrix(stateformula, mf)
@@ -216,41 +231,253 @@ setMethod("predict", "unmarkedFit",
                 X <- model.matrix(detformula, mf)
                 offset <- model.offset(mf)
                 })
-            })
-    out <- data.frame(matrix(NA, nrow(X), 2,  
-        dimnames=list(NULL, c("Predicted", "SE"))))
-    lc <- linearComb(object, X, type, offset = offset)
-    if(backTransform) lc <- backTransform(lc)
-    out$Predicted <- coef(lc)
-    out$SE <- SE(lc)
-    ci <- as.data.frame(confint(lc))
-    colnames(ci) <- c("lower", "upper")
-    out <- cbind(out, ci)
-    if(appendData)
-        out <- data.frame(out, as(newdata, "data.frame"))
+            },
+    RasterStack = {
+#        browser()
+        cd.names <- layerNames(newdata)
+        npix <- prod(dim(newdata)[1:2])
+        isfac <- is.factor(newdata)
+        if(any(isfac))
+            stop("This method currently does not handle factors")
+        z <- as.data.frame(matrix(getValues(newdata), npix))
+        names(z) <- cd.names
+        switch(type,
+               state = {
+                   varnames <- all.vars(stateformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(stateformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+                   offset <- model.offset(mf)
+               },
+               det= {
+                   varnames <- all.vars(detformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(detformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+                   offset <- model.offset(mf)
+               })
+    })
+    out <- data.frame(matrix(NA, nrow(X), 4,
+        dimnames=list(NULL, c("Predicted", "SE", "lower", "upper"))))
+    for(i in 1:nrow(X)) {
+        if(nrow(X) > 5000) {
+            if(i %% 1000 == 0)
+                cat("  doing row", i, "of", nrow(X), "\n")
+        }
+        if(any(is.na(X[i,])))
+            next
+        lc <- linearComb(object, X[i,], type, offset = offset[i])
+        if(backTransform)
+            lc <- backTransform(lc)
+        out$Predicted[i] <- coef(lc)
+        out$SE[i] <- SE(lc)
+        ci <- confint(lc, level=level)
+        out$lower[i] <- ci[1]
+        out$upper[i] <- ci[2]
+    }
+    if(appendData) {
+        if(!identical(cls, "RasterStack"))
+            out <- data.frame(out, as(newdata, "data.frame"))
+        else
+            out <- data.frame(out, z)
+    }
+    if(identical(cls, "RasterStack")) {
+        E.mat <- matrix(out[,1], dim(newdata)[1], dim(newdata)[2],
+                        byrow=TRUE)
+        E.raster <- raster(E.mat)
+        extent(E.raster) <- extent(newdata)
+        out.rasters <- list(E.raster)
+        for(i in 2:ncol(out)) {
+            i.mat <- matrix(out[,i], dim(newdata)[1], dim(newdata)[2],
+                            byrow=TRUE)
+            i.raster <- raster(i.mat)
+            extent(i.raster) <- extent(newdata)
+            out.rasters[[i]] <- i.raster
+        }
+        out.stack <- stack(out.rasters)
+        layerNames(out.stack) <- colnames(out)
+        out <- out.stack
+    }
     return(out)
 })
 
 
 
-setMethod("predict", "unmarkedFitColExt", 
-    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE, 
-        appendData = FALSE, ...) 
+
+
+
+
+
+setMethod("predict", "unmarkedFitPCount",
+    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE,
+        appendData = FALSE, level=0.95, ...)
+{
+    if(type %in% c("psi", "alpha"))
+        stop(type, " is scalar, so use backTransform instead")
+    if(missing(newdata) || is.null(newdata))
+        newdata <- getData(object)
+    formula <- object@formula
+    detformula <- as.formula(formula[[2]])
+    stateformula <- as.formula(paste("~", formula[3], sep=""))
+    if(inherits(newdata, "unmarkedFrame"))
+        class(newdata) <- "unmarkedFrame"
+    cls <- class(newdata)[1]
+    if(!cls %in% c("unmarkedFrame", "data.frame", "RasterStack"))
+        stop("newdata should be an unmarkedFrame, data.frame, or RasterStack", call.=FALSE)
+    if(identical(cls, "RasterStack"))
+        if(!require(raster))
+            stop("raster package is required")
+    switch(cls,
+    unmarkedFrame = {
+        designMats <- getDesign(newdata, formula, na.rm = na.rm)
+        switch(type,
+            state = {
+                X <- designMats$X
+                offset <- designMats$X.offset
+                },
+            det = {
+                X <- designMats$V
+                offset <- designMats$V.offset
+                })
+        },
+    data.frame = {
+        switch(type,
+            state = {
+                mf <- model.frame(stateformula, newdata)
+                X <- model.matrix(stateformula, mf)
+                offset <- model.offset(mf)
+                },
+            det = {
+                mf <- model.frame(detformula, newdata)
+                X <- model.matrix(detformula, mf)
+                offset <- model.offset(mf)
+                })
+            },
+    RasterStack = {
+        cd.names <- layerNames(newdata)
+        npix <- prod(dim(newdata)[1:2])
+        isfac <- is.factor(newdata)
+        if(any(isfac))
+            stop("This method currently does not handle factors")
+        z <- as.data.frame(matrix(getValues(newdata), npix))
+        names(z) <- cd.names
+        switch(type,
+               state = {
+                   varnames <- all.vars(stateformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(stateformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+                   offset <- model.offset(mf)
+               },
+               det= {
+                   varnames <- all.vars(detformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(detformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+                   offset <- model.offset(mf)
+               })
+    })
+    out <- data.frame(matrix(NA, nrow(X), 4,
+        dimnames=list(NULL, c("Predicted", "SE", "lower", "upper"))))
+    mix <- object@mixture
+    lam.mle <- coef(object, type="state")
+    if(identical(mix, "ZIP") & identical(type, "state")) {
+        psi.hat <- plogis(coef(object, type="psi"))
+        if(is.null(offset))
+            offset <- rep(0, nrow(X))
+        warning("Method to compute SE for ZIP model has not been written")
+    }
+    for(i in 1:nrow(X)) {
+        if(nrow(X) > 5000) {
+            if(i %% 1000 == 0)
+                cat("  doing row", i, "of", nrow(X), "\n")
+        }
+        if(any(is.na(X[i,])))
+            next
+        if(identical(mix, "ZIP") & identical(type, "state")) {
+            out$Predicted[i] <-
+                X[i,] %*% lam.mle + offset[i] + log(1 - psi.hat)
+            if(backTransform)
+                out$Predicted[i] <- exp(out$Predicted[i])
+            out$SE <- NA
+            ci <- c(NA, NA)
+        } else {
+            lc <- linearComb(object, X[i,], type, offset = offset[i])
+            if(backTransform)
+                lc <- backTransform(lc)
+            out$Predicted[i] <- coef(lc)
+            out$SE[i] <- SE(lc)
+            ci <- confint(lc, level=level)
+        }
+        out$lower[i] <- ci[1]
+        out$upper[i] <- ci[2]
+    }
+    if(appendData) {
+        if(!identical(cls, "RasterStack"))
+            out <- data.frame(out, as(newdata, "data.frame"))
+        else
+            out <- data.frame(out, z)
+    }
+    if(identical(cls, "RasterStack")) {
+        E.mat <- matrix(out[,1], dim(newdata)[1], dim(newdata)[2],
+                        byrow=TRUE)
+        E.raster <- raster(E.mat)
+        extent(E.raster) <- extent(newdata)
+        out.rasters <- list(E.raster)
+        for(i in 2:ncol(out)) {
+            i.mat <- matrix(out[,i], dim(newdata)[1], dim(newdata)[2],
+                            byrow=TRUE)
+            i.raster <- raster(i.mat)
+            extent(i.raster) <- extent(newdata)
+            out.rasters[[i]] <- i.raster
+        }
+        out.stack <- stack(out.rasters)
+        layerNames(out.stack) <- colnames(out)
+        out <- out.stack
+    }
+    return(out)
+})
+
+
+
+
+
+
+
+
+
+
+setMethod("predict", "unmarkedFitColExt",
+    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE,
+        appendData = FALSE, level=0.95, ...)
 {
     if(missing(newdata) || is.null(newdata))
         newdata <- getData(object)
     formula <- object@formula
-    cls <- class(newdata)
-    switch(cls, 
+    cls <- class(newdata)[1]
+    if(!cls %in% c("unmarkedMultFrame", "data.frame", "RasterStack"))
+        stop("newdata should be have class 'unmarkedMultFrame', 'data.frame', or 'RasterStack'")
+    if(identical(cls, "RasterStack"))
+        if(!require(raster))
+            stop("raster package is required")
+    switch(cls,
     unmarkedMultFrame = {
         designMats <- getDesign(newdata, formula, na.rm = na.rm)
-        switch(type, 
+        switch(type,
             psi = {
                 X <- designMats$W
                 #offset <- designMats$W.offset
                 },
             col = X <- designMats$X.gam,
-            ext = X <- designMats$X.eps,                
+            ext = X <- designMats$X.eps,
             det = {
                 X <- designMats$V
                 #offset <- designMats$V.offset
@@ -259,14 +486,14 @@ setMethod("predict", "unmarkedFitColExt",
     data.frame = {
         aschar1 <- as.character(formula)
         aschar2 <- as.character(formula[[2]])
-        aschar3 <- as.character(formula[[2]][[2]])    
+        aschar3 <- as.character(formula[[2]][[2]])
 
         detformula <- as.formula(paste(aschar1[1], aschar1[3]))
         epsformula <- as.formula(paste(aschar2[1], aschar2[3]))
         gamformula <- as.formula(paste(aschar3[1], aschar3[3]))
         psiformula <- as.formula(formula[[2]][[2]][[2]])
-            
-        switch(type, 
+
+        switch(type,
             psi = {
                 mf <- model.frame(psiformula, newdata)
                 X <- model.matrix(psiformula, mf)
@@ -281,24 +508,109 @@ setMethod("predict", "unmarkedFitColExt",
                 mf <- model.frame(epsformula, newdata)
                 X <- model.matrix(epsformula, mf)
                 #offset <- model.offset(mf)
-                },               
+                },
             det = {
                 mf <- model.frame(detformula, newdata)
                 X <- model.matrix(detformula, mf)
                 #offset <- model.offset(mf)
                 })
-            })
-    out <- data.frame(matrix(NA, nrow(X), 2, 
-        dimnames=list(NULL, c("Predicted", "SE"))))
-    lc <- linearComb(object, X, type)#, offset = offset)
-    if(backTransform) lc <- backTransform(lc)
-    out$Predicted <- coef(lc)
-    out$SE <- SE(lc)
-    ci <- as.data.frame(confint(lc))
-    colnames(ci) <- c("lower", "upper")
-    out <- cbind(out, ci)
-    if(appendData)
-        out <- data.frame(out, as(newdata, "data.frame"))
+            },
+    RasterStack = {
+        aschar1 <- as.character(formula)
+        aschar2 <- as.character(formula[[2]])
+        aschar3 <- as.character(formula[[2]][[2]])
+
+        detformula <- as.formula(paste(aschar1[1], aschar1[3]))
+        epsformula <- as.formula(paste(aschar2[1], aschar2[3]))
+        gamformula <- as.formula(paste(aschar3[1], aschar3[3]))
+        psiformula <- as.formula(formula[[2]][[2]][[2]])
+
+        cd.names <- layerNames(newdata)
+        npix <- prod(dim(newdata)[1:2])
+        isfac <- is.factor(newdata)
+        if(any(isfac))
+            stop("This method currently does not handle factors")
+        z <- as.data.frame(matrix(getValues(newdata), npix))
+        names(z) <- cd.names
+        switch(type,
+               psi = {
+                   varnames <- all.vars(psiformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(psiformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+#                   offset <- model.offset(mf)
+               },
+               col = {
+                   varnames <- all.vars(gamformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(gamformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+#                   offset <- model.offset(mf)
+               },
+               exp = {
+                   varnames <- all.vars(epsformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(epsformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+#                   offset <- model.offset(mf)
+               },
+               det= {
+                   varnames <- all.vars(detformula)
+                   if(!all(varnames %in% cd.names))
+                       stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                   mf <- model.frame(detformula, z, na.action="na.pass")
+                   X.terms <- attr(mf, "terms")
+                   X <- model.matrix(X.terms, mf)
+                   offset <- model.offset(mf)
+               })
+    })
+    out <- data.frame(matrix(NA, nrow(X), 4,
+        dimnames=list(NULL, c("Predicted", "SE", "lower", "upper"))))
+    for(i in 1:nrow(X)) {
+        if(nrow(X) > 5000) {
+            if(i %% 1000 == 0)
+                cat("  doing row", i, "of", nrow(X), "\n")
+        }
+        if(any(is.na(X[i,])))
+            next
+        lc <- linearComb(object, X[i,], type)
+        if(backTransform)
+            lc <- backTransform(lc)
+        out$Predicted[i] <- coef(lc)
+        out$SE[i] <- SE(lc)
+        ci <- confint(lc, level=level)
+        out$lower[i] <- ci[1]
+        out$upper[i] <- ci[2]
+    }
+    if(appendData) {
+        if(!identical(cls, "RasterStack"))
+            out <- data.frame(out, as(newdata, "data.frame"))
+        else
+            out <- data.frame(out, z)
+    }
+    if(identical(cls, "RasterStack")) {
+        E.mat <- matrix(out[,1], dim(newdata)[1], dim(newdata)[2],
+                        byrow=TRUE)
+        E.raster <- raster(E.mat)
+        extent(E.raster) <- extent(newdata)
+        out.rasters <- list(E.raster)
+        for(i in 2:ncol(out)) {
+            i.mat <- matrix(out[,i], dim(newdata)[1], dim(newdata)[2],
+                            byrow=TRUE)
+            i.raster <- raster(i.mat)
+            extent(i.raster) <- extent(newdata)
+            out.rasters[[i]] <- i.raster
+        }
+        out.stack <- stack(out.rasters)
+        layerNames(out.stack) <- colnames(out)
+        out <- out.stack
+    }
     return(out)
 })
 
@@ -309,54 +621,193 @@ setMethod("predict", "unmarkedFitColExt",
 
 
 
-setMethod("predict", "unmarkedFitPCO", 
-    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE, 
-        appendData = FALSE, ...) 
+setMethod("predict", "unmarkedFitPCO",
+    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE,
+        appendData = FALSE, level=0.95, ...)
 {
+    if(type %in% c("psi", "alpha"))
+        stop(type, " is scalar, so use backTransform instead")
     if(missing(newdata) || is.null(newdata))
         newdata <- getData(object)
     dynamics <- object@dynamics
     if(identical(dynamics, "notrend") & identical(type, "gamma"))
         stop("gamma is a derived parameter for this model: (1-omega)*lambda")
+    if(identical(dynamics, "trend") && identical(type, "omega"))
+        stop("omega is not a parameter in the dynamics='trend' model")
     formula <- object@formula
     formlist <- object@formlist
     if(inherits(newdata, "unmarkedFrame"))
-        cls <- "unmarkedFrame"            
-    else if(identical(class(newdata), "data.frame")) 
+        cls <- "unmarkedFrame"
+    else if(identical(class(newdata)[1], "data.frame"))
         cls <- "data.frame"
-    else 
-        stop("newdata should be a data.frame or inherit unmarkedFrame class")
-    switch(cls, 
+    else if(identical(class(newdata)[1], "RasterStack"))
+        cls <- "RasterStack"
+    else
+        stop("newdata should be a data.frame, unmarkedFrame, or RasterStack")
+    if(identical(cls, "RasterStack"))
+        if(!require(raster))
+            stop("raster package must be loaded")
+    switch(cls,
         unmarkedFrame = {
             D <- getDesign(newdata, formula, na.rm = na.rm)
-            switch(type, 
-                lambda = X <- D$Xlam,
-                gamma = X <- D$Xgam,
-                omega = X <- D$Xom,                           
-                det = X <- D$Xp)
+            switch(type,
+                lambda = {
+                    X <- D$Xlam
+                    offset <- D$Xlam.offset
+                },
+                gamma = {
+                    X <- D$Xgam
+                    offset <- D$Xgam.offset
+                },
+                omega = {
+                    X <- D$Xom
+                    offset <- D$Xom.offset
+                },
+                det = {
+                    X <- D$Xp
+                    offset <- D$Xp.offset
+                    })
                 },
         data.frame = {
             lambdaformula <- formlist$lambdaformula
             gammaformula <- formlist$gammaformula
             omegaformula <- formlist$omegaformula
             pformula <- formlist$pformula
-            switch(type, 
-                lambda = X <- model.matrix(lambdaformula, newdata),
-                gamma = X <- model.matrix(gammaformula, newdata),
-                omega = X <- model.matrix(omegaformula, newdata),
-                det = X <- model.matrix(pformula, newdata))    
-            })
-    out <- data.frame(matrix(NA, nrow(X), 2, 
-        dimnames=list(NULL, c("Predicted", "SE"))))
-    lc <- linearComb(object, X, type)
-    if(backTransform) lc <- backTransform(lc)
-    out$Predicted <- coef(lc)
-    out$SE <- SE(lc)
-    ci <- as.data.frame(confint(lc))
-    colnames(ci) <- c("lower", "upper")
-    out <- cbind(out, ci)
-    if(appendData)
-        out <- data.frame(out, newdata)
+            switch(type,
+                lambda = {
+                    mf <- model.frame(lambdaformula, newdata)
+                    X <- model.matrix(lambdaformula, mf)
+                    offset <- model.offset(mf)
+                },
+                gamma = {
+                    mf <- model.frame(gammaformula, newdata)
+                    X <- model.matrix(gammaformula, mf)
+                    offset <- model.offset(mf)
+                },
+                omega = {
+                    mf <- model.frame(omegaformula, newdata)
+                    X <- model.matrix(omegaformula, mf)
+                    offset <- model.offset(mf)
+                },
+                det = {
+                    mf <- model.frame(pformula, newdata)
+                    X <- model.matrix(pformula, mf)
+                    offset <- model.offset(mf)
+                })
+            },
+        RasterStack = {
+            lambdaformula <- formlist$lambdaformula
+            gammaformula <- formlist$gammaformula
+            omegaformula <- formlist$omegaformula
+            pformula <- formlist$pformula
+
+            cd.names <- layerNames(newdata)
+            npix <- prod(dim(newdata)[1:2])
+            isfac <- is.factor(newdata)
+            if(any(isfac))
+                stop("This method currently does not handle factors")
+            z <- as.data.frame(matrix(getValues(newdata), npix))
+            names(z) <- cd.names
+            switch(type,
+                   lambda = {
+                       varnames <- all.vars(lambdaformula)
+                       if(!all(varnames %in% cd.names))
+                           stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                       mf <- model.frame(lambdaformula, z,
+                                         na.action="na.pass")
+                       X.terms <- attr(mf, "terms")
+                       X <- model.matrix(X.terms, mf)
+                       offset <- model.offset(mf)
+                   },
+                   gamma = {
+                       varnames <- all.vars(gammaformula)
+                       if(!all(varnames %in% cd.names))
+                           stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                       mf <- model.frame(gammaformula, z,
+                                         na.action="na.pass")
+                       X.terms <- attr(mf, "terms")
+                       X <- model.matrix(X.terms, mf)
+                       offset <- model.offset(mf)
+                   },
+                   omega = {
+                       varnames <- all.vars(omegaformula)
+                       if(!all(varnames %in% cd.names))
+                           stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                       mf <- model.frame(omegaformula, z,
+                                         na.action="na.pass")
+                       X.terms <- attr(mf, "terms")
+                       X <- model.matrix(X.terms, mf)
+                       offset <- model.offset(mf)
+                   },
+                   det= {
+                       varnames <- all.vars(pformula)
+                       if(!all(varnames %in% cd.names))
+                           stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                       mf <- model.frame(pformula, z,
+                                         na.action="na.pass")
+                       X.terms <- attr(mf, "terms")
+                       X <- model.matrix(X.terms, mf)
+                       offset <- model.offset(mf)
+                   })
+    })
+    out <- data.frame(matrix(NA, nrow(X), 4,
+        dimnames=list(NULL, c("Predicted", "SE", "lower", "upper"))))
+    mix <- object@mixture
+    lam.mle <- coef(object, type="lambda")
+    if(identical(mix, "ZIP") & identical(type, "lambda")) {
+        psi.hat <- plogis(coef(object, type="psi"))
+        if(is.null(offset))
+            offset <- rep(0, nrow(X))
+        warning("Method to compute SE for ZIP model has not been written")
+    }
+    for(i in 1:nrow(X)) {
+        if(nrow(X) > 5000) {
+            if(i %% 1000 == 0)
+                cat("  doing row", i, "of", nrow(X), "\n")
+        }
+        if(any(is.na(X[i,])))
+            next
+        if(identical(mix, "ZIP") & identical(type, "lambda")) {
+            out$Predicted[i] <-
+                X[i,] %*% lam.mle + offset[i] + log(1 - psi.hat)
+            if(backTransform)
+                out$Predicted[i] <- exp(out$Predicted[i])
+            out$SE <- NA
+            ci <- c(NA, NA)
+        } else {
+            lc <- linearComb(object, X[i,], type, offset = offset[i])
+            if(backTransform)
+                lc <- backTransform(lc)
+            out$Predicted[i] <- coef(lc)
+            out$SE[i] <- SE(lc)
+            ci <- confint(lc, level=level)
+        }
+        out$lower[i] <- ci[1]
+        out$upper[i] <- ci[2]
+    }
+    if(appendData) {
+        if(!identical(cls, "RasterStack"))
+            out <- data.frame(out, as(newdata, "data.frame"))
+        else
+            out <- data.frame(out, z)
+    }
+    if(identical(cls, "RasterStack")) {
+        E.mat <- matrix(out[,1], dim(newdata)[1], dim(newdata)[2],
+                        byrow=TRUE)
+        E.raster <- raster(E.mat)
+        extent(E.raster) <- extent(newdata)
+        out.rasters <- list(E.raster)
+        for(i in 2:ncol(out)) {
+            i.mat <- matrix(out[,i], dim(newdata)[1], dim(newdata)[2],
+                            byrow=TRUE)
+            i.raster <- raster(i.mat)
+            extent(i.raster) <- extent(newdata)
+            out.rasters[[i]] <- i.raster
+        }
+        out.stack <- stack(out.rasters)
+        layerNames(out.stack) <- colnames(out)
+        out <- out.stack
+    }
     return(out)
 })
 
@@ -364,24 +815,31 @@ setMethod("predict", "unmarkedFitPCO",
 
 
 
-setMethod("predict", "unmarkedFitGMM", 
-    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE, 
-        appendData = FALSE, ...) 
+setMethod("predict", "unmarkedFitGMM",
+    function(object, type, newdata, backTransform = TRUE, na.rm = TRUE,
+        appendData = FALSE, level=0.95, ...)
 {
     if(missing(newdata) || is.null(newdata))
         newdata <- getData(object)
     formlist <- object@formlist
-    lamformula <- formlist$lambdaformula
-    phiformula <- formlist$phiformula        
-    pformula <- formlist$pformula        
+    lambdaformula <- formlist$lambdaformula
+    phiformula <- formlist$phiformula
+    pformula <- formlist$pformula
     formula <- object@formula
-        
+
     if(inherits(newdata, "unmarkedFrame"))
-        cls <- "unmarkedFrame"
-    switch(cls, 
+      cls <- "unmarkedFrame"
+    else
+      cls <- class(newdata)[1]
+    if(!cls %in% c("unmarkedFrame", "data.frame", "RasterStack"))
+        stop("newdata must be an unmarkedFrame, data.frame, or RasterStack")
+    if(identical(cls, "RasterStack"))
+        if(!require(raster))
+            stop("raster package must be loaded")
+    switch(cls,
         unmarkedFrame = {
-            D <- getDesign(newdata, formula, na.rm = na.rm)
-            switch(type, 
+            D <- unmarked:::getDesign(newdata, formula, na.rm = na.rm)
+            switch(type,
                 lambda = {
                     X <- D$Xlam
                     offset <- D$Xlam.offset
@@ -396,7 +854,7 @@ setMethod("predict", "unmarkedFitGMM",
                     })
               },
         data.frame = {
-            switch(type, 
+            switch(type,
                 lambda = {
                     mf <- model.frame(lambdaformula, newdata)
                     X <- model.matrix(lambdaformula, mf)
@@ -406,38 +864,124 @@ setMethod("predict", "unmarkedFitGMM",
                     mf <- model.frame(phiformula, newdata)
                     X <- model.matrix(phiformula, mf)
                     offset <- model.offset(mf)
-                    },                
+                    },
                 det = {   # Note, this is p not pi
-                  mf <- model.frame(detformula, newdata)
-                  X <- model.matrix(detformula, mf)
+                  mf <- model.frame(pformula, newdata)
+                  X <- model.matrix(pformula, mf)
                   offset <- model.offset(mf)
                 })
-            })
-        out <- data.frame(matrix(NA, nrow(X), 2, 
-            dimnames=list(NULL, c("Predicted", "SE"))))
-        lc <- linearComb(object, X, type, offset = offset)
-        if(backTransform) lc <- backTransform(lc)
-        out$Predicted <- coef(lc)
-        out$SE <- SE(lc)
-        ci <- as.data.frame(confint(lc))
-        colnames(ci) <- c("lower", "upper")
-        out <- cbind(out, ci)
-        if(appendData)
+        },
+        RasterStack = {
+            cd.names <- layerNames(newdata)
+            npix <- prod(dim(newdata)[1:2])
+            isfac <- is.factor(newdata)
+            z <- as.data.frame(matrix(getValues(newdata), npix))
+            names(z) <- cd.names
+            if(any(isfac)) {
+                stop("This method currently does not handle factors", call.=FALSE)
+                oumf <- getData(object)
+                sc <- siteCovs(oumf)
+                oc <- obsCovs(oumf)
+                for(i in 1:ncol(z)) {
+                    if(!isfac)
+                        next
+                    lab.i <- labels(newdata)[[i]][[1]]
+                    if(is.null(lab.i))
+                        stop("A factor in the raster stack does not have labels.", call.=FALSE)
+                    z[,i] <- factor(lab.i)
+                    if(names(z)[i] %in% names(sc))
+                        levels(z[,i]) <- levels(sc[,i])
+                    else
+                        levels(z[,i]) <- levels(oc[,i])
+                }
+            }
+            switch(type,
+                   lambda = {
+                       varnames <- all.vars(lambdaformula)
+                       if(!all(varnames %in% cd.names))
+                           stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'", call.=FALSE)
+                       mf <- model.frame(lambdaformula, z,
+                                         na.action="na.pass")
+                       X.terms <- attr(mf, "terms")
+                       X <- model.matrix(X.terms, mf)
+                       offset <- model.offset(mf)
+                   },
+                   phi = {
+                       varnames <- all.vars(phiformula)
+                       if(!all(varnames %in% cd.names))
+                           stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                       mf <- model.frame(phiformula, z,
+                                         na.action="na.pass")
+                       X.terms <- attr(mf, "terms")
+                       X <- model.matrix(X.terms, mf)
+                       offset <- model.offset(mf)
+                   },
+                   det= {
+                       varnames <- all.vars(pformula)
+                       if(!all(varnames %in% cd.names))
+                           stop("At least 1 covariate in the formula is not in the raster stack.\n   You probably need to assign them using\n\t 'layerNames(object) <- covariate.names'")
+                       mf <- model.frame(pformula, z, na.action="na.pass")
+                       X.terms <- attr(mf, "terms")
+                       X <- model.matrix(X.terms, mf)
+                       offset <- model.offset(mf)
+                   })
+        }
+    )
+    out <- data.frame(matrix(NA, nrow(X), 4,
+        dimnames=list(NULL, c("Predicted", "SE", "lower", "upper"))))
+    for(i in 1:nrow(X)) {
+        if(nrow(X) > 5000) {
+            if(i %% 1000 == 0)
+                cat("  doing row", i, "of", nrow(X), "\n")
+        }
+        if(any(is.na(X[i,])))
+            next
+        lc <- linearComb(object, X[i,], type, offset = offset[i])
+        if(backTransform)
+            lc <- backTransform(lc)
+        out$Predicted[i] <- coef(lc)
+        out$SE[i] <- SE(lc)
+        ci <- confint(lc, level=level)
+        out$lower[i] <- ci[1]
+        out$upper[i] <- ci[2]
+    }
+    if(appendData) {
+        if(!identical(cls, "RasterStack"))
             out <- data.frame(out, as(newdata, "data.frame"))
-        return(out)
-        })
+        else
+            out <- data.frame(out, z)
+    }
+    if(identical(cls, "RasterStack")) {
+        E.mat <- matrix(out[,1], dim(newdata)[1], dim(newdata)[2],
+                        byrow=TRUE)
+        E.raster <- raster(E.mat)
+        extent(E.raster) <- extent(newdata)
+        out.rasters <- list(E.raster)
+        for(i in 2:ncol(out)) {
+            i.mat <- matrix(out[,i], dim(newdata)[1], dim(newdata)[2],
+                            byrow=TRUE)
+            i.raster <- raster(i.mat)
+            extent(i.raster) <- extent(newdata)
+            out.rasters[[i]] <- i.raster
+        }
+        out.stack <- stack(out.rasters)
+        layerNames(out.stack) <- colnames(out)
+        out <- out.stack
+    }
+    return(out)
+})
 
 
 
 
-# ---------------------- coef, vcov, and SE -----------------------------------
+# ---------------------- coef, vcov, and SE ------------------------------
 
 
 setMethod("coef", "unmarkedFit",
-    function(object, type, altNames = TRUE) 
+    function(object, type, altNames = TRUE)
 {
     if(missing(type)) {
-        co <- lapply(object@estimates@estimates, 
+        co <- lapply(object@estimates@estimates,
             function(x) coef(x, altNames=altNames))
         names(co) <- NULL
         co <- unlist(co)
@@ -449,19 +993,19 @@ setMethod("coef", "unmarkedFit",
 
 
 setMethod("vcov", "unmarkedFit",
-    function (object, type, altNames = TRUE, method = "hessian", ...) 
+    function (object, type, altNames = TRUE, method = "hessian", ...)
 {
     method <- match.arg(method, c("hessian", "nonparboot"))
     switch(method,
-        hessian = {
+           hessian = {
             if (is.null(object@opt$hessian)) {
                 stop("Hessian was not computed for this model.")
-                }
+            }
             v <- solve(hessian(object))
-            },
+        },
         nonparboot = {
             if (is.null(object@bootstrapSamples)) {
-               stop("No bootstrap samples have been drawn. Use nonparboot first.")
+                stop("No bootstrap samples have been drawn. Use nonparboot first.")
                 }
             v <- object@covMatBS
         })
@@ -475,15 +1019,15 @@ setMethod("vcov", "unmarkedFit",
 })
 
 
-setMethod("SE", "unmarkedFit", function(obj,...) 
+setMethod("SE", "unmarkedFit", function(obj,...)
 {
     v <- vcov(obj,...)
     sqrt(diag(v))
 })
 
 
-          
-setMethod("logLik", "unmarkedFit", function(object, ...) 
+
+setMethod("logLik", "unmarkedFit", function(object, ...)
 {
     if(length(list(...)))
         warning("extra arguments discarded")
@@ -502,20 +1046,21 @@ setMethod("LRT", c(m1="unmarkedFit", m2="unmarkedFit"), function(m1, m2)
     chisq <- 2 * abs(ll1 - ll2)
     DF <- abs(length(coef(m1)) - length(coef(m2)))
     pval <- pchisq(chisq, DF, lower.tail=FALSE)
-    return(data.frame(Chisq=chisq, DF = DF, 'Pr(>Chisq)' = pval, check.names=F))
-}) 
-    
-    
+    return(data.frame(Chisq=chisq, DF = DF, 'Pr(>Chisq)' = pval,
+        check.names=F))
+})
 
 
 
-setMethod("confint", "unmarkedFit", function(object, parm, level = 0.95, type, 
-    method = c("normal", "profile")) 
+
+
+setMethod("confint", "unmarkedFit", function(object, parm, level = 0.95,
+    type, method = c("normal", "profile"))
 {
     method <- match.arg(method)
-    if(missing(type)) 
-        stop(paste("Must specify type as one of (", paste(names(object),collapse=", "),").",sep=""))
-    if(missing(parm)) 
+    if(missing(type))
+        stop(paste("Must specify type as one of (", paste(names(object), collapse=", "),").",sep=""))
+    if(missing(parm))
         parm <- 1:length(object[type]@estimates)
     if(method == "normal") {
         callGeneric(object[type],parm = parm, level = level)
@@ -524,23 +1069,23 @@ setMethod("confint", "unmarkedFit", function(object, parm, level = 0.95, type,
         ests <- mle(object)
         nP <- length(parm)
         ci <- matrix(NA, nP, 2)
-              
+
         ## create table to match parm numbers with est/parm numbers
         types <- names(object)
         numbertable <- data.frame(type = character(0), num = numeric(0))
         for(i in seq(length=length(types))) {
             length.est <- length(object[i]@estimates)
-            numbertable <- rbind(numbertable, data.frame(type = 
+            numbertable <- rbind(numbertable, data.frame(type =
                 rep(types[i], length.est), num = seq(length=length.est)))
             }
-        parm.fullnums <- which(numbertable$type == type & 
+        parm.fullnums <- which(numbertable$type == type &
             numbertable$num %in% parm)
-              
+
         for(i in seq(length=nP)) {
             cat("Profiling parameter",i,"of",nP,"...")
             se <- SE(object[type])
             whichPar <- parm.fullnums[i]
-            ci[i,] <- profileCI(nllFun, whichPar=whichPar, MLE=ests, 
+            ci[i,] <- profileCI(nllFun, whichPar=whichPar, MLE=ests,
                 interval=ests[whichPar] + 10*se[i]*c(-1,1), level=level)
             cat(" done.\n")
             }
@@ -553,7 +1098,7 @@ setMethod("confint", "unmarkedFit", function(object, parm, level = 0.95, type,
 
 
 setMethod("fitted", "unmarkedFit",
-    function(object, na.rm = FALSE) 
+    function(object, na.rm = FALSE)
 {
     data <- object@data
     des <- getDesign(data, object@formula, na.rm = na.rm)
@@ -562,17 +1107,17 @@ setMethod("fitted", "unmarkedFit",
     if (is.null(X.offset)) {
         X.offset <- rep(0, nrow(X))
         }
-    state <- do.call(object['state']@invlink, 
+    state <- do.call(object['state']@invlink,
         list(X %*% coef(object, 'state') + X.offset))
     state <- as.numeric(state)  ## E(X) for most models
     p <- getP(object, na.rm = na.rm) # P(detection | presence)
     fitted <- state * p  # true for models with E[Y] = p * E[X]
     fitted
-})		
+})
 
 
 
-setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE) 
+setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
 {
     data <- object@data
     db <- data@dist.breaks
@@ -587,7 +1132,7 @@ setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
     lambda <- drop(exp(X %*% coef(object, 'state') + X.offset))
     if(identical(object@output, "density")) {
         a <- matrix(NA, M, J)
-        switch(data@survey, 
+        switch(data@survey,
             line = {
                 tlength <- data@tlength
                 A <- tlength * max(db) * 2
@@ -595,10 +1140,10 @@ setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
             point = {
                 A <- pi * max(db)^2
                 })
-        switch(data@unitsIn, 
+        switch(data@unitsIn,
             m = A <- A / 1e6,
             km = A <- A)
-        switch(object@unitsOut, 
+        switch(object@unitsOut,
             ha = A <- A * 100,
             kmsq = A <- A)
         lambda <- lambda * A
@@ -606,11 +1151,11 @@ setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
     cp <- getP(object, na.rm = na.rm)
     fitted <- lambda * cp
     fitted
-})		
+})
 
 
 
-setMethod("fitted", "unmarkedFitOccu", function(object, na.rm = FALSE) 
+setMethod("fitted", "unmarkedFitOccu", function(object, na.rm = FALSE)
 {
     data <- object@data
     des <- getDesign(data, object@formula, na.rm = na.rm)
@@ -629,7 +1174,7 @@ setMethod("fitted", "unmarkedFitOccu", function(object, na.rm = FALSE)
 
 
 
-setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE) 
+setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
 {
     data <- object@data
     des <- getDesign(data, object@formula, na.rm = na.rm)
@@ -645,43 +1190,67 @@ setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
     p <- getP(object, na.rm = na.rm)
     mix <- object@mixture
     switch(mix,
-        P = {
-            fitted <- as.numeric(state) * p 
-            },
-        NB = {
-            if(missing(K)) K <- max(y, na.rm = TRUE) + 20 
-            k <- 0:K
-            k.ijk <- rep(k, M*J)
-            state.ijk <- state[rep(1:M, each = J*(K+1))]
-            alpha <- exp(coef(object['alpha']))
-            prob.ijk <- dnbinom(k.ijk, mu = state.ijk, size = alpha)
-            all <- cbind(rep(as.vector(t(p)), each = K + 1), k.ijk, prob.ijk)
-            prod.ijk <- rowProds(all)
-            fitted <- colSums(matrix(prod.ijk, K + 1, M*J))
-            fitted <- matrix(fitted, M, J, byrow = TRUE)
-            })
+           P = {
+               fitted <- as.numeric(state) * p
+           },
+           NB = { # I don't think this sum is necessary
+               if(missing(K)) K <- max(y, na.rm = TRUE) + 20
+               k <- 0:K
+               k.ijk <- rep(k, M*J)
+               state.ijk <- state[rep(1:M, each = J*(K+1))]
+               alpha <- exp(coef(object['alpha']))
+               prob.ijk <- dnbinom(k.ijk, mu = state.ijk, size = alpha)
+               all <- cbind(rep(as.vector(t(p)), each = K + 1), k.ijk,
+                            prob.ijk)
+               prod.ijk <- rowProds(all)
+               fitted <- colSums(matrix(prod.ijk, K + 1, M*J))
+               fitted <- matrix(fitted, M, J, byrow = TRUE)
+           },
+           ZIP = {
+               psi <- plogis(coef(object['psi']))
+               lambda <- as.numeric(state)
+               fitted <- (1-psi)*lambda
+               fitted <- matrix(fitted, M, J, byrow=TRUE)
+           })
     return(fitted)
 })
 
 
 setMethod("fitted", "unmarkedFitPCO",
-    function(object, K, na.rm = FALSE) 
+    function(object, K, na.rm = FALSE)
 {
     dynamics <- object@dynamics
+    mixture <- object@mixture
     data <- getData(object)
     D <- unmarked:::getDesign(data, object@formula, na.rm = na.rm)
     Xlam <- D$Xlam; Xgam <- D$Xgam; Xom <- D$Xom; Xp <- D$Xp
+    Xlam.offset <- D$Xlam.offset; Xgam.offset <- D$Xgam.offset
+    Xom.offset <- D$Xom.offset; Xp.offset <- D$Xp.offset
     delta <- D$delta #FIXME this isn't returned propertly when na.rm=F
+
     y <- D$y
     M <- nrow(y)
     T <- data@numPrimary
     J <- ncol(y) / T
-    lambda <- exp(Xlam %*% coef(object, 'lambda'))
-    omega <- matrix(plogis(Xom %*% coef(object, 'omega')), M, T-1, byrow=TRUE)
+
+    if(is.null(Xlam.offset)) Xlam.offset <- rep(0, M)
+    if(is.null(Xgam.offset)) Xgam.offset <- rep(0, M*(T-1))
+    if(is.null(Xom.offset)) Xom.offset <- rep(0, M*(T-1))
+    if(is.null(Xp.offset)) Xp.offset <- rep(0, M*T*J)
+
+    lambda <- exp(Xlam %*% coef(object, 'lambda') + Xlam.offset)
+    if(identical(mixture, "ZIP")) {
+        psi <- plogis(coef(object, type="psi"))
+        lambda <- (1-psi)*lambda
+    }
+    if(!identical(dynamics, "trend"))
+        omega <- matrix(plogis(Xom %*% coef(object, 'omega') + Xom.offset),
+                        M, T-1, byrow=TRUE)
     if(!identical(dynamics, "notrend"))
-        gamma <- matrix(exp(Xgam %*% coef(object, 'gamma')), M, T-1, byrow=TRUE)
+        gamma <- matrix(exp(Xgam %*% coef(object, 'gamma') + Xgam.offset),
+                        M, T-1, byrow=TRUE)
     else {
-        if(identical(dynamics, "notrend")) 
+        if(identical(dynamics, "notrend"))
             gamma <- (1-omega)*lambda
         }
     p <- getP(object, na.rm = na.rm) # Should return MxJT
@@ -692,18 +1261,27 @@ setMethod("fitted", "unmarkedFitPCO",
             for(d in 2:delta[i ,1]) {
                 if(identical(dynamics, "autoreg"))
                     gamma[i, 1] <- N[i, 1] * gamma[i, 1]
-                N[i, 1] <- N[i, 1] * omega[i, 1] + gamma[i, 1]
+            if(identical(dynamics, "trend"))
+                N[i,1] <- N[i,1] * gamma[i,1]
+            else
+                N[i,1] <- N[i,1] * omega[i,1] + gamma[i,1]
                 }
             }
         for(t in 2:T) {
             if(identical(dynamics, "autoreg"))
                 gamma[i, t-1] <- N[i, t-1] * gamma[i, t-1]
-            N[i, t] <- N[i, t-1] * omega[i, t-1] + gamma[i, t-1]
+            if(identical(dynamics, "trend"))
+                N[i,t] <- N[i,t-1] * gamma[i,t-1]
+            else
+                N[i,t] <- N[i,t-1] * omega[i,t-1] + gamma[i,t-1]
             if(delta[i, t] > 1) {
                 for(d in 2:delta[i, t]) {
                     if(identical(dynamics, "autoreg"))
                         gamma[i, t-1] <- N[i, t] * gamma[i, t-1]
-                    N[i, t] <- N[i, t] * omega[i, t-1] + gamma[i, t-1]
+                    if(identical(dynamics, "trend"))
+                        N[i,t] <- N[i,t]*gamma[i,t-1]
+                    else
+                        N[i,t] <- N[i,t] * omega[i,t-1] + gamma[i,t-1]
                     }
                 }
             }
@@ -715,7 +1293,7 @@ setMethod("fitted", "unmarkedFitPCO",
 
 
 
-setMethod("fitted", "unmarkedFitOccuRN", function(object, K, na.rm = FALSE) 
+setMethod("fitted", "unmarkedFitOccuRN", function(object, K, na.rm = FALSE)
 {
     data <- object@data
     des <- getDesign(data, object@formula, na.rm = na.rm)
@@ -733,17 +1311,17 @@ setMethod("fitted", "unmarkedFitOccuRN", function(object, K, na.rm = FALSE)
     J <- ncol(y)
     lam <- exp(X %*% coef(object, 'state') + X.offset)
     r <- plogis(V %*% coef(object, 'det') + V.offset)
-    if(missing(K)) K <- max(y, na.rm = TRUE) + 20 
-            
+    if(missing(K)) K <- max(y, na.rm = TRUE) + 20
+
     lam <- rep(lam, each = J)
-            
+
     fitted <- 1 - exp(-lam*r) ## analytical integration.
-            
+
     return(matrix(fitted, M, J, byrow = TRUE))
 })
 
 
-setMethod("fitted", "unmarkedFitColExt", function(object, na.rm = FALSE) 
+setMethod("fitted", "unmarkedFitColExt", function(object, na.rm = FALSE)
 {
     data <- object@data
     M <- numSites(data)
@@ -762,25 +1340,25 @@ setMethod("fitted", "unmarkedFitColExt", function(object, na.rm = FALSE)
     X.it.gam <- designMats$X.gam
     X.it.eps <- designMats$X.eps
     W.i <- designMats$W
-            
+
     psiP <- plogis(W.i %*% psiParms)
     detP <- plogis(V.itj %*% detParms)
     colP <- plogis(X.it.gam  %*% colParms)
     extP <- plogis(X.it.eps %*% extParms)
-            
+
     detP <- array(detP, c(J, nY, M))
     colP <- matrix(colP, M, nY, byrow = TRUE)
     extP <- matrix(extP, M, nY, byrow = TRUE)
-            
+
     ## create transition matrices (phi^T)
     phis <- array(NA,c(2,2,nY-1,M)) #array of phis for each
     for(i in 1:M) {
         for(t in 1:(nY-1)) {
-            phis[,,t,i] <- matrix(c(1-colP[i,t], colP[i,t], extP[i,t], 
-                1-extP[i,t])) 
+            phis[,,t,i] <- matrix(c(1-colP[i,t], colP[i,t], extP[i,t],
+                1-extP[i,t]))
             }
         }
-            
+
     ## first compute latent probs
     x <- array(NA, c(2, nY, M))
     x[1,1,] <- 1-psiP
@@ -796,95 +1374,79 @@ setMethod("fitted", "unmarkedFitColExt", function(object, na.rm = FALSE)
     for(i in 1:M) {
         for(t in 1:nY) {
             for(j in 1:J) {
-                fitted[j,t,i] <- (x[,t,i] %*% 
+                fitted[j,t,i] <- (x[,t,i] %*%
                     matrix(c(1, 1 - detP[j,t,i], 0, detP[j,t,i]), 2, 2))[2]
                 }
             }
-        }	
-            
+        }
+
     return(matrix(fitted, M, J*nY, byrow = TRUE))
 })
-          
-          
-          
 
+
+
+# This covers unmarkedFitGDS too
 setMethod("fitted", "unmarkedFitGMM",
-    function(object, na.rm = FALSE) 
+    function(object, na.rm = FALSE)
 {
 
     # E[y_itj] = M_i * phi_it * cp_itj
-    
+
     data <- object@data
     D <- getDesign(data, object@formula, na.rm = na.rm)
     Xlam <- D$Xlam
     Xphi <- D$Xphi
     Xdet <- D$Xdet
-    
+
     Xlam.offset <- D$Xlam.offset
     Xphi.offset <- D$Xphi.offset
     Xdet.offset <- D$Xdet.offset
     if(is.null(Xlam.offset)) Xlam.offset <- rep(0, nrow(Xlam))
     if(is.null(Xphi.offset)) Xphi.offset <- rep(0, nrow(Xphi))
     if(is.null(Xdet.offset)) Xdet.offset <- rep(0, nrow(Xdet))
-    
+
     y <- D$y
     M <- nrow(y)
     T <- data@numPrimary
     J <- ncol(y) / T
     lambda <- drop(exp(Xlam %*% coef(object, 'lambda') + Xlam.offset))
-    phi <- plogis(Xphi %*% coef(object, 'phi') + Xphi.offset)
+    if(T==1)
+        phi <- 1
+    else
+        phi <- plogis(Xphi %*% coef(object, 'phi') + Xphi.offset)
     phi.mat <- matrix(phi, nrow=M, ncol=T, byrow=TRUE)
-    phi.ijt <- as.numeric(apply(phi, 2, rep, times=J))
+    phi.ijt <- as.numeric(apply(phi.mat, 2, rep, times=J))
     cp <- getP(object, na.rm = na.rm)
-
-# My tests show that E[y] is the same under the P and NB models    
-#    mix <- object@mixture
-#    switch(mix,
-#        P = {
-#            fitted <- lambda * phi.ijt * as.numeric(cp) # recycle
-#            fitted <- matrix(fitted, M, J*T) 
-#            },
-#        NB = {
-#            K <- object@K 
-#            k <- 0:K
-#            k.ijk <- rep(k, M*J)
-#            lambda.ijk <- lambda[rep(1:M, each = J*(K+1))]
-#            alpha <- exp(coef(object['alpha']))
-#            prob.ijk <- dnbinom(k.ijk, mu = lambda.ijk, size = alpha)
-#            all <- cbind(rep(as.vector(t(cp)), each = K + 1), k.ijk, prob.ijk)
-#            prod.ijk <- rowProds(all)
-#            fitted <- colSums(matrix(prod.ijk, K + 1, M*J))
-#            fitted <- matrix(fitted, M, J*T, byrow = TRUE)
-#            })
 
     fitted <- lambda * phi.ijt * as.numeric(cp) # recycle
     fitted <- matrix(fitted, M, J*T)
     return(fitted)
 })
-          
+
 
 
 
 setMethod("profile", "unmarkedFit",
-    function(fitted, type, parm, seq) 
+    function(fitted, type, parm, seq)
 {
     stopifnot(length(parm) == 1)
     MLE <- mle(fitted)
     SE(fitted[type])
     nPar <- length(mle(fitted))
     nll <- nllFun(fitted)
-            
+
     ## create table to match parm numbers with est/parm numbers
     types <- names(fitted)
     numbertable <- data.frame(type = character(0), num = numeric(0))
     for(i in seq(length=length(types))) {
         length.est <- length(fitted[i]@estimates)
-        numbertable <- rbind(numbertable, 
-        data.frame(type = rep(types[i], length.est), 
+        numbertable <- rbind(numbertable,
+        data.frame(type = rep(types[i], length.est),
             num = seq(length=length.est)))
         }
-    parm.fullnums <- which(numbertable$type == type & numbertable$num == parm)
-            
+    parm.fullnums <- which(numbertable$type == type &
+        numbertable$num == parm)
+
     f <- function(value) {
         fixedNLL <- genFixedNLL(nll, parm.fullnums, value)
         mleRestricted <- optim(rep(0,nPar), fixedNLL)$value
@@ -898,20 +1460,21 @@ setMethod("profile", "unmarkedFit",
 
 
 setMethod("hessian", "unmarkedFit",
-    function(object) 
+    function(object)
 {
     object@opt$hessian
 })
 
 
-setMethod("update", "unmarkedFit", 
-    function(object, formula., ..., evaluate = TRUE) 
+setMethod("update", "unmarkedFit",
+    function(object, formula., ..., evaluate = TRUE)
 {
     call <- object@call
     origFormula <- formula(call)
-    if (is.null(call)) 
+    if (is.null(call))
         stop("need an object with call slot")
-    extras <- match.call(expand.dots = FALSE)$...
+    extras <- match.call(call=sys.call(-1),
+                         expand.dots = FALSE)$...
     if (!missing(formula.)) {
         detformula <- as.formula(origFormula[[2]])
         stateformula <- as.formula(paste("~", origFormula[3], sep=""))
@@ -920,7 +1483,7 @@ setMethod("update", "unmarkedFit",
         newStateformula <- as.formula(paste("~", formula.[3], sep=""))
         upStateformula <- update.formula(stateformula, newStateformula)
         call$formula <- as.formula(paste(
-			deparse(upDetformula, width=500), 
+			deparse(upDetformula, width=500),
             deparse(upStateformula, width=500)))
             }
     if (length(extras) > 0) {
@@ -931,51 +1494,55 @@ setMethod("update", "unmarkedFit",
             call <- as.call(call)
             }
         }
-    if (evaluate) 
-        eval(call, parent.frame())
+    if (evaluate)
+        eval(call, parent.frame(2))
     else call
 })
 
 
-setMethod("update", "unmarkedFitColExt", 
-    function(object, ..., evaluate = TRUE) 
+setMethod("update", "unmarkedFitColExt",
+    function(object, formula., ..., evaluate = TRUE)
 {
     call <- object@call
-    if (is.null(call)) 
+    if (is.null(call))
         stop("need an object with call slot")
-    extras <- match.call(expand.dots = FALSE)$...
+    extras <- match.call(call=sys.call(-1),
+                         expand.dots = FALSE)$...
     if (length(extras) > 0) {
         existing <- !is.na(match(names(extras), names(call)))
-        for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
-            if (any(!existing)) {
-                call <- c(as.list(call), extras[!existing])
-                call <- as.call(call)
+        for (a in names(extras)[existing])
+            call[[a]] <- extras[[a]]
+        if (any(!existing)) {
+            call <- c(as.list(call), extras[!existing])
+            call <- as.call(call)
             }
         }
-    if (evaluate) 
-        eval(call, parent.frame())
+    if (evaluate)
+        eval(call, parent.frame(2))
     else call
 })
-          
-          
 
-setMethod("update", "unmarkedFitGMM", 
-    function(object, lambdaformula, phiformula, pformula, ..., evaluate = TRUE)
+
+
+setMethod("update", "unmarkedFitGMM",
+    function(object, lambdaformula, phiformula, pformula, ...,
+        evaluate = TRUE)
 {
     call <- object@call
-    if (is.null(call)) 
+    if (is.null(call))
         stop("need an object with call slot")
     formlist <- object@formlist
     if (!missing(lambdaformula))
-        call$lambdaformula <- update.formula(formlist$lambdaformula, 
+        call$lambdaformula <- update.formula(formlist$lambdaformula,
             lambdaformula)
     if (!missing(phiformula))
-        call$phiformula <- update.formula(formlist$phiformula, 
+        call$phiformula <- update.formula(formlist$phiformula,
             phiformula)
     if (!missing(pformula))
-        call$pformula <- update.formula(formlist$pformula, 
+        call$pformula <- update.formula(formlist$pformula,
             pformula)
-    extras <- match.call(expand.dots = FALSE)$...
+    extras <- match.call(call=sys.call(-1),
+                         expand.dots = FALSE)$...
     if(length(extras) > 0) {
         existing <- !is.na(match(names(extras), names(call)))
         for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
@@ -984,70 +1551,69 @@ setMethod("update", "unmarkedFitGMM",
             call <- as.call(call)
             }
         }
-    if (evaluate) 
-        eval(call, parent.frame())
+    if (evaluate)
+        eval(call, parent.frame(2))
     else call
 })
 
-          
-          
 
 
-setMethod("update", "unmarkedFitPCO", 
-    function(object, lambdaformula., gammaformula., omegaformula., pformula., 
-        ..., evaluate = TRUE) 
-    {
-        call <- object@call
-        lambdaformula <- as.formula(call[['lambdaformula']])
-        gammaformula <- as.formula(call[['gammaformula']])
-        omegaformula <- as.formula(call[['omegaformula']])
-        pformula <- as.formula(call[['pformula']])
-        extras <- match.call(expand.dots = FALSE)$...
-        if (!missing(lambdaformula.)) {
-            upLambdaformula <- update.formula(lambdaformula, lambdaformula.)
-            call[['lambdaformula']] <- upLambdaformula
-            }
-        if (!missing(gammaformula.)) {
-            upGammaformula <- update.formula(gammaformula, gammaformula.)
-            call[['gammaformula']] <- upGammaformula
-            }
-        if (!missing(omegaformula.)) {
-            upOmegaformula <- update.formula(omegaformula, omegaformula.)
-            call[['omegaformula']] <- upOmegaformula
-            }
-        if (!missing(pformula.)) {
-            upPformula <- update.formula(pformula, pformula.)
-            call[['pformula']] <- upPformula
-            }
-        if (length(extras) > 0) {
-            existing <- !is.na(match(names(extras), names(call)))
-            for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
-            if (any(!existing)) {
-                call <- c(as.list(call), extras[!existing])
-                call <- as.call(call)
-                }
-            }
-        if (evaluate) 
-            eval(call, parent.frame())
-        else call
-        })
+
+
+setMethod("update", "unmarkedFitPCO",
+    function(object, lambdaformula., gammaformula., omegaformula.,
+        pformula., ..., evaluate = TRUE) {
+    call <- object@call
+    lambdaformula <- as.formula(call[['lambdaformula']])
+    gammaformula <- as.formula(call[['gammaformula']])
+    omegaformula <- as.formula(call[['omegaformula']])
+    pformula <- as.formula(call[['pformula']])
+    extras <- match.call(call=sys.call(-1),
+                         expand.dots = FALSE)$...
+    if (!missing(lambdaformula.)) {
+        upLambdaformula <- update.formula(lambdaformula,
+                                          lambdaformula.)
+        call[['lambdaformula']] <- upLambdaformula
+    }
+    if (!missing(gammaformula.)) {
+        upGammaformula <- update.formula(gammaformula, gammaformula.)
+        call[['gammaformula']] <- upGammaformula
+    }
+    if (!missing(omegaformula.)) {
+        upOmegaformula <- update.formula(omegaformula, omegaformula.)
+        call[['omegaformula']] <- upOmegaformula
+    }
+    if (!missing(pformula.)) {
+        upPformula <- update.formula(pformula, pformula.)
+        call[['pformula']] <- upPformula
+    }
+    if (length(extras) > 0) {
+        existing <- !is.na(match(names(extras), names(call)))
+        for (a in names(extras)[existing]) call[[a]] <- extras[[a]]
+        if (any(!existing)) {
+            call <- c(as.list(call), extras[!existing])
+            call <- as.call(call)
+        }
+    }
+    if (evaluate)
+        eval(call, parent.frame(2))
+    else call
+})
 
 
 setGeneric("sampleSize", function(object) standardGeneric("sampleSize"))
-setMethod("sampleSize", "unmarkedFit",
-          function(object) {
-            data <- getData(object)
-            M <- numSites(data)
-            M <- M - length(object@sitesRemoved)
-            M
-          })
+setMethod("sampleSize", "unmarkedFit", function(object) {
+    data <- getData(object)
+    M <- numSites(data)
+    M <- M - length(object@sitesRemoved)
+    M
+})
 
 
-setGeneric("getData", function(object) standardGeneric("getData"))	
-setMethod("getData", "unmarkedFit",
-          function(object) {
-            object@data
-          })
+setGeneric("getData", function(object) standardGeneric("getData"))
+setMethod("getData", "unmarkedFit",function(object) {
+    object@data
+})
 
 
 setGeneric("nllFun", function(object) standardGeneric("nllFun"))
@@ -1058,166 +1624,172 @@ setMethod("mle", "unmarkedFit", function(object) object@opt$par)
 
 setClass("profile", representation(prof = "matrix"))
 
-setGeneric("smoothed", function(object, mean=TRUE) standardGeneric("smoothed"))
+setGeneric("smoothed",
+    function(object, mean=TRUE) standardGeneric("smoothed"))
 setMethod("smoothed","unmarkedFitColExt",
-          function(object, mean) {
-            if(mean) object@smoothed.mean
-            else object@smoothed
-          })
+    function(object, mean) {
+        if(mean) object@smoothed.mean
+        else object@smoothed
+    })
 
-setGeneric("projected", function(object, mean=TRUE) standardGeneric("projected"))
-setMethod("projected","unmarkedFitColExt",
-          function(object, mean) {
-            if(mean) object@projected.mean
-            else object@projected
-          })
+setGeneric("projected",
+    function(object, mean=TRUE) standardGeneric("projected"))
+setMethod("projected","unmarkedFitColExt", function(object, mean) {
+    if(mean) object@projected.mean
+    else object@projected
+})
 
-setMethod("plot", c("profile", "missing"),
-          function(x) {
-            plot(x@prof[,1], x@prof[,2], type = "l")
-          })
-
-
-setMethod("residuals", "unmarkedFit", function(object, ...)
-          {
-            y <- getY(object@data)
-            e <- fitted(object, na.rm = FALSE)	 
-            r <- y - e
-            return(r)
-          })
-
-setMethod("residuals", "unmarkedFitOccu", function(object, ...)
-          {
-            y <- getY(object@data)
-            y <- truncateToBinary(y)
-            e <- fitted(object, na.rm = FALSE)	 
-            r <- y - e
-            return(r)
-          })
-
-setMethod("residuals", "unmarkedFitOccuRN", function(object, ...)
-          {
-            y <- getY(object@data)
-            y <- truncateToBinary(y)
-            e <- fitted(object, na.rm = FALSE)	 
-            r <- y - e
-            return(r)
-          })
+setMethod("plot", c("profile", "missing"), function(x) {
+    plot(x@prof[,1], x@prof[,2], type = "l")
+})
 
 
-setMethod("plot", c(x = "unmarkedFit", y = "missing"), 
-          function(x, y, ...)
-          {
-            r <- residuals(x)
-            e <- fitted(x, na.rm = FALSE)
-            plot(e, r, ylab = "Residuals", xlab = "Predicted values")
-            abline(h = 0, lty = 3, col = "gray")
-          })
+setMethod("residuals", "unmarkedFit", function(object, ...) {
+    y <- getY(object@data)
+    e <- fitted(object, na.rm = FALSE)
+    r <- y - e
+    return(r)
+})
+
+setMethod("residuals", "unmarkedFitOccu", function(object, ...) {
+    y <- getY(object@data)
+    y <- truncateToBinary(y)
+    e <- fitted(object, na.rm = FALSE)
+    r <- y - e
+    return(r)
+})
+
+setMethod("residuals", "unmarkedFitOccuRN", function(object, ...) {
+    y <- getY(object@data)
+    y <- truncateToBinary(y)
+    e <- fitted(object, na.rm = FALSE)
+    r <- y - e
+    return(r)
+})
+
+
+setMethod("plot", c(x = "unmarkedFit", y = "missing"), function(x, y, ...)
+{
+    r <- residuals(x)
+    e <- fitted(x, na.rm = FALSE)
+    plot(e, r, ylab = "Residuals", xlab = "Predicted values")
+    abline(h = 0, lty = 3, col = "gray")
+})
 
 
 
 
-setMethod("hist", "unmarkedFitDS", 
-    function(x, lwd=1, lty=1, ...) {
-        ymat <- getY(getData(x))
-        dbreaks <- getData(x)@dist.breaks
-        nb <- length(dbreaks)
-        mids <- (dbreaks[-1] - dbreaks[-nb]) / 2 + dbreaks[-nb]
-        distances <- rep(mids, times=colSums(ymat))
-        h <- hist(distances, plot=F, breaks=dbreaks)
-        key <- x@keyfun
-        survey <- x@data@survey
-        switch(key, 
-        halfnorm = {
-            sigma <- exp(coef(x, type="det"))
-            if(length(sigma) > 1)
-                stop("This method only works when there are no detection covars")
-            switch(survey, 
-            line = {
-                int <- 2 * integrate(dnorm, dbreaks[1], dbreaks[nb], 
-                    sd=sigma)$value
-                h$density <- h$density * int
-                plot(h, freq=F, ...)
-                plot(function(x) 2 * dnorm(x, mean=0, sd=sigma), 
-                    min(dbreaks), max(dbreaks), add=T, lwd=lwd, lty=lty)
-                },
-            point = {
-                int <- integrate(drhn, dbreaks[1], dbreaks[nb], 
-                    sigma=sigma)$value
-                h$density <- h$density * int
-                plot(h, freq=F, ...)
-                plot(function(r) drhn(r, sigma=sigma), min(dbreaks), 
-                    max(dbreaks), add=T, lwd=lwd, lty=lty)
-                })
-            },
-        exp = {		# This doesn't work on example fm4
-            rate <- exp(coef(x, type="det"))
-            if(length(rate) > 1)
-                stop("This method only works when there are no detection covars")
-            switch(survey,
-            line = {
-                int <- integrate(dxexp, dbreaks[1], dbreaks[nb], rate=rate)$value
-                h$density <- h$density * int
-                plot(h, freq=F, ...)
-                plot(function(x) dxexp(x, rate=rate), min(dbreaks), 
-                    max(dbreaks), add=T, lwd=lwd, lty=lty)
-                },
-            point = {
-                int <- integrate(drexp, dbreaks[1], dbreaks[nb], rate=rate)$value
-                h$density <- h$density * int
-                plot(h, freq=F, ...)
-                plot(function(r) drexp(r, rate=rate), min(dbreaks), 
-                    max(dbreaks), add=T, lwd=lwd, lty=lty)
-                })
-            },
-        hazard = {
-            shape <- exp(coef(x, type="det"))
-            scale <- exp(coef(x, type="scale"))
-            if(length(shape) > 1)
-                stop("This method only works when there are no detection covars")
-            switch(survey, 
-            line = {
-                int <- integrate(dxhaz, dbreaks[1], dbreaks[nb], 
-                    shape=shape, scale=scale)$value
-                h$density <- h$density * int
-                plot(h, freq=F, ...)
-                plot(function(x) dxhaz(x, shape=shape, scale=scale), 
-                    min(dbreaks), max(dbreaks), add=T, lwd=lwd, lty=lty)
-                },
-            point = {
-                int <- integrate(drhaz, dbreaks[1], dbreaks[nb], 
-                    shape=shape, scale=scale)$value
-                    h$density <- h$density * int
-                    plot(h, freq=F, ...)
-                    plot(function(r) drhaz(r, shape=shape, scale=scale), 
-                        min(dbreaks), max(dbreaks), add=T, lwd=lwd, lty=lty)
-                })
-            },
-        uniform = {
-            switch(survey, 
-            line = {
-                plot(h, freq=F, ...)
-                abline(h=1/max(dbreaks), lwd=lwd, lty=lty)
-                },
-            point = {
-                plot(h, freq=F, ...)
-                plot(function(r) (pi*r^2) / (pi*max(dbreaks)^2), 
-                    min(dbreaks), max(dbreaks), add=T, lwd=lwd, lty=lty)
-                }
-            )}
-            )
-        })
+setMethod("hist", "unmarkedFitDS", function(x, lwd=1, lty=1, ...) {
+    ymat <- getY(getData(x))
+    dbreaks <- getData(x)@dist.breaks
+    nb <- length(dbreaks)
+    mids <- (dbreaks[-1] - dbreaks[-nb]) / 2 + dbreaks[-nb]
+    distances <- rep(mids, times=colSums(ymat))
+    h <- hist(distances, plot=F, breaks=dbreaks)
+    key <- x@keyfun
+    survey <- x@data@survey
+    switch(key,
+           halfnorm = {
+               sigma <- exp(coef(x, type="det"))
+               if(length(sigma) > 1)
+               stop("This method only works when there are no detection covars")
+               switch(survey,
+                      line = {
+                          int <- 2 * integrate(dnorm, dbreaks[1],
+                                               dbreaks[nb], sd=sigma)$value
+                          h$density <- h$density * int
+                          plot(h, freq=F, ...)
+                          plot(function(x) 2 * dnorm(x, mean=0, sd=sigma),
+                               min(dbreaks), max(dbreaks), add=T,
+                               lwd=lwd, lty=lty)
+                      },
+                      point = {
+                          int <- integrate(drhn, dbreaks[1], dbreaks[nb],
+                                           sigma=sigma)$value
+                          h$density <- h$density * int
+                          plot(h, freq=F, ...)
+                          plot(function(r) drhn(r, sigma=sigma),
+                               min(dbreaks), max(dbreaks), add=T, lwd=lwd,
+                               lty=lty)
+                      })
+           },
+           exp = {		# This doesn't work on example fm4
+               rate <- exp(coef(x, type="det"))
+               if(length(rate) > 1)
+                   stop("This method only works when there are no detection covars")
+               switch(survey,
+                      line = {
+                          int <- integrate(dxexp, dbreaks[1], dbreaks[nb],
+                                           rate=rate)$value
+                          h$density <- h$density * int
+                          plot(h, freq=F, ...)
+                          plot(function(x) dxexp(x, rate=rate),
+                               min(dbreaks),
+                               max(dbreaks), add=T, lwd=lwd, lty=lty)
+                      },
+                      point = {
+                          int <- integrate(drexp, dbreaks[1], dbreaks[nb],
+                                           rate=rate)$value
+                          h$density <- h$density * int
+                          plot(h, freq=F, ...)
+                          plot(function(r) drexp(r, rate=rate),
+                               min(dbreaks), max(dbreaks), add=T,
+                               lwd=lwd, lty=lty)
+                      })
+           },
+           hazard = {
+               shape <- exp(coef(x, type="det"))
+               scale <- exp(coef(x, type="scale"))
+               if(length(shape) > 1)
+                   stop("This method only works when there are no detection covars")
+               switch(survey,
+                      line = {
+                          int <- integrate(dxhaz, dbreaks[1], dbreaks[nb],
+                                           shape=shape, scale=scale)$value
+                          h$density <- h$density * int
+                          plot(h, freq=F, ...)
+                          plot(function(x) dxhaz(x, shape=shape,
+                                                 scale=scale),
+                               min(dbreaks), max(dbreaks), add=T,
+                               lwd=lwd, lty=lty)
+                      },
+                      point = {
+                          int <- integrate(drhaz, dbreaks[1], dbreaks[nb],
+                                           shape=shape, scale=scale)$value
+                          h$density <- h$density * int
+                          plot(h, freq=F, ...)
+                          plot(function(r) drhaz(r, shape=shape,
+                                                 scale=scale),
+                               min(dbreaks), max(dbreaks), add=T, lwd=lwd,
+                               lty=lty)
+                      })
+           },
+           uniform = {
+               switch(survey,
+                      line = {
+                          plot(h, freq=F, ...)
+                          abline(h=1/max(dbreaks), lwd=lwd, lty=lty)
+                      },
+                      point = {
+                          plot(h, freq=F, ...)
+                          plot(function(r) (pi*r^2) / (pi*max(dbreaks)^2),
+                               min(dbreaks), max(dbreaks), add=T, lwd=lwd,
+                               lty=lty)
+                      }
+                      )}
+           )
+})
 
 
 
 
-############################# CHILD CLASS METHODS ##############################
+# ----------------------- CHILD CLASS METHODS ---------------------------
 
-                                        # Extract detection probs
+# Extract detection probs
 setGeneric("getP", function(object, ...) standardGeneric("getP"))
 
 
-setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE) 
+setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE)
 {
     formula <- object@formula
     detformula <- as.formula(formula[[2]])
@@ -1239,8 +1811,8 @@ setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE)
 
 
 
-setMethod("getP", "unmarkedFitDS", 
-    function(object, na.rm = TRUE) 
+setMethod("getP", "unmarkedFitDS",
+    function(object, na.rm = TRUE)
 {
     formula <- object@formula
     detformula <- as.formula(formula[[2]])
@@ -1267,7 +1839,7 @@ setMethod("getP", "unmarkedFitDS",
             a[i,] <- tlength[i] * w
             u[i,] <- a[i,] / sum(a[i,])
             }
-        }, 
+        },
     point = {
         for(i in 1:M) {
             a[i, 1] <- pi*db[2]^2
@@ -1278,61 +1850,61 @@ setMethod("getP", "unmarkedFitDS",
         })
 
 
-    switch(key, 
+    switch(key,
         halfnorm = {
             sigma <- exp(V %*% ppars + V.offset)
             for(i in 1:M) {
-                switch(survey, 
-                line = { 
+                switch(survey,
+                line = {
                     f.0 <- 2 * dnorm(0, 0, sd=sigma[i])
-                    int <- 2 * (pnorm(db[-1], 0, sd=sigma[i]) - 
+                    int <- 2 * (pnorm(db[-1], 0, sd=sigma[i]) -
                         pnorm(db[-(J+1)], 0, sd=sigma[i]))
-                    cp[i,] <- int / f.0 / w 
+                    cp[i,] <- int / f.0 / w
                     },
                 point = {
                     for(j in 1:J) {
-                        cp[i, j] <- integrate(grhn, db[j], db[j+1], 
-                            sigma=sigma[i], rel.tol=1e-4)$value * 
+                        cp[i, j] <- integrate(grhn, db[j], db[j+1],
+                            sigma=sigma[i], rel.tol=1e-4)$value *
                             2 * pi / a[i, j]
                         }
                     })
                 cp[i,] <- cp[i,] * u[i,]
                 }
-            }, 
+            },
         exp = {
             rate <- exp(V %*% ppars + V.offset)
             for(i in 1:M) {
-                switch(survey, 
+                switch(survey,
                 line = {
                     for(j in 1:J) {
-                        cp[i, j] <- integrate(gxexp, db[j], db[j+1], 
+                        cp[i, j] <- integrate(gxexp, db[j], db[j+1],
                             rate=rate[i], rel.tol=1e-4)$value / w[j]
                         }},
                 point = {
                     for(j in 1:J) {
-                        cp[i, j] <- u * integrate(grexp, db[j], db[j+1], 
-                            rate=rate[i], rel.tol=1e-4)$value * 
+                        cp[i, j] <- u * integrate(grexp, db[j], db[j+1],
+                            rate=rate[i], rel.tol=1e-4)$value *
                             2 * pi * a[i, j]
-                        }	
+                        }
                     })
                 cp[i,] <- cp[i,] * u[i,]
                 }
-            }, 
+            },
         hazard = {
             shape <- exp(V %*% ppars + V.offset)
             scale <- exp(coef(object, type="scale"))
             for(i in 1:M) {
-                switch(survey, 
+                switch(survey,
                 line = {
                     for(j in 1:J) {
-                        cp[i, j] <- integrate(gxhaz, db[j], db[j+1], 
-                            shape=shape[i], scale=scale, 
+                        cp[i, j] <- integrate(gxhaz, db[j], db[j+1],
+                            shape=shape[i], scale=scale,
                             rel.tol=1e-4)$value / w[j]
                         }},
-                point = {   
+                point = {
                     for(j in 1:J) {
-                        cp[i, j] <- integrate(grhaz, db[j], db[j+1], 
-                            shape = shape[i], scale=scale, 
+                        cp[i, j] <- integrate(grhaz, db[j], db[j+1],
+                            shape = shape[i], scale=scale,
                             rel.tol=1e-4)$value * 2 * pi / a[i, j]
                     }})
                 cp[i,] <- cp[i,] * u[i,]
@@ -1345,9 +1917,130 @@ setMethod("getP", "unmarkedFitDS",
 
 
 
+# Should this return p or pi. Right now it's pi without phi.
+setMethod("getP", "unmarkedFitGDS",
+    function(object, na.rm = TRUE)
+{
+#    browser()
+    formula <- object@formula
+    detformula <- as.formula(formula[[2]])
+    umf <- object@data
+    designMats <- unmarked:::getDesign(umf, formula, na.rm = na.rm)
+    y <- designMats$y
+    Xdet <- designMats$Xdet
+    Xdet.offset <- designMats$Xdet.offset
+    if (is.null(Xdet.offset))
+        Xdet.offset <- rep(0, nrow(Xdet))
+    M <- nrow(y)
+    T <- umf@numPrimary
+    J <- ncol(y) / T
+    ppars <- coef(object, type = "det")
+    db <- umf@dist.breaks
+    w <- diff(db)
+    survey <- umf@survey
+    key <- object@keyfun
+    tlength <- umf@tlength
+
+    u <- a <- matrix(NA, M, J)
+    switch(survey,
+    line = {
+        for(i in 1:M) {
+            a[i,] <- tlength[i] * w
+            u[i,] <- a[i,] / sum(a[i,])
+            }
+        },
+    point = {
+        for(i in 1:M) {
+            a[i, 1] <- pi*db[2]^2
+            for(j in 2:J)
+                a[i, j] <- pi*db[j+1]^2 - sum(a[i, 1:(j-1)])
+            u[i,] <- a[i,] / sum(a[i,])
+            }
+        })
 
 
-setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE) 
+    cp <- array(NA, c(M, J, T))
+    switch(key,
+        halfnorm = {
+            sigma <- exp(Xdet %*% ppars + Xdet.offset)
+            sigma <- matrix(sigma, M, T, byrow=TRUE)
+            for(i in 1:M) {
+                for(t in 1:T) {
+                    switch(survey,
+                    line = {
+                        f.0 <- 2 * dnorm(0, 0, sd=sigma[i, t])
+                        int <- 2 * (pnorm(db[-1], 0, sd=sigma[i, t]) -
+                            pnorm(db[-(J+1)], 0, sd=sigma[i, t]))
+                        cp[i,,t] <- int / f.0 / w
+                        },
+                    point = {
+                        for(j in 1:J) {
+                            cp[i, j, t] <- integrate(grhn, db[j], db[j+1],
+                                sigma=sigma[i, t], rel.tol=1e-4)$value *
+                                2 * pi / a[i, j]
+                            }
+                        })
+                    cp[i,,t] <- cp[i,,t] * u[i,]
+                    }
+                }
+            },
+        exp = {
+            rate <- exp(Xdet %*% ppars + Xdet.offset)
+            rate <- matrix(rate, M, T, byrow=TRUE)
+            for(i in 1:M) {
+                for(t in 1:T) {
+                switch(survey,
+                line = {
+                    for(j in 1:J) {
+                        cp[i, j, t] <- integrate(gxexp, db[j], db[j+1],
+                            rate=rate[i,t], rel.tol=1e-4)$value / w[j]
+                        }},
+                point = {
+                    for(j in 1:J) {
+                        cp[i, j, t] <- integrate(grexp, db[j], db[j+1],
+                            rate=rate[i,t], rel.tol=1e-4)$value *
+                            2 * pi * a[i, j]
+                        }
+                    })
+                cp[i,,t] <- cp[i,,t] * u[i,]
+                }}
+            },
+        hazard = {
+            shape <- exp(Xdet %*% ppars + Xdet.offset)
+            shape <- matrix(shape, M, T, byrow=TRUE)
+            scale <- exp(coef(object, type="scale"))
+            for(i in 1:M) {
+                for(t in 1:T) {
+                switch(survey,
+                line = {
+                    for(j in 1:J) {
+                        cp[i, j, t] <- integrate(gxhaz, db[j], db[j+1],
+                            shape=shape[i,t], scale=scale,
+                            rel.tol=1e-4)$value / w[j]
+                        }},
+                point = {
+                    for(j in 1:J) {
+                        cp[i, j, t] <- integrate(grhaz, db[j], db[j+1],
+                            shape = shape[i,t], scale=scale,
+                            rel.tol=1e-4)$value * 2 * pi / a[i, j]
+                    }})
+                cp[i,,t] <- cp[i,,t] * u[i,]
+                }}
+            },
+	uniform = cp <- u)
+    cp <- matrix(cp, nrow=M)
+    return(cp)
+})
+
+
+
+
+
+
+
+
+
+setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE)
 {
     formula <- object@formula
     detformula <- as.formula(formula[[2]])
@@ -1360,7 +2053,7 @@ setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE)
     if (is.null(V.offset))
         V.offset <- rep(0, nrow(V))
     M <- nrow(y)
-    J <- ncol(y)
+    J <- obsNum(umf) #ncol(y)
     ppars <- coef(object, type = "det")
     p <- plogis(V %*% ppars + V.offset)
     p <- matrix(p, M, J, byrow = TRUE)
@@ -1370,17 +2063,19 @@ setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE)
 
 
 
-setMethod("getP", "unmarkedFitPCO", function(object, na.rm = TRUE) 
+setMethod("getP", "unmarkedFitPCO", function(object, na.rm = TRUE)
 {
     umf <- object@data
     D <- getDesign(umf, object@formula, na.rm = na.rm)
     y <- D$y
     Xp <- D$Xp
+    Xp.offset <- D$Xp.offset
     M <- nrow(y)
     T <- umf@numPrimary
     J <- ncol(y) / T
+    if(is.null(Xp.offset)) Xp.offset <- rep(0, M*T*J)
     ppars <- coef(object, type = "det")
-    p <- plogis(Xp %*% ppars)
+    p <- plogis(Xp %*% ppars + Xp.offset)
     p <- matrix(p, M, J*T, byrow = TRUE)
     return(p)
 })
@@ -1403,13 +2098,13 @@ setMethod("getP", "unmarkedFitColExt", function(object, na.rm = TRUE)
     p <- array(p, c(J, nY, M))
     p <- aperm(p, c(3, 1, 2))
     p <- matrix(p, nrow=M)
-    return(p)    
+    return(p)
 })
 
 
 
-setMethod("getP", "unmarkedFitGMM", 
-    function(object, na.rm = TRUE) 
+setMethod("getP", "unmarkedFitGMM",
+    function(object, na.rm = TRUE)
 {
     formula <- object@formula
     detformula <- object@formlist$pformula
@@ -1421,23 +2116,23 @@ setMethod("getP", "unmarkedFitGMM",
     Xdet.offset <- D$Xdet.offset
     if (is.null(Xdet.offset))
         Xdet.offset <- rep(0, nrow(Xdet))
-    
+
     M <- nrow(y)
     T <- object@data@numPrimary
     R <- numY(object@data) / T
     J <- obsNum(object@data) / T
-    
+
     ppars <- coef(object, type = "det")
     p <- plogis(Xdet %*% ppars + Xdet.offset)
     p <- matrix(p, nrow=M, byrow=TRUE)
     p <- array(p, c(M, J, T))
-    p <- aperm(p, c(1,3,2))     
+    p <- aperm(p, c(1,3,2))
 
     cp <- array(as.numeric(NA), c(M, T, R))
     for(t in 1:T) cp[,t,] <- do.call(piFun, list(p[,t,]))
     cp <- aperm(cp, c(1,3,2))
     cp <- matrix(cp, nrow=M, ncol=numY(object@data))
-    
+
     return(cp)
 })
 
@@ -1445,7 +2140,7 @@ setMethod("getP", "unmarkedFitGMM",
 
 
 
-setMethod("simulate", "unmarkedFitDS", 
+setMethod("simulate", "unmarkedFitDS",
     function(object, nsim = 1, seed = NULL, na.rm=TRUE)
 {
     formula <- object@formula
@@ -1463,7 +2158,7 @@ setMethod("simulate", "unmarkedFitDS",
     lamParms <- coef(object, type = "state")
     lambda <- drop(exp(X %*% lamParms + X.offset))
     if(identical(object@output, "density")) {
-        switch(umf@survey, 
+        switch(umf@survey,
             line = {
                 tlength <- umf@tlength
                 A <- tlength * max(db) * 2
@@ -1471,10 +2166,10 @@ setMethod("simulate", "unmarkedFitDS",
             point = {
                 A <- pi * max(db)^2
                 })
-        switch(umf@unitsIn, 
+        switch(umf@unitsIn,
             m = A <- A / 1e6,
             km = A <- A)
-        switch(object@unitsOut, 
+        switch(object@unitsOut,
             ha = A <- A * 100,
             kmsq = A <- A)
         lambda <- lambda * A
@@ -1491,7 +2186,7 @@ setMethod("simulate", "unmarkedFitDS",
 
 
 
-setMethod("simulate", "unmarkedFitPCount", 
+setMethod("simulate", "unmarkedFitPCount",
     function(object, nsim = 1, seed = NULL, na.rm = TRUE)
 {
     formula <- object@formula
@@ -1507,16 +2202,21 @@ setMethod("simulate", "unmarkedFitPCount",
     J <- ncol(y)
     allParms <- coef(object, altNames = FALSE)
     lamParms <- coef(object, type = "state")
-    lam <- as.numeric(exp(X %*% lamParms + X.offset)) 
+    lam <- as.numeric(exp(X %*% lamParms + X.offset))
     lamvec <- rep(lam, each = J)
     pvec <- c(t(getP(object, na.rm = na.rm)))
     mix <- object@mixture
     simList <- list()
     for(i in 1:nsim) {
-        switch(mix, 
-            P = N <- rpois(M, lam),
-            NB = N <- rnbinom(M, size = exp(coef(object["alpha"])), mu = lam)
-            )                
+        switch(mix,
+               P = N <- rpois(M, lam),
+               NB = N <- rnbinom(M, size = exp(coef(object["alpha"])),
+                                 mu = lam),
+               ZIP = {
+                   psi <- plogis(coef(object["psi"]))
+                   N <- rzip(M, lam, psi)
+               }
+            )
         yvec <- rbinom(M * J, size = rep(N, each = J), prob = pvec)
         simList[[i]] <- matrix(yvec, M, J, byrow = TRUE)
         }
@@ -1526,25 +2226,41 @@ setMethod("simulate", "unmarkedFitPCount",
 
 
 
-setMethod("simulate", "unmarkedFitPCO", 
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE) 
+setMethod("simulate", "unmarkedFitPCO",
+    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
 {
     mix <- object@mixture
     dynamics <- object@dynamics
     umf <- object@data
     D <- unmarked:::getDesign(umf, object@formula, na.rm = na.rm)
     Xlam <- D$Xlam; Xgam <- D$Xgam; Xom <- D$Xom; Xp <- D$Xp
+    Xlam.offset <- D$Xlam.offset; Xgam.offset <- D$Xgam.offset
+    Xom.offset <- D$Xom.offset; Xp.offset <- D$Xp.offset
     delta <- D$delta
+
     y <- D$y
     M <- nrow(y)
     T <- umf@numPrimary
     J <- ncol(y) / T
-    lambda <- drop(exp(Xlam %*% coef(object, 'lambda')))
+
+    if(is.null(Xlam.offset)) Xlam.offset <- rep(0, M)
+    if(is.null(Xgam.offset)) Xgam.offset <- rep(0, M*(T-1))
+    if(is.null(Xom.offset)) Xom.offset <- rep(0, M*(T-1))
+    if(is.null(Xp.offset)) Xp.offset <- rep(0, M*T*J)
+
+    lambda <- drop(exp(Xlam %*% coef(object, 'lambda') + Xlam.offset))
     if(dynamics != "notrend")
-        gamma <- matrix(exp(Xgam %*% coef(object, 'gamma')), M, T-1, byrow=TRUE)
-    else 
+        gamma <- matrix(exp(Xgam %*% coef(object, 'gamma') + Xgam.offset),
+                        M, T-1, byrow=TRUE)
+    else
         gamma <- matrix(NA, M, T-1)
-    omega <- matrix(plogis(Xom %*% coef(object, 'omega')), M, T-1, byrow=TRUE)
+    if(dynamics != "trend")
+        omega <- matrix(plogis(Xom %*% coef(object, 'omega') + Xom.offset),
+                        M, T-1, byrow=TRUE)
+    else
+        omega <- matrix(-999, M, T-1) # placeholder
+    if(identical(mix, "ZIP"))
+        psi <- plogis(coef(object, type="psi"))
     p <- getP(object, na.rm = na.rm)
     N <- matrix(NA, M, T)
     S <- G <- matrix(NA, M, T-1)
@@ -1552,36 +2268,53 @@ setMethod("simulate", "unmarkedFitPCO",
     for(s in 1:nsim) {
         y.sim <- matrix(NA, M, J*T)
         for(i in 1:M) {
-            switch(mix, 
-                P = N[i, 1] <- rpois(1, lambda),
-                NB = N[i, 1] <- rnbinom(1, size = exp(coef(object["alpha"])), 
-                    mu = lambda))
+            switch(mix,
+                   P = N[i, 1] <- rpois(1, lambda),
+                   NB = N[i, 1] <- rnbinom(1, size =
+                       exp(coef(object["alpha"])), mu = lambda),
+                   ZIP = N[i,1] <- rzip(1, lambda[i], psi))
             if(delta[i, 1] > 1) {
-                for(d in 2:delta[i, 1]) 
-                    N[i, 1] <- N[i, 1] * omega[i, 1] + gamma[i, 1]
+                for(d in 2:delta[i, 1]) {
+                    if(dynamics == "trend")
+                        N[i,1] <- rpois(1, N[i,1]*gamma[i,1])
+                    else if(dynamics == "autoreg")
+                        N[i,1] <- rbinom(1, N[i,1], omega[i,1]) +
+                            rpois(1, gamma[i,1]*N[i,1])
+                    else
+                        N[i,1] <- rbinom(1, N[i,1], omega[i,1]) +
+                            rpois(1, gamma[i, 1])
                 }
+            }
             # Might need more NA handling here...ignore gaps?
             for(t in 2:T) {
-                if(is.na(omega[i, t-1]) | is.na(gamma[i,t-1])) 
+                if(is.na(omega[i, t-1]) | is.na(gamma[i,t-1]))
                     N[i, t] <- N[i, t-1] # just a place holder
                 else{
-                    S[i, t-1] <- rbinom(1, N[i, t-1], omega[i, t-1])
+                    if(!identical(dynamics, "trend"))
+                        S[i, t-1] <- rbinom(1, N[i, t-1], omega[i, t-1])
                     if(identical(dynamics, "autoreg"))
                         gamma[i, t-1] <- gamma[i, t-1] * N[i, t-1]
-                    if(identical(dynamics, "notrend")) # is this true for t>2??
+                    else if(identical(dynamics, "notrend"))
                         gamma[i, t-1] <- (1-omega[i, t-1]) * lambda[i]
                     G[i, t-1] <- rpois(1, gamma[i, t-1])
-                    N[i, t] <- S[i, t-1] + G[i, t-1]
+                    if(identical(dynamics, "trend"))
+                        N[i,t] <- rpois(1, N[i,t-1]*gamma[i,t-1])
+                    else
+                        N[i, t] <- S[i, t-1] + G[i, t-1]
                     if(delta[i, t] > 1) {
                         for(d in 2:delta[i, 1]) {
-                            S[i, t-1] <- rbinom(N[i, t], omega[i, t-1])
-                            G[i, t-1] <- rpois(1, gamma[i, t-1])
-                            N[i, t] <- S[i, t-1] + G[i, t-1]
+                            if(dynamics == "trend")
+                                N[i,t] <- rpois(1, N[i,t]*gamma[i,t-1])
+                            else {
+                                S[i,t-1] <- rbinom(1, N[i,t], omega[i,t-1])
+                                G[i,t-1] <- rpois(1, gamma[i, t-1])
+                                N[i, t] <- S[i, t-1] + G[i, t-1]
                             }
                         }
                     }
                 }
             }
+        }
         y.na <- is.na(y)
         N <- N[,rep(1:T, each=J)]
         y.sim[!y.na] <- rbinom(sum(!y.na), N[!y.na], p[!y.na])
@@ -1592,7 +2325,7 @@ setMethod("simulate", "unmarkedFitPCO",
 
 
 
-setMethod("simulate", "unmarkedFitMPois", 
+setMethod("simulate", "unmarkedFitMPois",
     function(object, nsim = 1, seed = NULL, na.rm = TRUE)
 {
     formula <- object@formula
@@ -1621,7 +2354,7 @@ setMethod("simulate", "unmarkedFitMPois",
 
 
 
-setMethod("simulate", "unmarkedFitOccu", 
+setMethod("simulate", "unmarkedFitOccu",
     function(object, nsim = 1, seed = NULL, na.rm = TRUE)
 {
     formula <- object@formula
@@ -1652,7 +2385,7 @@ setMethod("simulate", "unmarkedFitOccu",
 
 
 setMethod("simulate", "unmarkedFitColExt",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE) 
+    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
 {
     data <- object@data
     psiParms <- coef(object, 'psi')
@@ -1678,46 +2411,46 @@ setMethod("simulate", "unmarkedFitColExt",
     detP <- plogis(V.itj %*% detParms)
     colP <- plogis(X.it.gam  %*% colParms)
     extP <- plogis(X.it.eps %*% extParms)
-            
+
     detP <- array(detP, c(J, nY, M))
     detP <- aperm(detP, c(3, 1, 2))
     colP <- matrix(colP, M, nY, byrow = TRUE)
     extP <- matrix(extP, M, nY, byrow = TRUE)
-            
+
     simList <- list()
     for(s in 1:nsim) {
         ## generate first year's data
         x <- matrix(0, M, nY)
-        x[,1] <- rbinom(M, 1, psiP) 
-              
+        x[,1] <- rbinom(M, 1, psiP)
+
         ## create transition matrices (phi^T)
         phis <- array(NA,c(2,2,nY-1,M)) #array of phis for each
         for(i in 1:M) {
             for(t in 1:(nY-1)) {
-                phis[,,t,i] <- matrix(c(1-colP[i,t], colP[i,t], extP[i,t], 
-                    1-extP[i,t])) 
+                phis[,,t,i] <- matrix(c(1-colP[i,t], colP[i,t], extP[i,t],
+                    1-extP[i,t]))
                 }
             }
-              
+
         ## generate latent years 2:T
         for(i in 1:M) {
             for(t in 2:nY) {
                 x[i,t] <- rbinom(1, 1, phis[2,x[i,t-1]+1,t-1,i])
                 }
             }
-              
+
         ## generate observations
         y <- array(NA, c(M, J, nY))
         for(t in 1:nY) {
             y[,,t] <- rbinom(M*J, 1, x[,t]*detP[,,t])
             }
-              
+
         y.mat <- y[,,1]
         for(i in 2:dim(y)[3]) {
             y.mat <- cbind(y.mat,y[,,i])
             }
         simList[[s]] <- y.mat
-        }            
+        }
     return(simList)
 })
 
@@ -1725,7 +2458,7 @@ setMethod("simulate", "unmarkedFitColExt",
 
 
 setMethod("simulate", "unmarkedFitOccuRN",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE) 
+    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -1754,16 +2487,16 @@ setMethod("simulate", "unmarkedFitOccuRN",
         }
     return(simList)
 })
-          
-          
-          
-setMethod("simulate", "unmarkedFitGMM", 
+
+
+
+setMethod("simulate", "unmarkedFitGMM",
     function(object, nsim = 1, seed = NULL, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
     mixture <- object@mixture
-    D <- getDesign(umf, formula, na.rm = na.rm)
+    D <- unmarked:::getDesign(umf, formula, na.rm = na.rm)
     y <- D$y
     Xlam <- D$Xlam
     Xphi <- D$Xphi
@@ -1771,7 +2504,7 @@ setMethod("simulate", "unmarkedFitGMM",
 
     Xlam.offset <- D$Xlam.offset
     Xphi.offset <- D$Xphi.offset
-    Xdet.offset <- D$Xdet.offset        
+    Xdet.offset <- D$Xdet.offset
     if (is.null(Xlam.offset)) Xlam.offset <- rep(0, nrow(Xlam))
     if (is.null(Xphi.offset)) Xphi.offset <- rep(0, nrow(Xphi))
     if (is.null(Xdet.offset)) Xdet.offset <- rep(0, nrow(Xdet))
@@ -1779,322 +2512,141 @@ setMethod("simulate", "unmarkedFitGMM",
     n <- nrow(y)
     T <- umf@numPrimary
     J <- ncol(y) / T
-    
+
     lamParms <- coef(object, type = "lambda")
     phiParms <- coef(object, type = "phi")
-    detParms <- coef(object, type = "det")        
+    detParms <- coef(object, type = "det")
     lam <- drop(exp(Xlam %*% lamParms + Xlam.offset))
-    phi <- as.numeric(plogis(Xphi %*% phiParms + Xphi.offset))
-    phi.mat <- matrix(phi, nrow=n, byrow=TRUE)
-    p <- as.numeric(plogis(Xdet %*% detParms + Xdet.offset))    
+    if(is.null(phiParms))
+        phi <- rep(1, nrow(Xphi))
+    else
+        phi <- as.numeric(plogis(Xphi %*% phiParms + Xphi.offset))
+    phi.mat <- matrix(phi, nrow=n, ncol=T, byrow=TRUE)
+    p <- as.numeric(plogis(Xdet %*% detParms + Xdet.offset))
 
-    cp.arr <- array(NA, c(n, T, J+1))  
+    cp.arr <- array(NA, c(n, T, J+1))
     cp.mat <- getP(object, na.rm = na.rm)
+    cp.mat[is.na(y)] <- NA
     cp.temp <- array(cp.mat, c(n, J, T))
     cp.arr[,,1:J] <- aperm(cp.temp, c(1,3,2))
-    cp.arr[,,J+1] <- 1 - apply(cp.arr[,,1:J], 1:2, sum, na.rm=TRUE)
+    cp.arr[,,J+1] <- 1 - apply(cp.arr[,,1:J,drop=FALSE], 1:2, sum, na.rm=TRUE)
 
     simList <- list()
     for(s in 1:nsim) {
-        switch(mixture, 
+        switch(mixture,
             P = M <- rpois(n=n, lambda=lam),
-            NB = M <- rnbinom(n=n, mu=lam, size=exp(coef(object, type="alpha"))))
+            NB = M <- rnbinom(n=n, mu=lam,
+                size=exp(coef(object, type="alpha"))))
 
         N <- rbinom(n*T, size=M, prob=phi.mat)
-        N <- matrix(N, nrow=n, ncol=T, byrow=TRUE)
-    
+        # bug fix 3/16/2010
+        N <- matrix(N, nrow=n, ncol=T, byrow=FALSE) # , byrow=TRUE)
+
         y.sim <- array(NA, c(n, J, T))
-        for(i in 1:n)
-            for(t in 1:T)
-                y.sim[i,,t] <- drop(rmultinom(1, N[i,t], cp.arr[i,t,]))[1:J] 
+        for(i in 1:n) {
+            for(t in 1:T) {
+                if(is.na(N[i,t]))
+                    next
+                pi.it <- cp.arr[i,t,]
+                na.it <- is.na(pi.it)
+                pi.it[na.it] <- 0
+                y.sim[i,,t] <- drop(rmultinom(1, N[i,t], pi.it))[1:J]
+                y.sim[i,na.it[1:J],t] <- NA
+            }
+        }
         simList[[s]] <- matrix(y.sim, nrow=n, ncol=J*T) # note, byrow=F
         }
     return(simList)
 })
 
-          
 
 
 
-############################## PARAMETRIC BOOTSTRAP ###########################
-
-setGeneric("parboot",
-           def = function(object, ...) {
-             standardGeneric("parboot")
-           })
 
 
-setClass("parboot",
-         representation(call = "call",
-                        t0 = "numeric",
-                        t.star = "matrix"))
-         
-
-setMethod("parboot", "unmarkedFit", 
-    function(object, statistic=SSE, nsim=10, report, ...) 
+setMethod("simulate", "unmarkedFitGDS",
+    function(object, nsim = 1, seed = NULL, na.rm=TRUE)
 {
-    statistic <- match.fun(statistic)
-    call <- match.call(call = sys.call(-1))
     formula <- object@formula
-    umf <- getData(object)
-    y <- getY(umf)
-    if(class(object) %in% c("unmarkedFitOccu", "unmarkedFitOccuRN", 
-        "unmarkedFitColExt"))
-            y <- truncateToBinary(y)
-    ests <- as.numeric(coef(object))
-    t0 <- statistic(object, ...)
-    lt0 <- length(t0)
-    t.star <- matrix(NA, nsim, lt0)
-    if(!is.null(names(t0)))
-        colnames(t.star) <- names(t0)
-    else colnames(t.star) <- paste("t*", 1:lt0, sep="")
-    if(!missing(report))
-        cat("t0 =", t0, "\n")      
-    fits <- list()
-    simdata <- umf
-    simList <- simulate(object, nsim = nsim, na.rm = FALSE)
-    for(i in 1:nsim) {
-        y.sim <- simList[[i]]
-        is.na(y.sim) <- is.na(y)
-        simdata@y <- y.sim
-        fits[[i]] <- update(object, data=simdata, starts=ests, se=FALSE, ...)
-        t.star[i,] <- statistic(fits[[i]], ...)
-        if(!missing(report)) {
-            if(nsim > report && i %in% seq(report, nsim, by=report))
-                cat(paste(round(t.star[(i-(report-1)):i,], 1), collapse=", "), 
-                    fill=TRUE)
-            flush.console()
-            }
+    umf <- object@data
+    db <- umf@dist.breaks
+    w <- diff(db)
+    mixture <- object@mixture
+    keyfun <- object@keyfun
+
+    D <- getDesign(umf, formula, na.rm = na.rm)
+    y <- D$y
+    Xlam <- D$Xlam
+    Xphi <- D$Xphi
+    Xdet <- D$Xdet
+    Xlam.offset <- D$Xlam.offset
+    Xphi.offset <- D$Xphi.offset
+    Xdet.offset <- D$Xdet.offset
+
+    if(is.null(Xlam.offset)) Xlam.offset <- rep(0, nrow(Xlam))
+    if(is.null(Xphi.offset)) Xphi.offset <- rep(0, nrow(Xphi))
+    if(is.null(Xdet.offset)) Xdet.offset <- rep(0, nrow(Xdet))
+
+    M <- nrow(y)
+    T <- umf@numPrimary
+    R <- ncol(y)
+    J <- R / T
+
+    lamPars <- coef(object, type="lambda")
+    if(T>1)
+        phiPars <- coef(object, type="phi")
+    detPars <- coef(object, type="det")
+
+    lambda <- exp(Xlam %*% lamPars + Xlam.offset)
+    if(T==1)
+        phi <- matrix(1, M, T)
+    else {
+        phi <- plogis(Xphi %*% phiPars + Xphi.offset)
+        phi <- matrix(phi, M, T, byrow=TRUE)
         }
-    out <- new("parboot", call=call, t0 = t0, t.star = t.star)
-    return(out)
-})
 
-
-
-
-
-
-setMethod("show", "parboot", function(object) 
-{
-    t.star <- object@t.star
-    t0 <- object@t0
-    nsim <- nrow(t.star)
-    biasMat <- pMat <- matrix(NA, nsim, length(t0))
-    for(i in 1:nsim) {
-        biasMat[i,] <- t0 - t.star[i,]
-        pMat[i,] <- abs(t.star[i,] - 1) > abs(t0 - 1)
-        }
-    bias <- colMeans(biasMat)
-    bias.se <- apply(biasMat, 2, sd)
-    p.val <- colSums(pMat) / (1 + nsim)
-    stats <- data.frame("t0" = t0, "mean(t0 - t_B)" = bias, 
-        "StdDev(t0 - t_B)" = bias.se, "Pr(t_B > t0)" = p.val, 
-        check.names = FALSE)
-    cat("\nCall:", deparse(object@call, width.cutoff=500), fill=T)
-    cat("\nParametric Bootstrap Statistics:\n")
-    print(stats, digits=3)
-    cat("\nt_B quantiles:\n")
-    print(t(apply(t.star, 2, quantile, 
-        probs=c(0, 2.5, 25, 50, 75, 97.5, 100) / 100)), digits=2)
-    cat("\nt0 = Original statistic compuated from data\n")
-    cat("t_B = Vector of bootstrap samples\n\n")
-})
-
-
-
-
-setMethod("plot", signature(x="parboot", y="missing"), 
-    function(x, y, xlab, main = "Parametric Bootstrapped Samples", xlim, ...)
-{
-    t.star <- x@t.star
-    t0 <- x@t0
-    for(i in 1:length(t0)) {
-        if(missing(xlab))
-            xlab <- colnames(t.star)[i]
-        h <- hist(t.star[,i], plot = FALSE)
-        if(missing(xlim))
-            xl <- c(min(h$breaks[1], t0[i]), max(max(h$breaks), t0[i]))
-        hist(t.star[,i], xlab=xlab, xlim = xl, main = main, ...)
-        abline(v=t0[i], lty=2)
-        devAskNewPage(ask = TRUE)
-        }
-    devAskNewPage(ask = FALSE)
-})
-
-
-# ----------------------- Nonparametric bootstrapping --------------------------
-
-## nonparboot return entire list of fits... 
-##  they will be processed by vcov, confint, etc.
-
-setGeneric("nonparboot", 
-    function(object, B = 0, ...) {standardGeneric("nonparboot")})
-
-
-setMethod("nonparboot", "unmarkedFit",
-          function(object, B = 0, keepOldSamples = TRUE, bsType, ...) {
-            bsType <- match.arg(bsType, c("site", "both"))
-            if (identical(B, 0) && !is.null(object@bootstrapSamples)) {
-              return(object)
-            }
-            if (B <= 0 && is.null(object@bootstrapSamples)) {
-              stop("B must be greater than 0 when fit has no bootstrap samples.")
-            }
-            data <- object@data
-            formula <- object@formula
-            designMats <- getDesign(data, formula)  # bootstrap only after removing sites
-            removed.sites <- designMats$removed.sites
-            data <- data[-removed.sites,]
-            y <- getY(data)
-            colnames(y) <- NULL
-            data@y <- y
-            M <- numSites(data)
-            boot.iter <- function() {
-              sites <- sort(sample(1:M, M, replace = TRUE))
-              data.b <- data[sites,]
-              y <- getY(data.b)
-              if (bsType == "both") {
-                obs.per.site <- alply(y, 1, function(row) {
-                  which(!is.na(row))
+    if(identical(object@output, "density")) {
+        switch(umf@survey,
+            line = {
+                tlength <- umf@tlength
+                A <- tlength * max(db) * 2
+                },
+            point = {
+                A <- pi * max(db)^2
                 })
-                obs <- lapply(obs.per.site, 
-                    function(obs) sample(obs, replace = TRUE))
-                data.b <- data.b[obs]
-              }
-              fm <- update(object, data = data.b, se = FALSE)
-              return(fm)
-            }
-            if (!keepOldSamples) {
-              object@bootstrapSamples <- NULL
-            }               
-            object@bootstrapSamples <- c(object@bootstrapSamples,
-                replicate(B, boot.iter(), simplify = FALSE))
-            coefs <- t(sapply(object@bootstrapSamples, function(x) coef(x)))
-            v <- cov(coefs)
-            object@covMatBS <- v
-            inds <- .estimateInds(object)
-            for (est in names(inds)) {
-              v.est <- v[inds[[est]], inds[[est]], drop = FALSE]
-              object@estimates@estimates[[est]]@covMatBS <- v.est
-            }
-            object
-          })
+        switch(umf@unitsIn,
+            m = A <- A / 1e6,
+            km = A <- A)
+        switch(object@unitsOut,
+            ha = A <- A * 100,
+            kmsq = A <- A)
+        lambda <- lambda * A
+        }
+    cp <- getP(object, na.rm = na.rm)
+    ysim <- cpa <- array(cp, c(M, J, T))
 
-setMethod("nonparboot", "unmarkedFitOccu",
-    function(object, B = 0, keepOldSamples = TRUE, ...) 
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples, bsType="both")
+    simList <- list()
+    for(s in 1:nsim) {
+        for(i in 1:M) {
+            switch(mixture,
+                P = Ns <- rpois(1, lambda[1]),
+                NB = {
+                    alpha <- exp(coef(object, type="alpha"))
+                    Ns <- rnbinom(1, mu=lambda[i], size=alpha)
+                    })
+            for(t in 1:T) {
+                N <- rbinom(1, Ns, phi[i,t])
+                cp.it <- cpa[i,,t]
+                cp.it[J+1] <- 1-sum(cp.it)
+                y.it <- as.integer(rmultinom(1, N, prob=cp.it))
+                ysim[i,,t] <- y.it[1:J]
+                }
+            }
+        y.mat <- matrix(ysim, nrow=M)
+        simList[[s]] <- y.mat
+        }
+    return(simList)
 })
 
 
-setMethod("nonparboot", "unmarkedFitPCount",
-    function(object, B = 0, keepOldSamples = TRUE, ...) 
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples, bsType="both")
-})
 
-
-setMethod("nonparboot", "unmarkedFitMPois",
-    function(object, B = 0, keepOldSamples = TRUE, ...) 
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples, bsType="site")
-})
-
-
-setMethod("nonparboot", "unmarkedFitDS",
-    function(object, B = 0, keepOldSamples = TRUE, ...) 
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples, bsType="site")
-})
-
-
-setMethod("nonparboot", "unmarkedFitOccuRN",
-    function(object, B = 0, keepOldSamples = TRUE, ...) 
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples, bsType="both")
-})
-
-
-setMethod("nonparboot", "unmarkedFitColExt",
-          function(object, B = 0, keepOldSamples = TRUE, ...) {
-            if (identical(B, 0) && !is.null(object@bootstrapSamples)) {
-              return(object)
-            }
-            if (B <= 0 && is.null(object@bootstrapSamples)) {
-              stop("B must be greater than 0 when fit has no bootstrap samples.")
-            }
-            data <- object@data
-            psiParms <- coef(object, 'psi')
-            detParms <- coef(object, 'det')
-            colParms <- coef(object, 'col')
-            extParms <- coef(object, 'ext')
-          
-            # bootstrap only after removing sites
-            designMats <- getDesign(object@data, formula = object@formula)   
-            removed.sites <- designMats$removed.sites
-            data <- data[-removed.sites,]
-            y <- getY(data)
-            colnames(y) <- NULL
-            data@y <- y
-            M <- numSites(data)
-            boot.iter <- function() {
-              sites <- sort(sample(1:M, M, replace = TRUE))
-              data.b <- data[sites,]
-              y <- getY(data.b)
-              fm <- update(object, data = data.b, se = FALSE)
-              return(fm)
-            }
-            if (!keepOldSamples) {
-              object@bootstrapSamples <- NULL
-            }               
-            object@bootstrapSamples <- c(object@bootstrapSamples,
-                replicate(B, boot.iter(), simplify = FALSE))
-            coefs <- t(sapply(object@bootstrapSamples, function(x) coef(x)))
-            v <- cov(coefs)
-            object@covMatBS <- v
-            inds <- .estimateInds(object)
-            for (est in names(inds)) {
-              v.est <- v[inds[[est]], inds[[est]], drop = FALSE]
-              object@estimates@estimates[[est]]@covMatBS <- v.est
-            }
-            smoothed.occ <- t(sapply(object@bootstrapSamples, 
-                function(x) x@smoothed.mean[1,]))
-            smoothed.unocc <- t(sapply(object@bootstrapSamples, 
-                function(x) x@smoothed.mean[2,]))
-            object@smoothed.mean.bsse <- rbind(sqrt(diag(cov(smoothed.occ))),
-                                               sqrt(diag(cov(smoothed.unocc))))
-            projected.occ <- t(sapply(object@bootstrapSamples, 
-                function(x) x@projected.mean[1,]))
-            projected.unocc <- t(sapply(object@bootstrapSamples, 
-                function(x) x@projected.mean[2,]))
-            object@projected.mean.bsse <- rbind(sqrt(diag(cov(projected.occ))),
-                                               sqrt(diag(cov(projected.unocc))))
-            object
-          })
-
-################################# Helper functions #############################
-
-## A helper function to return a list of indices for each estimate type
-## 
-
-
-.estimateInds <- function(umf) {
-  ## get length of each estimate
-  estimateLengths <- sapply(umf@estimates@estimates, function(est) {
-    length(coef(est))
-  })
-  ## recurse function to generate list of indices
-  estimateInds <- function(type) {
-    if(type==1) {
-      return(list(seq(length=estimateLengths[1])))
-    } else {
-      prev.list <- estimateInds(type-1)
-      prev.max <- max(prev.list[[type-1]])
-      return(c(prev.list, list(seq(prev.max+1, prev.max+estimateLengths[type]))))
-    }
-  }
-  retlist <- estimateInds(length(estimateLengths))
-  names(retlist) <- names(umf)
-  retlist
-}

@@ -6,21 +6,29 @@
 \alias{yearlySiteCovs<-}
 \alias{yearlySiteCovs<-,unmarkedMultFrame-method}
 \alias{unmarkedFrameGMM}
+\alias{unmarkedFrameGDS}
 
 \title{Create an unmarkedMultFrame or an unmarkedFrameGMM.}
 
 \usage{
-    unmarkedMultFrame(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs)
-    unmarkedFrameGMM(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs,
-        type, obsToY, piFun)}
+  unmarkedMultFrame(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs)
+  unmarkedFrameGMM(y, siteCovs, obsCovs, numPrimary, yearlySiteCovs, type,
+    obsToY, piFun)
+  unmarkedFrameGDS(y, siteCovs, numPrimary, yearlySiteCovs, dist.breaks,
+    survey, unitsIn, tlength)
+}
 
-\description{These functions construct flavors of unmarkedFrames for data
+
+
+\description{These functions construct unmarkedFrames for data
     collected during primary and secondary sampling periods.}
 
 \details{
-unmarkedMultFrame objects are used by \code{\link{colext}}. 
+unmarkedMultFrame objects are used by \code{\link{colext}}.
 
-unmarkedFrameGMM objects are used by \code{\link{gmultmix}}. 
+unmarkedFrameGMM objects are used by \code{\link{gmultmix}}.
+
+unmarkedFrameGDS objects are used by \code{\link{gdistsamp}}.
 
 For a study with \emph{M} sites, \emph{T} years, and a maximum of
 \emph{J} observations per site-year, the data are shaped as follows.
@@ -36,43 +44,53 @@ element-by-element.  The number of years must be specified in
 If the data are in long format, the convenience function
 \code{\link{formatMult}} is useful for creating the unmarkedMultFrame.
 
-unmarkedFrameGMM is a superclass of unmarkedMultFrame containing information on
-the survey design used that resulted in multinomial outcomes. For 
-constant-interval removal sampling, you can set type="removal" and ignore
-the arguments obsToY and piFun. Similarly, for double-observer sampling, 
+unmarkedFrameGMM and unmarkedFrameGDS are superclasses of
+unmarkedMultFrame containing information on
+the survey design used that resulted in multinomial outcomes. For
+unmarkedFrameGMM and constant-interval removal sampling, you can set
+type="removal" and ignore
+the arguments obsToY and piFun. Similarly, for double-observer sampling,
 setting type="double" will automatically create an appropiate obsToY matrix and
-\code{\link{piFuns}}. For all other situations, the type argument should be 
-ignored and the obsToY and piFun arguments must be specified. piFun must be a 
+\code{\link{piFuns}}. For all other situations, the type argument of
+unmarkedFrameGMM should be
+ignored and the obsToY and piFun arguments must be specified. piFun must be a
 function that converts an MxJ matrix of detection probabilities into an MxJ
 matrix of multinomial cell probabilities. obsToY is a matrix describing how
 the obsCovs relate to the observed counts y. For further discussion and examples
 see the help page for \code{\link{multinomPois}} and \code{\link{piFuns}}.
 
-An unmarkedFrameGMM object can be created from an unmarkedMultFrame using the
+unmarkedFrameGMM and unmarkedFrameGDS objects can be created from an
+unmarkedMultFrame using the
 "as" conversion method. See examples.
 
 }
 
-\note{Data used with \link{colext} and \link{gmultmix} may be collected 
-during a single year, so yearlySiteCovs may be a misnomer is some cases. }
+\note{Data used with \link{colext}, \link{gmultmix}, and
+  \link{gdistsamp} may be collected during a single year, so
+  yearlySiteCovs may be a misnomer is some cases. }
 
 \value{an unmarkedMultFrame or unmarkedFrameGMM object}
 \arguments{
     \item{y}{A matrix of the observed data.}
     \item{siteCovs}{Data frame of covariates that vary at the site level.}
-    \item{obsCovs}{Data frame of covariates that vary within 
+    \item{obsCovs}{Data frame of covariates that vary within
         site-year-observation level.}
-    \item{numPrimary}{Number of primary time periods (seasons in the 
+    \item{numPrimary}{Number of primary time periods (seasons in the
         multiseason model).}
-    \item{yearlySiteCovs}{Data frame containing covariates at the 
+    \item{yearlySiteCovs}{Data frame containing covariates at the
         site-year level.}
-    \item{type}{Either "removal" or "double" for constant-interval removal 
-        sampling or double observer sampling. This should be not be specified 
+    \item{type}{Either "removal" or "double" for constant-interval removal
+        sampling or double observer sampling. This should be not be specified
         for other types of survey designs.}
-    \item{obsToY}{A matrix specifying relationship between observation-level 
+    \item{obsToY}{A matrix specifying relationship between observation-level
         covariates and response matrix}
-    \item{piFun}{A function converting an MxJ matrix of detection probabilities 
-      into an MxJ matrix of multinomial cell probabilities.}}
+    \item{piFun}{A function converting an MxJ matrix of detection probabilities
+      into an MxJ matrix of multinomial cell probabilities.}
+    \item{dist.breaks}{see \code{\link{unmarkedFrameDS}}}
+    \item{survey}{see \code{\link{unmarkedFrameDS}}}
+    \item{unitsIn}{see \code{\link{unmarkedFrameDS}}}
+    \item{tlength}{see \code{\link{unmarkedFrameDS}}}
+  }
 
 \seealso{\code{\link{formatMult}}}
 
@@ -89,18 +107,18 @@ occasions <- data.frame(matrix(rep(1:(J*T), each=n), n, J*T))
 
 y <- matrix(0:1, n, J*T)
 
-umf <- unmarkedMultFrame(y=y, 
-    siteCovs = data.frame(site=site), 
+umf <- unmarkedMultFrame(y=y,
+    siteCovs = data.frame(site=site),
     obsCovs=list(occasion=occasions),
-    yearlySiteCovs=data.frame(year=years), 
+    yearlySiteCovs=list(year=years),
     numPrimary=T)
 
-umfGMM1 <- unmarkedFrameGMM(y=y, 
-    siteCovs = data.frame(site=site), 
+umfGMM1 <- unmarkedFrameGMM(y=y,
+    siteCovs = data.frame(site=site),
     obsCovs=list(occasion=occasions),
     yearlySiteCovs=data.frame(year=c(t(years))),
-    # or: yearlySiteCovs=list(year=years), 
-    numPrimary=T, type="removal")   
+    # or: yearlySiteCovs=list(year=years),
+    numPrimary=T, type="removal")
 
 
 # A user-defined piFun calculating removal probs when time intervals differ.
@@ -115,7 +133,7 @@ instRemPiFun <- function(p) {
 		pi[,i] <- pi[, i - 1]/p[, i - 1] * (1 - p[, i - 1]) * p[, i]
 		}
 	return(pi)
-	} 
+	}
 
 # Associated obsToY matrix required by unmarkedFrameMPois
 o2y <- diag(ncol(y))
@@ -123,11 +141,11 @@ o2y[upper.tri(o2y)] <- 1
 o2y
 
 
-umfGMM2 <- unmarkedFrameGMM(y=y, 
-    siteCovs = data.frame(site=site), 
+umfGMM2 <- unmarkedFrameGMM(y=y,
+    siteCovs = data.frame(site=site),
     obsCovs=list(occasion=occasions),
-    yearlySiteCovs=data.frame(year=years), 
-    numPrimary=T, obsToY=o2y, piFun="instRemPiFun")   
+    yearlySiteCovs=data.frame(year=years),
+    numPrimary=T, obsToY=o2y, piFun="instRemPiFun")
 
 str(umfGMM2)
 

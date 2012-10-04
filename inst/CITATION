@@ -1,21 +1,20 @@
-citHeader("To cite package 'unmarked' in publications use:")
+citHeader("To cite unmarked in publications use:")
 
-desc <- packageDescription("unmarked")
-year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", desc$Date)
-vers <- paste("R package version", desc$Version)
+citEntry(entry = "Article",
+  title        = "{unmarked}: An {R} Package for Fitting Hierarchical Models of Wildlife Occurrence and Abundance",
+  author       = personList(as.person("Ian Fiske"),
+                   as.person("Richard Chandler")),
+  journal      = "Journal of Statistical Software",
+  year         = "2011",
+  volume       = "43",
+  number       = "10",
+  pages        = "1--23",
+  url          = "http://www.jstatsoft.org/v43/i10/",
 
-citEntry(entry="Manual",
-         title = "unmarked: Models for Data from Unmarked Animals",
-         author = personList(as.person("Ian Fiske"),
-                             as.person("Richard B. Chandler"),
-                             as.person("J. Andrew Royle")),
-         year = year,
-         note = vers,
-         url = "http://CRAN.R-project.org/package=unmarked",
-         
-         textVersion =
-         paste("Ian Fiske, Richard B. Chandler, and Andy Royle (",
-               year,
-               "). unmarked: Models for Data from Unmarked Animals. ",
-               vers, ". http://CRAN.R-project.org/package=unmarked", sep=""))
+  textVersion  =
+  paste("Ian Fiske, Richard Chandler (2011).",
+        "unmarked: An R Package for Fitting Hierarchical Models of Wildlife Occurrence and Abundance.",
+        "Journal of Statistical Software, 43(10), 1-23.",
+        "URL http://www.jstatsoft.org/v43/i10/.")
+)
 

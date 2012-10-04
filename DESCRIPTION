@@ -1,12 +1,19 @@
+<<<<<<< HEAD
 Package: unmarkedPCO
 Version: 0.9-0
 Date: 2011-01-24
+=======
+Package: unmarked
+Version: 0.9-8
+Date: 2012-07-07
+>>>>>>> 88bff091a7bcc2a6dc2b8eaedfb874972c4cacf7
 Type: Package
 Title: Models for Data from Unmarked Animals
-Author: Ian Fiske, Richard Chandler, Andy Royle
+Author: Ian Fiske, Richard Chandler, Andy Royle, Marc Kery
 Maintainer: Richard Chandler <rchandler@usgs.gov>
 Depends: R (>= 2.12.0), methods, reshape, lattice, Rcpp (>= 0.8.0),
     RcppArmadillo (>= 0.2.0)
+Suggests: raster
 Imports: graphics, stats, utils
 Description: Unmarked fits hierarchical models of animal abundance and occurrence to data collected using survey methods such as point counts, site occupancy sampling, distance sampling, removal sampling, and double observer sampling. Parameters governing the state and observation processes can be modeled as functions of covariates. This version of the package was created to accompany Chandler and King (2011 Journal of Applied Ecology).
 License: GPL (>=3)
@@ -14,8 +21,9 @@ LazyLoad: yes
 LazyData: yes
 Collate: 'classes.R' 'unmarkedEstimate.R' 'mapInfo.R' 'unmarkedFrame.R'
     'unmarkedFit.R' 'utils.R' 'getDesign.R' 'colext.R' 'distsamp.R'
-    'multinomPois.R' 'occu.R' 'occuRN.R' 'pcount.R' 'gmultmix.R' 'pcountOpen.R'
-    'unmarkedFitList.R' 'unmarkedLinComb.R'
+    'multinomPois.R' 'occu.R' 'occuRN.R' 'pcount.R' 'gmultmix.R'
+    'pcountOpen.R' 'gdistsamp.R' 'unmarkedFitList.R' 'unmarkedLinComb.R'
+    'ranef.R' 'boot.R'
 Encoding: UTF-8
 LinkingTo: Rcpp
 SystemRequirements: GNU make

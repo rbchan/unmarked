@@ -1,22 +1,22 @@
 
 # data will need to be an unmarkedMultFrame
-gmultmix <- function(lambdaformula, phiformula, pformula, data, 
-    mixture=c('P', 'NB'), K, starts, method = "BFGS", control = list(), se = TRUE)
+gmultmix <- function(lambdaformula, phiformula, pformula, data,
+    mixture=c('P', 'NB'), K, starts, method = "BFGS", se = TRUE, ...)
 {
 if(!is(data, "unmarkedFrameGMM"))
     stop("Data is not of class unmarkedFrameGMM.")
 
 mixture <- match.arg(mixture)
 
-formlist <- list(lambdaformula = lambdaformula, phiformula = phiformula, 
+formlist <- list(lambdaformula = lambdaformula, phiformula = phiformula,
     pformula = pformula)
 form <- as.formula(paste(unlist(formlist), collapse=" "))
 D <- unmarked:::getDesign(data, formula = form)
 
 Xlam <- D$Xlam
-Xphi <- D$Xphi 
+Xphi <- D$Xphi
 Xdet <- D$Xdet
-y <- D$y  # MxJT 
+y <- D$y  # MxJT
 
 Xlam.offset <- D$Xlam.offset
 Xphi.offset <- D$Xphi.offset
@@ -28,7 +28,7 @@ if(is.null(Xdet.offset)) Xdet.offset <- rep(0, nrow(Xdet))
 if(missing(K) || is.null(K)) K <- max(y, na.rm=TRUE) + 100
 k <- 0:K
 lk <- length(k)
-M <- nrow(y)  
+M <- nrow(y)
 T <- data@numPrimary
 R <- numY(data) / T
 J <- obsNum(data) / T
@@ -36,7 +36,7 @@ J <- obsNum(data) / T
 y <- array(y, c(M, R, T))
 y <- aperm(y, c(1,3,2))
 yt <- apply(y, 1:2, function(x) {
-    if(all(is.na(x))) 
+    if(all(is.na(x)))
         return(NA)
     else return(sum(x, na.rm=TRUE))
     })
@@ -45,12 +45,17 @@ yt <- apply(y, 1:2, function(x) {
 piFun <- data@piFun
 
 lamPars <- colnames(Xlam)
-phiPars <- colnames(Xphi)
 detPars <- colnames(Xdet)
 nLP <- ncol(Xlam)
-nPP <- ncol(Xphi)
+if(T==1) {
+    nPP <- 0
+    phiPars <- character(0)
+} else if(T>1) {
+    nPP <- ncol(Xphi)
+    phiPars <- colnames(Xphi)
+    }
 nDP <- ncol(Xdet)
-nP <- nLP + nPP + nDP + ifelse(mixture=='NB', 1, 0)
+nP <- nLP + nPP + nDP + (mixture=='NB')
 if(!missing(starts) && length(starts) != nP)
     stop(paste("The number of starting values should be", nP))
 
@@ -70,36 +75,39 @@ for(i in 1:M) {
             }
         }
     }
-    
+
 nll <- function(pars) {
-    lambda <- exp(Xlam %*% pars[1:nLP] + Xlam.offset) 
-    phi <- drop(plogis(Xphi %*% pars[(nLP+1):(nLP+nPP)] + Xphi.offset))
+    lambda <- exp(Xlam %*% pars[1:nLP] + Xlam.offset)
+    if(T==1)
+        phi <- 1
+    else if(T>1)
+        phi <- drop(plogis(Xphi %*% pars[(nLP+1):(nLP+nPP)] + Xphi.offset))
     p <- plogis(Xdet %*% pars[(nLP+nPP+1):(nLP+nPP+nDP)] + Xdet.offset)
 
     phi.mat <- matrix(phi, M, T, byrow=TRUE)
     phi <- as.numeric(phi.mat)
-    
+
     p <- matrix(p, nrow=M, byrow=TRUE)
     p <- array(p, c(M, J, T))
-    p <- aperm(p, c(1,3,2))     
+    p <- aperm(p, c(1,3,2))
     cp <- array(as.numeric(NA), c(M, T, R+1))
-    
+
     for(t in 1:T) cp[,t,1:R] <- do.call(piFun, list(p[,t,]))
     cp[,,1:R] <- cp[,,1:R] * phi
-    cp[,,R+1] <- 1 - apply(cp[,,1:R], 1:2, sum, na.rm=TRUE) # Double-check
-    
-    switch(mixture, 
+    cp[,,R+1] <- 1 - apply(cp[,,1:R,drop=FALSE], 1:2, sum, na.rm=TRUE)
+
+    switch(mixture,
         P = f <- sapply(k, function(x) dpois(x, lambda)),
-        NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda, 
+        NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda,
             size=exp(pars[nP]))))
     g <- matrix(as.numeric(NA), M, lk)
     for(i in 1:M) {
         A <- matrix(0, lk, T)
         for(t in 1:T) {
             na <- naflag[i,t,]
-            if(!all(na))            
-                A[, t] <- lfac.k - lfac.kmyt[i, t,] + 
-                    sum(y[i, t, !na] * log(cp[i, t, which(!na)])) + 
+            if(!all(na))
+                A[, t] <- lfac.k - lfac.kmyt[i, t,] +
+                    sum(y[i, t, !na] * log(cp[i, t, which(!na)])) +
                     kmyt[i, t,] * log(cp[i, t, R+1])
             }
         g[i,] <- exp(rowSums(A))
@@ -108,12 +116,12 @@ nll <- function(pars) {
     ll <- rowSums(f*g)
     -sum(log(ll))
     }
-    
+
 if(missing(starts)) starts <- rep(0, nP)
-fm <- optim(starts, nll, method = method, hessian = se, control = control)
+fm <- optim(starts, nll, method = method, hessian = se, ...)
 opt <- fm
 if(se) {
-		covMat <- tryCatch(solve(fm$hessian), error=function(x) 
+    covMat <- tryCatch(solve(fm$hessian), error=function(x)
         simpleError("Hessian is singular. Try using fewer covariates."))
     if(identical(class(covMat)[1], "simpleError")) {
         warning(covMat$message)
@@ -132,28 +140,35 @@ lamEstimates <- unmarkedEstimate(name = "Abundance", short.name = "lambda",
     estimates = ests[1:nLP],
     covMat = as.matrix(covMat[1:nLP, 1:nLP]), invlink = "exp",
     invlinkGrad = "exp")
-phiEstimates <- unmarkedEstimate(name = "Availability", short.name = "phi",
-    estimates = ests[(nLP+1):(nLP+nPP)],
-    covMat = as.matrix(covMat[(nLP+1):(nLP+nPP), (nLP+1):(nLP+nPP)]), 
-        invlink = "logistic",
-    invlinkGrad = "logistic.grad")
+estimateList <- unmarkedEstimateList(list(lambda=lamEstimates))
+
+if(T>1) {
+    phiEstimates <- unmarkedEstimate(name = "Availability",
+                                     short.name = "phi",
+                                     estimates = ests[(nLP+1):(nLP+nPP)],
+                                     covMat = as.matrix(covMat[(nLP+1) :
+                                       (nLP+nPP), (nLP+1):(nLP+nPP)]),
+                                     invlink = "logistic",
+                                     invlinkGrad = "logistic.grad")
+    estimateList@estimates$phi <- phiEstimates
+}
+
 detEstimates <- unmarkedEstimate(name = "Detection", short.name = "p",
     estimates = ests[(nLP+nPP+1):(nLP+nPP+nDP)],
     covMat = as.matrix(
-        covMat[(nLP+nPP+1):(nLP+nPP+nDP), (nLP+nPP+1):(nLP+nPP+nDP)]), 
+        covMat[(nLP+nPP+1):(nLP+nPP+nDP), (nLP+nPP+1):(nLP+nPP+nDP)]),
     invlink = "logistic", invlinkGrad = "logistic.grad")
-estimateList <- unmarked:::unmarkedEstimateList(list(lambda=lamEstimates,
-    phi=phiEstimates, det=detEstimates))
+estimateList@estimates$det <- detEstimates
 
 if(identical(mixture,"NB"))
-		estimateList@estimates$alpha <- unmarkedEstimate(name = "Dispersion",
+    estimateList@estimates$alpha <- unmarkedEstimate(name = "Dispersion",
         short.name = "alpha", estimates = ests[nP],
         covMat = as.matrix(covMat[nP, nP]), invlink = "exp",
         invlinkGrad = "exp")
 
-umfit <- new("unmarkedFitGMM", fitType = "gmn", 
-    call = match.call(), formula = form, formlist = formlist,    
-    data = data, estimates = estimateList, sitesRemoved = D$removed.sites, 
+umfit <- new("unmarkedFitGMM", fitType = "gmn",
+    call = match.call(), formula = form, formlist = formlist,
+    data = data, estimates = estimateList, sitesRemoved = D$removed.sites,
     AIC = fmAIC, opt = opt, negLogLike = fm$value, nllFun = nll,
     mixture=mixture, K=K)
 

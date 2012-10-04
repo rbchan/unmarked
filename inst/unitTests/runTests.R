@@ -10,7 +10,7 @@ if(require("RUnit", quietly = TRUE)) {
     	FALSE
     }
     if( is_local() ) path <- getwd()
-    
+
     library(package=pkg, character.only = TRUE)
     if(!(exists("path") && file.exists(path)))
         path <- system.file("unitTests", package = pkg)
@@ -18,7 +18,10 @@ if(require("RUnit", quietly = TRUE)) {
     ## --- Testing ---
 
     ## Define tests
-    testSuite <- defineTestSuite(name=paste(pkg, "unit testing"), dirs = path)
+    testSuite <- defineTestSuite(name=paste(pkg, "unit testing"),
+                                 dirs = path,
+                                 rngKind="Mersenne-Twister",
+                                 rngNormalKind="Inversion")
 
     if(interactive()) {
         cat("Now have RUnit Test Suite 'testSuite' for package '", pkg,
@@ -30,9 +33,9 @@ if(require("RUnit", quietly = TRUE)) {
     } else { ## run from shell / Rscript / R CMD Batch / ...
         ## Run
         tests <- runTestSuite(testSuite)
-        
+
         output <- NULL
-        
+
         process_args <- function(argv){
         	if( !is.null(argv) && length(argv) > 0 ){
         		rx <- "^--output=(.*)$"
@@ -42,9 +45,9 @@ if(require("RUnit", quietly = TRUE)) {
         		}
         	}
         }
-        
-        # give a chance to the user to customize where he/she wants 
-        # the unit tests results to be stored with the --output= command 
+
+        # give a chance to the user to customize where he/she wants
+        # the unit tests results to be stored with the --output= command
         # line argument
         if( exists( "argv",  globalenv() ) ){
         	# littler
@@ -53,7 +56,7 @@ if(require("RUnit", quietly = TRUE)) {
         	# Rscript
         	output <- process_args(commandArgs(TRUE))
         }
-        
+
         # if it did not work, try to use /tmp
         if( is.null(output) ){
         	if( file.exists( "/tmp" ) ){
@@ -62,14 +65,14 @@ if(require("RUnit", quietly = TRUE)) {
         		output <- getwd()
         	}
         }
-        
+
         ## Print results
         output.txt  <- file.path( output, sprintf("%s-unitTests.txt", pkg))
         output.html <- file.path( output, sprintf("%s-unitTests.html", pkg))
-       
+
         printTextProtocol(tests, fileName=output.txt)
         message( sprintf( "saving txt unit test report to '%s'", output.txt ) )
-        
+
         ## Print HTML version to a file
         ## printHTMLProtocol has problems on Mac OS X
         if (Sys.info()["sysname"] != "Darwin"){
@@ -88,3 +91,8 @@ if(require("RUnit", quietly = TRUE)) {
     "for package", pkg,"\n")
 }
 
+
+
+
+tests <- runTestSuite(testSuite)
+printTextProtocol(tests)

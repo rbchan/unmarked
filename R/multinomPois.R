@@ -34,8 +34,8 @@ doublePiFun <- function(p){
 
 # Fit the multinomial-Poisson abundance mixture model.
 
-multinomPois <- function(formula, data, starts, method = "BFGS", 
-    control = list(), se = TRUE)
+multinomPois <- function(formula, data, starts, method = "BFGS",
+    se = TRUE, ...)
 {
     if(!is(data, "unmarkedFrameMPois"))
 		    stop("Data is not a data frame or unmarkedFrame.")
@@ -60,12 +60,12 @@ multinomPois <- function(formula, data, starts, method = "BFGS",
     nP <- nDP + nAP
     if(!missing(starts) && length(starts) != nP)
         stop(paste("The number of starting values should be", nP))
-	   
+
     yvec <- as.numeric(y)
     navec <- is.na(yvec)
 
     nll <- function(parms) {
-        lambda <- exp(X %*% parms[1 : nAP] + X.offset) 
+        lambda <- exp(X %*% parms[1 : nAP] + X.offset)
         p <- plogis(V %*% parms[(nAP + 1) : nP] + V.offset)
         p.matrix <- matrix(p, M, R, byrow = TRUE)
         pi <- do.call(piFun, list(p = p.matrix))
@@ -75,11 +75,11 @@ multinomPois <- function(formula, data, starts, method = "BFGS",
         }
     if(missing(starts))
         starts <- rep(0, nP)
-    fm <- optim(starts, nll, method = method, hessian = se, control = control)
+    fm <- optim(starts, nll, method = method, hessian = se, ...)
     opt <- fm
     if(se) {
         tryCatch(covMat <- solve(fm$hessian),
-				    error=function(x) stop(simpleError("Hessian is singular.  Try using fewer covariates.")))
+                 error=function(x) stop(simpleError("Hessian is singular.  Try providing starting values or using fewer covariates.")))
     } else {
         covMat <- matrix(NA, nP, nP)
       }
@@ -88,23 +88,28 @@ multinomPois <- function(formula, data, starts, method = "BFGS",
     names(ests) <- c(lamParms, detParms)
 
     stateName <- "Abundance"
-	
-    stateEstimates <- unmarkedEstimate(name = stateName, short.name = "lambda",
-        estimates = ests[1:nAP],
-		    covMat = as.matrix(covMat[1:nAP,1:nAP]), invlink = "exp",
-		    invlinkGrad = "exp")
+
+    stateEstimates <- unmarkedEstimate(name = stateName,
+                                       short.name = "lambda",
+                                       estimates = ests[1:nAP],
+                                       covMat = as.matrix(
+                                           covMat[1:nAP,1:nAP]),
+                                       invlink = "exp",
+                                       invlinkGrad = "exp")
 
     detEstimates <- unmarkedEstimate(name = "Detection", short.name = "p",
-		    estimates = ests[(nAP + 1) : nP],
-		    covMat = as.matrix(covMat[(nAP + 1) : nP, (nAP + 1) : nP]), 
-		    invlink = "logistic", invlinkGrad = "logistic.grad")
+                                     estimates = ests[(nAP + 1) : nP],
+                                     covMat = as.matrix(covMat[(nAP + 1) :
+                                                 nP, (nAP + 1) : nP]),
+                                     invlink = "logistic",
+                                     invlinkGrad = "logistic.grad")
 
     estimateList <- unmarkedEstimateList(list(state=stateEstimates,
         det=detEstimates))
 
-    umfit <- new("unmarkedFitMPois", fitType = "multinomPois", 
-        call = match.call(), formula = formula, data = data, 
-        estimates = estimateList, sitesRemoved = designMats$removed.sites, 
+    umfit <- new("unmarkedFitMPois", fitType = "multinomPois",
+        call = match.call(), formula = formula, data = data,
+        estimates = estimateList, sitesRemoved = designMats$removed.sites,
         AIC = fmAIC, opt = opt, negLogLike = fm$value, nllFun = nll)
 
     return(umfit)

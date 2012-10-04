@@ -1,12 +1,12 @@
 
 # Fit the Occupancy model of Royle and Nichols
 
-occuRN <- function(formula, data, K = 25, starts, method = "BFGS", 
-    control = list(), se = TRUE)
+occuRN <- function(formula, data, K = 25, starts, method = "BFGS",
+    se = TRUE, ...)
 {
-    if(!is(data, "unmarkedFrameOccu")) 
-        stop("Data is not an unmarkedFrameOccu object.")	
-	
+    if(!is(data, "unmarkedFrameOccu"))
+        stop("Data is not an unmarkedFrameOccu object.")
+
     designMats <- getDesign(data, formula)
     X <- designMats$X; V <- designMats$V; y <- designMats$y
     X.offset <- designMats$X.offset; V.offset <- designMats$V.offset
@@ -14,12 +14,12 @@ occuRN <- function(formula, data, K = 25, starts, method = "BFGS",
         X.offset <- rep(0, nrow(X))
     if (is.null(V.offset))
         V.offset <- rep(0, nrow(V))
-	
+
   y <- truncateToBinary(data@y)
 
   J <- ncol(y)
   M <- nrow(y)
- 
+
   occParms <- colnames(X)
   detParms <- colnames(V)
   nDP <- ncol(V)
@@ -28,7 +28,7 @@ occuRN <- function(formula, data, K = 25, starts, method = "BFGS",
   nP <- nDP + nOP
   if(!missing(starts) && length(starts) != nP)
 	   stop(paste("The number of starting values should be", nP))
-  
+
   y.ji <- as.vector(y)
   navec <- is.na(y.ji)
   n <- 0:K
@@ -37,7 +37,7 @@ occuRN <- function(formula, data, K = 25, starts, method = "BFGS",
   {
 
     ## compute individual level detection probabilities
-    r.ij <- matrix(plogis(V %*% parms[(nOP + 1) : nP] + V.offset), M, J, 
+    r.ij <- matrix(plogis(V %*% parms[(nOP + 1) : nP] + V.offset), M, J,
       byrow = TRUE)
 
     ## compute list of detection probabilities along N
@@ -65,34 +65,35 @@ occuRN <- function(formula, data, K = 25, starts, method = "BFGS",
     -sum(log(like.i))
   }
 
-	if(missing(starts)) starts <- rep(0, nP) 
-  fm <- optim(starts, nll, method = method, hessian = se, control = control)
+	if(missing(starts)) starts <- rep(0, nP)
+  fm <- optim(starts, nll, method = method, hessian = se, ...)
 	opt <- fm
 	if(se) {
-		tryCatch(covMat <- solve(fm$hessian),
-				error=function(x) stop(simpleError("Hessian is singular.  Try using fewer covariates.")))
+            tryCatch(covMat <- solve(fm$hessian),
+                     error=function(x) stop(simpleError("Hessian is singular.  Try providing starting values or using fewer covariates.")))
 	} else {
-		covMat <- matrix(NA, nP, nP)
+            covMat <- matrix(NA, nP, nP)
 	}
   ests <- fm$par
-  fmAIC <- 2 * fm$value + 2 * nP + 2 * nP * (nP + 1) / (M - nP - 1)
+  fmAIC <- 2 * fm$value + 2 * nP # + 2 * nP * (nP + 1) / (M - nP - 1)
   names(ests) <- c(occParms, detParms)
 
-  stateEstimates <- unmarkedEstimate(name = "Abundance", short.name = "lam",
+  stateEstimates <- unmarkedEstimate(name = "Abundance",
+      short.name = "lam",
       estimates = ests[1:nOP],
       covMat = as.matrix(covMat[1:nOP,1:nOP]), invlink = "exp",
       invlinkGrad = "exp")
 
   detEstimates <- unmarkedEstimate(name = "Detection", short.name = "p",
       estimates = ests[(nOP + 1) : nP],
-      covMat = as.matrix(covMat[(nOP + 1) : nP, (nOP + 1) : nP]), 
+      covMat = as.matrix(covMat[(nOP + 1) : nP, (nOP + 1) : nP]),
       invlink = "logistic", invlinkGrad = "logistic.grad")
 
   estimateList <- unmarkedEstimateList(list(state=stateEstimates,
           det=detEstimates))
 
   umfit <- new("unmarkedFitOccuRN", fitType = "occuRN",
-      call = match.call(), formula = formula, data = data, 
+      call = match.call(), formula = formula, data = data,
       sitesRemoved = designMats$removed.sites, estimates = estimateList,
       AIC = fmAIC, opt = opt, negLogLike = fm$value, nllFun = nll)
 

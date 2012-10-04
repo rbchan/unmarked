@@ -1,1 +1,8 @@
 .gitignore
+[.]git.*
+[.]git*
+[.]git/*
+[.]/.git/
+.Rhistory
+[.].Rhistory
+
