@@ -25,7 +25,7 @@ if(is.null(Xlam.offset)) Xlam.offset <- rep(0, nrow(Xlam))
 if(is.null(Xphi.offset)) Xphi.offset <- rep(0, nrow(Xphi))
 if(is.null(Xdet.offset)) Xdet.offset <- rep(0, nrow(Xdet))
 
-if(missing(K) || is.null(K)) K <- max(y, na.rm=TRUE) + 20
+if(missing(K) || is.null(K)) K <- max(y, na.rm=TRUE) + 100
 k <- 0:K
 lk <- length(k)
 M <- nrow(y)  

@@ -33,7 +33,7 @@ colSums(simPt())
 set.seed(3)
 umf1 <- unmarkedFrameDS(y = simPt(), survey="point", 
     dist.breaks=seq(0, 50, by=10), unitsIn="m")
-(m1 <- distsamp(~1 ~1, umf1, starts=c(log(5), log(20))))
+(m1 <- distsamp(~1 ~1, umf1, starts=c(log(5), log(20)), rel.tol=1e-3))
 (m2 <- distsamp(~1 ~1, umf1, starts=c(log(5), log(20)), output="abund"))
 
 
@@ -67,6 +67,17 @@ integrate(unmarked:::grhn, 0, 10, sigma=1000)$value * 2 * pi
 integrate(unmarked:::grhn, 10, 20, sigma=1000)$value * 2 * pi
 
 
+fitstats <- function(fm) {
+    observed <- getY(fm@data)
+    expected <- fitted(fm)
+    resids <- residuals(fm)
+    sse <- sum(resids^2)
+    chisq <- sum((observed - expected)^2 / expected)
+    freeTuke <- sum((sqrt(observed) - sqrt(expected))^2)
+    out <- c(SSE=sse, Chisq=chisq, freemanTukey=freeTuke)
+    return(out)
+    }
+pb <- parboot(m1, statistic=fitstats, nsim=200, report=1)
 
 
 
@@ -119,4 +130,58 @@ for(i in 1:nsims) {
     }
 hist(simout2[,1]); abline(v=lam, lwd=2, col=3)
 hist(simout2[,2]); abline(v=sig, lwd=2, col=3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Integrate fails if function is flat over most of its range
+
+
+grhaz <- unmarked:::grhaz
+curve(grhaz(x, shape=100, scale=10), 0, 50)
+curve(grhaz(x, shape=1, scale=1), 0, 50)
+
+str(integrate(grhaz, 0, 50, shape=1, scale=1, abs.tol=1e-4, stop.on.error=F))
+str(integrate(grhaz, 0, Inf, shape=1, scale=1, abs.tol=1e-1, stop.on.error=F))
+
+
+curve(grhaz(x, shape=0.1, scale=1), 400, 450)
+
+str(integrate(grhaz, 400, 450, shape=0.1, scale=1, abs.tol=1e-4, 
+    stop.on.error=F))
+str(integrate(grhaz, 300, Inf, shape=0.1, scale=1, abs.tol=1e-1, 
+    stop.on.error=F))
+
+
+
+str(integrate(grhaz, 400, 450, shape=10, scale=10, abs.tol=1e-4, 
+    stop.on.error=F))
+
+
+curve(gxhaz(x, shape=5, scale=1), 0, 50)
+integrate(gxhaz, 0, 20, shape=5, scale=1)$value
+
+increment <- 2
+sum(gxhaz(seq(0, 20, by=increment), shape=5, scale=1) * increment)
+
+increment <- 1
+sum(gxhaz(seq(0, 20, by=increment), shape=5, scale=1) * increment)
+
+increment <- 0.2
+sum(gxhaz(seq(0, 20, by=increment), shape=5, scale=1) * increment)
+
+increment <- 0.001
+sum(gxhaz(seq(0, 20, by=increment), shape=5, scale=1) * increment)
+
+
+
 

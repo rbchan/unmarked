@@ -1,39 +1,43 @@
 # Methods needed from other packages
-importFrom(stats, confint, fitted, coef, vcov, predict, update, profile, 
+importFrom(stats, confint, fitted, coef, vcov, predict, update, profile,
     simulate, residuals, logLik)
 importFrom(graphics, plot, hist)
 importFrom(utils, head)
 importFrom(reshape, melt, cast, recast)
 
 # Fitting functions
-export(occu, occuRN, pcount, pcountOpen, multinomPois, distsamp, colext, gmultmix)
+export(occu, occuRN, pcount, pcountOpen, multinomPois, distsamp, colext,
+    gmultmix, gdistsamp)
 export(removalPiFun, doublePiFun)
 
 # S4 classes
-exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitDS, unmarkedFitPCount,
-    unmarkedFitMPois, unmarkedFrame, unmarkedFrameOccu, unmarkedFramePCount, 
-    unmarkedFrameMPois, unmarkedFrameDS, unmarkedMultFrame, unmarkedFrameGMM,
-    unmarkedFramePCO, unmarkedEstimate, unmarkedFitList, unmarkedModSel)
+exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitDS,
+    unmarkedFitPCount, unmarkedFitMPois, unmarkedFitPCO,
+    unmarkedFrame, unmarkedFrameOccu, unmarkedFramePCount,
+    unmarkedFrameMPois, unmarkedFrameDS, unmarkedMultFrame,
+    unmarkedFrameGMM, unmarkedFrameGDS, unmarkedFramePCO,
+    unmarkedEstimate, unmarkedFitList, unmarkedModSel)
 
 # Methods
-exportMethods(backTransform, coef, confint, coordinates, fitted, getData, getP, 
-    getY, head, hessian, linearComb, mle, modSel, nllFun, numSites, numY, 
-    obsCovs, obsNum, "obsCovs<-", obsToY, "obsToY<-", parboot, plot, hist, 
-    predict, profile, projection, residuals, sampleSize, SE, 
-    show, simulate, siteCovs, "siteCovs<-", summary, update, vcov, 
-    yearlySiteCovs, "yearlySiteCovs<-", "[", smoothed, projected, 
+exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
+    getP, getY, head, hessian, linearComb, mle, modSel, nllFun, numSites,
+    numY, obsCovs, obsNum, "obsCovs<-", obsToY, "obsToY<-", parboot, plot,
+    hist, predict, profile, projection, residuals, sampleSize, SE,
+    show, simulate, siteCovs, "siteCovs<-", summary, update, vcov,
+    yearlySiteCovs, "yearlySiteCovs<-", "[", smoothed, projected,
     nonparboot, logLik, LRT)
 
 # Constructors
-export(unmarkedEstimate, fitList, mapInfo, unmarkedFrame, unmarkedFrameOccu,
-    unmarkedFramePCount, unmarkedFrameMPois, unmarkedFrameDS, unmarkedMultFrame,
-    unmarkedFrameGMM, unmarkedFramePCO)
+export(unmarkedEstimate, fitList, mapInfo, unmarkedFrame,
+    unmarkedFrameOccu, unmarkedFramePCount, unmarkedFrameMPois,
+    unmarkedFrameDS, unmarkedMultFrame, unmarkedFrameGMM,
+    unmarkedFramePCO, unmarkedFrameGDS)
 
 # Formatting
 export(csvToUMF, formatLong, formatWide, formatMult, formatDistData)
 
 # Misc
-export(imputeMissing, gxhn, gxexp, gxhaz, dxhn, dxexp, dxhaz, drhn, drexp, 
-    drhaz, sight2perpdist, lambda2psi, SSE)
+export(imputeMissing, gxhn, gxexp, gxhaz, dxhn, dxexp, dxhaz, drhn, drexp,
+    drhaz, grhn, grexp, grhaz, sight2perpdist, lambda2psi, SSE)
 
 useDynLib(unmarked)

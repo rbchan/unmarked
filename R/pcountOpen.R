@@ -20,16 +20,18 @@ y <- D$y; Xlam <- D$Xlam; Xgam <- D$Xgam; Xom <- D$Xom; Xp <- D$Xp
 delta <- D$delta; go.dims <- D$go.dims
 deltamax <- max(delta, na.rm=TRUE)
 M <- nrow(y)
-T <- ncol(y)
-y <- matrix(y, M, T)
+T <- data@numPrimary
+J <- ncol(getY(data)) / T
+y <- array(y, c(M, J, T))
 if(missing(K)) K <- max(y, na.rm=T) + 20
 if(K <= max(y, na.rm = TRUE))
     stop("specified K is too small. Try a value larger than any observation")
 k <- 0:K
 lk <- length(k)
 
-first <- apply(y, 1, function(x) min(which(!is.na(x))))
-last  <- apply(y, 1, function(x) max(which(!is.na(x)))) 
+ytna <- apply(is.na(y), c(1,3), all)
+first <- apply(!ytna, 1, function(x) min(which(x)))
+last  <- apply(!ytna, 1, function(x) max(which(x))) 
 
 lamParms <- colnames(Xlam)
 gamParms <- colnames(Xgam)
@@ -63,8 +65,9 @@ if(!missing(starts) && length(starts) != nP)
 
 nll <- function(parms) {
     lambda <- drop(exp(Xlam %*% parms[1 : nAP]))
-    p <- matrix(plogis(Xp %*% parms[(nAP+nGP+nOP+1) : (nAP+nGP+nOP+nDP)]),
-        M, T, byrow=TRUE)
+    p <- array(plogis(Xp %*% parms[(nAP+nGP+nOP+1) : (nAP+nGP+nOP+nDP)]),
+        c(J, T, M))
+    p <- aperm(p, c(3,1,2))
     if(identical(fix, "omega"))
         omega <- matrix(1, M, T-1)
     else
@@ -98,7 +101,14 @@ nll <- function(parms) {
         first.i <- first[i]
         last.i <- last[i]
         delta.i1 <- delta[i, first.i]
-        g1 <- dbinom(y[i, first.i], k, p[i, first.i])
+        if(J == 1)
+            g1 <- dbinom(y[i, 1, first.i], k, p[i, 1, first.i])
+        else { 
+            bin.k1 <- t(sapply(k, function(x) 
+                dbinom(y[i,,first.i], x, p[i,,first.i])))
+            bin.k1[is.na(bin.k1)] <- 1
+            g1 <- rowProds(bin.k1)
+            }
         switch(mixture, 
             P = g2 <- dpois(k, lambda[i]),
             NB = g2 <- dnbinom(k, size=exp(parms[nP]), mu=lambda[i]))    
@@ -106,7 +116,14 @@ nll <- function(parms) {
             L[i] <- sum(g1 * g2)
             next
             }
-        g1.T <- dbinom(y[i, last.i], k, p[i, last.i])
+        if(J == 1)
+            g1.T <- dbinom(y[i,1,last.i], k, p[i,1,last.i])
+        else {
+            bin.kT <- t(sapply(k, function(x) 
+                dbinom(y[i,,last.i], x, p[i,,last.i])))
+            bin.kT[is.na(bin.kT)] <- 1
+            g1.T <- rowProds(bin.kT)
+            }
         g.star <- matrix(NA, lk, last.i-1) 
         if(identical(go.dims, "scalar"))
             g3.T <- g3[,, delta[i, last.i]]
@@ -124,11 +141,18 @@ nll <- function(parms) {
         g.star[, last.i-1] <- colSums(g1.T * g3.T)
         if((last.i - first.i) > 1) { 
             for(t in (last.i-1):(first.i+1)) {
-                if(is.na(y[i, t]))
+                if(ytna[i, t])
                     # time gap is dealt with by delta
                     g.star[,t-1] <- g.star[,t]
                 else {
-                    g1.t <- dbinom(y[i, t], k, p[i, t])
+                    if(J==1)
+                        g1.t <- dbinom(y[i,1,t], k, p[i,1,t])
+                    else {
+                        bin.kt <- t(sapply(k, function(x) 
+                            dbinom(y[i,,t], x, p[i,,t])))
+                        bin.kt[is.na(bin.kt)] <- 1
+                        g1.t <- rowProds(bin.kt)
+                        }
                     if(identical(go.dims, "scalar"))
                         g3.t <- g3[,,delta[i, t]]
                     else
@@ -198,7 +222,7 @@ if(identical(mixture, "NB")) {
         covMat = as.matrix(covMat[nP, nP]), invlink = "exp",
         invlinkGrad = "exp")
     }
-umfit <- new("unmarkedFitPCountOpen", fitType = "pcountOpen", 
+umfit <- new("unmarkedFitPCO", fitType = "pcountOpen", 
     call = match.call(), formula = formula, formlist = formlist, data = data, 
     sitesRemoved=D$removed.sites, estimates = estimateList, AIC = fmAIC, 
     opt = opt, negLogLike = fm$value, nllFun = nll, K = K, mixture = mixture, 

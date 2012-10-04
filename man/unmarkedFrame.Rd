@@ -1,13 +1,13 @@
 \name{unmarkedFrame}
+
 \title{Create an unmarkedFrame, or one of its child classes.}
+
 \alias{unmarkedFrame}
-\alias{unmarkedFrameOccu}
-\alias{unmarkedFramePCount}
-\alias{unmarkedFrameDS}
-\alias{unmarkedFrameMPois}
-\alias{unmarkedFramePCO}
+
 \usage{unmarkedFrame(y, siteCovs=NULL, obsCovs=NULL, mapInfo, obsToY)}
+
 \description{Constructor for unmarkedFrames.}
+
 \arguments{
 	\item{y}{An MxJ matrix of the observed measured data, where M is the number 
         of sites and J is the maximum number of observations per site.}
@@ -20,7 +20,9 @@
 		    observation-level covariates and response matrix}
 	\item{mapInfo}{geographic coordinate information. Currently ignored.}
 }
-\details{unmarkedFrame is the S4 class that holds data structures to be passed 
+
+\details{
+unmarkedFrame is the S4 class that holds data structures to be passed 
 to the model-fitting functions in unmarked.
 
 An unmarkedFrame contains the observations (\code{y}), covariates measured at 
@@ -54,7 +56,10 @@ covariates are available at the observation level.
 }
 
 \value{an unmarkedFrame object}
-\seealso{\code{\link{unmarkedFrame-class}}}
+
+\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrameOccu}}, 
+    \code{\link{unmarkedFramePCount}}, \code{\link{unmarkedFrameDS}}}
+
 \examples{
 
 # Set up data for pcount()

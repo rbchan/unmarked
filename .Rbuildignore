@@ -1,1 +1,6 @@
 .gitignore
+[.]git.*
+[.]git*
+[.]git/*
+[.]/.git/
+

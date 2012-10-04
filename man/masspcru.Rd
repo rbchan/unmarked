@@ -6,7 +6,7 @@
 \code{masspcru} contains NAAMP data for Pseudacris
 crucifer (pcru) in Massachusetts from 2001 to 2007 in the raw long format.
 }
-\usage{data(frogs)}
+\usage{data(masspcru)}
 \format{
   Data frame with
   	\describe{

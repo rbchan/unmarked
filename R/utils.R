@@ -1,5 +1,5 @@
 
-genFixedNLL <- function(nll, whichFixed, fixedValues) 
+genFixedNLL <- function(nll, whichFixed, fixedValues)
 {
     function(params) {
         params[whichFixed] <- fixedValues
@@ -22,7 +22,7 @@ profileCI <- function(nll, whichPar, MLE, interval, level)
         }
     lower <- tryCatch(uniroot(f, c(interval[1],MLE[whichPar]))$root,
         error = function(e) {
-            warning("Lower endpoint of profile confidence interval is on the boundary.", 
+            warning("Lower endpoint of profile confidence interval is on the boundary.",
         call. = FALSE)
         -Inf
         })
@@ -32,7 +32,7 @@ profileCI <- function(nll, whichPar, MLE, interval, level)
         call. = FALSE)
         Inf
         })
-	
+
     return(c(lower,upper))
 }
 
@@ -250,7 +250,7 @@ function(dfin, sep = ".", obsToY, type, ...)
 
 	y <- grep(paste("^y",sep.reg,"[[:digit:]]", sep=""),dfnm)
 	J <- length(y)
-	y <- as.matrix(dfin[,y])		
+	y <- as.matrix(dfin[,y])
 	M <- nrow(y)
 
   if(identical(tolower(colnames(dfin))[1],"site")) {
@@ -303,7 +303,7 @@ function(dfin, sep = ".", obsToY, type, ...)
 			obsToY <- matrix(0, R, J)
 		}
 	}
-	
+
 	do.call(type, list(y = y, siteCovs = siteCovs, obsCovs = obsCovs, ...))
 }
 
@@ -350,11 +350,11 @@ function(df.in)
   rownames(y) <- dimnames(obsvars)[[1]]
   colnames(y) <- dimnames(obsvars)[[2]]
 	y <- as.matrix(y)
-	
+
 	obsvars.list <- arrToList(obsvars)
 	obsvars.list <- lapply(obsvars.list, function(x) as.vector(t(x)))
 	obsvars.df <- as.data.frame(obsvars.list)
-	
+
 	## check for siteCovs
 	obsNum <- ncol(y)
 	M <- nrow(y)
@@ -373,15 +373,15 @@ function(df.in)
 								row.u
 							})
 					u
-				} 
+				}
 			})
 	siteCovs <- as.data.frame(siteCovs[!sapply(siteCovs, is.null)])
 	if(nrow(siteCovs) == 0) siteCovs <- NULL
-  
+
   ## only check non-sitecovs
   obsvars.df2 <- as.data.frame(obsvars.df[, !(names(obsvars.df) %in% names(siteCovs))])
   names(obsvars.df2) <- names(obsvars.df)[!(names(obsvars.df) %in% names(siteCovs))]
-  
+
 	yearlySiteCovs <- sapply(obsvars.df2, function(x) {
 				obsmat <- matrix(x, M*nY, obsNum/nY, byrow = TRUE)
 				l.u <- apply(obsmat, 1, function(y) {
@@ -400,7 +400,7 @@ function(df.in)
 			})
 	yearlySiteCovs <- as.data.frame(yearlySiteCovs[!sapply(yearlySiteCovs, is.null)])
 	if(nrow(yearlySiteCovs) == 0) yearlySiteCovs <- NULL
-	
+
 	umf <- unmarkedMultFrame(y = y, siteCovs = siteCovs, obsCovs = obsvars.df, yearlySiteCovs = yearlySiteCovs,
 			numPrimary = nY)
   return(umf)
@@ -545,8 +545,8 @@ getSS <- function(phi) {
 }
 
 imputeMissing <- function(umf, whichCovs = seq(length=ncol(obsCovs(umf)))) {
-  
-  
+
+
   ## impute observation covariates
   if(!is.null(umf@obsCovs)) {
     obsCovs <- umf@obsCovs
@@ -587,7 +587,7 @@ imputeMissing <- function(umf, whichCovs = seq(length=ncol(obsCovs(umf)))) {
 #	stateformula <- as.formula(paste("~",formula[3],sep=""))
 #	yVar <- all.vars(detformula)[1]
 #	detVars <- all.vars(detformula)[-1]
-#	
+#
 #	# escape separater if it is regexp special
 #	reg.specials <- c('.', '\\', ':', '|', '(', ')', '[', '{', '^', '$', '*', '+', '?')
 #	if(sep %in% reg.specials) {
@@ -595,23 +595,23 @@ imputeMissing <- function(umf, whichCovs = seq(length=ncol(obsCovs(umf)))) {
 #	} else {
 #		sep.reg <- sep
 #	}
-#	
+#
 #	## y columns must be in format y.1, y.2, ..., y.J where sep="." here
 #	yNames <- grep(paste(yVar,sep.reg,"[[:digit:]]+$",sep=""), colnames(data), value=TRUE)
 #	timevary <- yNames
-#	
+#
 #	## detection covs must be in format either name alone, or name.1, name.2, ..., name.Q where sep="." here
-#	detCols <- lapply(detVars, 
-#			function(x) sort(grep(paste("^",x,"(",sep.reg,"[[:digit:]]+)?$",sep=""), colnames(data), 
+#	detCols <- lapply(detVars,
+#			function(x) sort(grep(paste("^",x,"(",sep.reg,"[[:digit:]]+)?$",sep=""), colnames(data),
 #								value=TRUE)))
-#	
+#
 #	names(detCols) <- detVars
 #	if (length(detVars) > 0) {
-#		toadd <- detVars[sapply(detCols, function(x) ifelse(length(x) > 
+#		toadd <- detVars[sapply(detCols, function(x) ifelse(length(x) >
 #											1, TRUE, FALSE))]
 #		timevary <- as.character(c(timevary, unlist(detCols[toadd])))
 #	}
-#	dataLong <- reshape(data, timevary, direction = "long", sep = sep, 
+#	dataLong <- reshape(data, timevary, direction = "long", sep = sep,
 #			timevar = "timeINDEX", idvar = "idINDEX", ids = rownames(data))
 #	## reorder dataLong to be in site-major order
 #	dataLong <- dataLong[order(dataLong$idINDEX, dataLong$timeINDEX),]
@@ -642,7 +642,7 @@ formatDistData <- function(distData, distCol, transectNameCol, dist.breaks)
     transects <- distData[,transectNameCol]
     M <- nlevels(transects)
     J <- length(dist.breaks) - 1
-    y <- matrix(NA, M, J, 
+    y <- matrix(NA, M, J,
 	   dimnames = list(levels(transects), paste("y", 1:J, sep=".")))
     for(i in 1:M) {
 	   sub <- subset(distData, transects==rownames(y)[i])
@@ -655,7 +655,7 @@ formatDistData <- function(distData, distCol, transectNameCol, dist.breaks)
 
 ## Sight distance to perpendicular distance
 
-sight2perpdist <- function(sightdist, sightangle) 
+sight2perpdist <- function(sightdist, sightangle)
 {
     if(any(0 > sightangle | sightangle > 180))
 	   stop("sightangle must be degrees in [0, 180]")
@@ -664,7 +664,7 @@ sight2perpdist <- function(sightdist, sightangle)
 
 
 
-SSE <- function(fit) 
+SSE <- function(fit)
 {
     sse <- sum(residuals(fit)^2, na.rm=TRUE)
     return(c(SSE=sse))
@@ -674,35 +674,33 @@ SSE <- function(fit)
 
 # For pcountOpen. Calculate time intervals acknowledging gaps due to NAs
 # The first column indicates is time since first primary period + 1
-formatDelta <- function(d, y)
+formatDelta <- function(d, yna)
 {
-    M <- nrow(y)
-    T <- ncol(y)
+    M <- nrow(yna)
+    T <- ncol(yna)
     d <- d - min(d, na.rm=TRUE) + 1
     dout <- matrix(NA, M, T)
     dout[,1] <- d[,1]
     dout[,2:T] <- t(apply(d, 1, diff))
     for(i in 1:M) {
-        if(any(is.na(y[i,])) & !all(is.na(y[i,]))) { # 2nd test for simulate
-            last <- max(which(!is.na(y[i,])))
-            y.in <- y[i, 1:last]
+        if(any(yna[i,]) & !all(yna[i,])) { # 2nd test for simulate
+            last <- max(which(!yna[i,]))
+            y.in <- yna[i, 1:last]
             d.in <- d[i, 1:last]
-            if(any(is.na(y.in))) {
+            if(any(y.in)) {
                 for(j in last:2) { # first will always be time since 1
-                    nextReal <- which(!is.na(y[i, 1:(j-1)]))
+                    nextReal <- which(!yna[i, 1:(j-1)])
                     if(length(nextReal) > 0)
                         dout[i, j] <- d[i, j] - d[i, max(nextReal)]
                     else
                         dout[i, j] <- d[i, j] - 1
                     }
-#                first <- ifelse(is.na(y[i, 1]), 1, d[i, 1])
-#                dout[i, 1] <- d[i, 2] - first
                 }
             }
         }
     return(dout)
 }
-                        
+
 
 
 
@@ -715,7 +713,7 @@ formatDelta <- function(d, y)
 
 
 # Markov transition probs for pcountOpen
-tranProbs <- function(Nr, omegaR, gammaR, deltaR, dynamicsR) 
+tranProbs <- function(Nr, omegaR, gammaR, deltaR, dynamicsR)
 {
     if(any(Nr < 0))
         stop("N should be a non-negative integer")
@@ -727,8 +725,8 @@ tranProbs <- function(Nr, omegaR, gammaR, deltaR, dynamicsR)
         stop("Delta cannot be NA")
     if(!dynamicsR %in% c("constant", "autoreg", "notrend"))
         stop("dynamics must be one of: constant, autoreg, or notrend")
-    
-    .Call("tranProbs", 
+
+    .Call("tranProbs",
         as.integer(Nr),
         as.double(omegaR),
         as.double(gammaR),
@@ -746,7 +744,7 @@ tranProbsR <- function(N, omega, gamma, delta, dynamics) {
         for(k in 1:lN) {
             cmin0 <- 0:min(N[j], N[k])
             gamma2 <- ifelse(identical(dynamics, "autoreg"), gamma*N[j], gamma)
-            bpsum[k, j] <- sum(dbinom(cmin0, N[j], omega) * 
+            bpsum[k, j] <- sum(dbinom(cmin0, N[j], omega) *
                 dpois(N[k]-cmin0, gamma2))
             }}
     bpsum <- t(t(bpsum) / colSums(bpsum))
@@ -758,17 +756,21 @@ tranProbsR <- function(N, omega, gamma, delta, dynamics) {
         }
     return(bpsum)
     }
-    
-    
-    
-    
-# much faster than apply(m, 1, prod) or exp(rowSums(log(m)))    
-rowProds <- function(m) 
+
+
+
+
+# much faster than apply(m, 1, prod) or exp(rowSums(log(m)))
+rowProds <- function(m)
 {
-    .Call("rowProds", 
+    .Call("rowProds",
         as.matrix(m),
         PACKAGE = "unmarked")
-}    
-    
-    
- 
+}
+
+
+
+
+# ------------------------ fit statistics -------------------------------
+
+

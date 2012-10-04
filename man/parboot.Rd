@@ -39,16 +39,32 @@ ltUMF <- with(linetran, {
 # Fit a model
 (fm <- distsamp(~area ~habitat, ltUMF))
 
-# Function returning two fit-stats: sum of squared errors and population size at
-# sampled plots.
-fitStats <- function(fit) {
-    sse <- SSE(fit)
-    plot.area.ha <- lengths*1000 * 40 / 10000
-    N <- sum(predict(fit, type="state")$Predicted*plot.area.ha, na.rm=TRUE)
-    return(c(sse, N.hat=N))
+# Function returning three fit-statistics.
+fitstats <- function(fm) {
+    observed <- getY(fm@data)
+    expected <- fitted(fm)
+    resids <- residuals(fm)
+    sse <- sum(resids^2)
+    chisq <- sum((observed - expected)^2 / expected)
+    freeTuke <- sum((sqrt(observed) - sqrt(expected))^2)
+    out <- c(SSE=sse, Chisq=chisq, freemanTukey=freeTuke)
+    return(out)
     }
 
-(pb <- parboot(fm, fitStats, nsim=25))
+(pb <- parboot(fm, fitstats, nsim=25, report=1))
 plot(pb, main="")
+
+
+# Local population size (derived parameter)
+Nhat <- function(fm) {
+    lengths <- fm@data@tlength
+    strip.width <- max(fm@data@dist.breaks)
+    plot.area.ha <- lengths * (2*strip.width) / 1e4
+    N <- sum(predict(fm, type="state")$Predicted*plot.area.ha, na.rm=TRUE)
+    }
+    
+(pb.N <- parboot(fm, Nhat, nsim=25, report=5))
+plot(pb.N)
+
 
 }

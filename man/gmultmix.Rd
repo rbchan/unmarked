@@ -3,10 +3,8 @@
 \title{Generalized multinomial-mixture model}
 \description{
 A three level hierarchical model for designs involving 
-repeated counts that yield multinomial outcomes. This model can be useful 
-if sites are not closed with respect to immigration and emigraion over the
-duration of sampling. Possible data collection 
-methods include removal sampling and double observer sampling. 
+repeated counts that yield multinomial outcomes.  Possible data collection 
+methods include repeated removal sampling and double observer sampling. 
 The three model parameters are abundance, availability, and detection 
 probability.
 }
@@ -65,7 +63,12 @@ An object of class unmarkedFitGMM.
 }
 \references{
 Royle, J. A. (2004) Generalized estimators of avian abundance from count 
-survey data. \emph{Animal Biodiversity and Conservation} 27, pp. 375--386.
+survey data. \emph{Animal Biodiversity and Conservation} 27,
+pp. 375--386.
+
+Chandler, R. B., J. A. Royle, and D. I. King. In Press. Inference about
+density and temporary emigration in unmarked populations. Ecology
+
 }
 \author{
 Richard Chandler \email{rchandler@usgs.gov} and Andy Royle
@@ -114,7 +117,7 @@ y.ijt <- cbind(y[,1,], y[,2,], y[,3,], y[,4,])
 
 umf1 <- unmarkedFrameGMM(y=y.ijt, numPrimary=T, type="removal")
 
-(m1 <- gmultmix(~1, ~1, ~1, data=umf1))
+(m1 <- gmultmix(~1, ~1, ~1, data=umf1, K=30))
 
 backTransform(m1, type="lambda")        # Individuals per plot
 backTransform(m1, type="phi")           # Probability of being avilable

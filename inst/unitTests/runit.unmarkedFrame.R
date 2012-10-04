@@ -2,10 +2,6 @@ test.emptyframe <- function() {
   checkException(umf <- unmarkedFrame())
 }
 
-test.onecol <- function() {
-    checkException(umf <- unmarkedFrame(y=matrix(1)))
-    }
-
 test.frame <- function() {
   M <- 10
   J <- 3
@@ -22,25 +18,25 @@ test.umfDS.args <- function() {
     uin <- "m"
     sc <- data.frame(1)
     oc <- matrix(1, 2)
-    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, obsCovs=oc, 
+    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, obsCovs=oc,
         survey=s, dist.breaks=d, unitsIn=uin))
-    umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s, dist.breaks=d, 
-        unitsIn=uin)    
+    umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s, dist.breaks=d,
+        unitsIn=uin)
     checkException(obsCovs(umf) <- oc)
-    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s, 
+    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s,
         dist.breaks=d))
-    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, dist.breaks=d, 
-        unitsIn=uin))    
-    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s, 
-        unitsIn=uin))    
-    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s, 
+    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, dist.breaks=d,
+        unitsIn=uin))
+    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s,
+        unitsIn=uin))
+    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s,
         dist.breaks=0:3, unitsIn=uin))
-    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s, 
+    checkException(umf <- unmarkedFrameDS(y=y, siteCovs=sc, survey=s,
         dist.breaks=1:3, unitsIn=uin))
-             
+
     }
-    
-    
+
+
 
 test.obsToY <- function() {
     y <- matrix(c(
@@ -59,9 +55,9 @@ test.obsToY <- function() {
         NA, NA), nrow=6, ncol=2, byrow=TRUE)
     umf <- unmarkedFrameMPois(y = y, obsCovs = list(x=oc), type="double")
     o2y <- obsToY(umf)
-    
+
     checkEquals(o2y, matrix(1, 2, 3))
     oc.na <- is.na(oc)
     oc.na %*% o2y
-    
-    }    
+
+    }
