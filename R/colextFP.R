@@ -1,4 +1,4 @@
-colext <- function(psiformula = ~ 1, gammaformula = ~ 1,
+colextFP <- function(psiformula = ~ 1, gammaformula = ~ 1,
                    epsilonformula = ~ 1, detformula = ~ 1,
                    fpformula = ~ 1, bformula = ~ 1,
                    data, type, starts, method = "BFGS", se = TRUE, ...)
@@ -91,7 +91,7 @@ colext <- function(psiformula = ~ 1, gammaformula = ~ 1,
                                                       (nSP+nGP+nEP+1):nP]),
                             invlink = "logistic",
                             invlinkGrad = "logistic.grad")
-    
+
     fp <- unmarkedEstimate(name = "false positive", short.name = "fp",
                            estimates = ests[(nOP+nDP+1) : (nOP+nDP+nFP)],
                            covMat = as.matrix(covMat[(nOP+nDP+1) : (nOP+nDP+nFP),
@@ -106,8 +106,8 @@ colext <- function(psiformula = ~ 1, gammaformula = ~ 1,
                             invlink = "logistic",
                             invlinkGrad = "logistic.grad")
     }
-    
-    
+
+
     estimateList <- unmarkedEstimateList(list(psi = psi, col = col,
                                               ext = ext, det=det))
 
@@ -137,7 +137,7 @@ colextFP.fit <- function(formula, data, J,
     K <- 1
     psiformula <- formula$psiformula
     gammaformula <- formula$gammaformula
-    epsilonformula <- formula$epsilonformula 
+    epsilonformula <- formula$epsilonformula
     detformula <- formula$detformula
     fpformula <- formula$fpformula
     bformula <- formula$bformula
@@ -199,13 +199,13 @@ colextFP.fit <- function(formula, data, J,
 
     V.arr <- array(t(V.itjk), c(nDP, nDMP, J, nY, M))
     V.arr <- aperm(V.arr, c(2,1,5,4,3))
-    
+
     U.arr <- array(t(U.itjk), c(nFP, nDMP, J, nY, M))
     U.arr <- aperm(U.arr, c(2,1,5,4,3))
-    
+
     S.arr <- array(t(S.itjk), c(nBP, nDMP, J, nY, M))
     S.arr <- aperm(S.arr, c(2,1,5,4,3))
-    
+
     y.arr <- array(y.itj, c(J, nY, M))
     y.arr <- aperm(y.arr, c(3:1))
     storage.mode(J.it) <- storage.mode(y.arr) <- storage.mode(K) <-
