@@ -116,22 +116,24 @@ sim2 <- function(lambda=5, phi=0.5, shape=20, scale=10, R=100, T=3,
 
 
 
+integrate(function(x, sigma=100) 2*pi*exp(-x^2/(2*sigma^2))*x, 0, 100)$value / (pi*100^2)
 
 
 library(unmarked)
 
 set.seed(3)
 
-breaks <- seq(0, 50, by=10)
+breaks <- seq(0, 100, by=20)
 T <- 5
-umf <- unmarkedFrameGDS(y = sim2(lambda=30, shape=50, phi=0.7,
+umf <- unmarkedFrameGDS(y = sim2(lambda=30, shape=100, phi=0.7,
                                  T=T, breaks=breaks),
                         survey="point", unitsIn="m",
                         dist.breaks=breaks, numPrimary=T)
 summary(umf)
 
 system.time(m <- gdistsamp(~1, ~1, ~1, umf, K=100, output="density",
-                           starts=c(3, 0, 3))) # 28s
+                           starts=c(log(30), qlogis(0.7), log(100)),
+                           control=list(trace=TRUE))) # 28s
 
 backTransform(m, type="lambda") # 27.9
 backTransform(m, type="phi")    # 0.742
@@ -142,18 +144,22 @@ backTransform(m, type="det")    # 49.3
 # Point-transect, half-normal
 set.seed(340098)
 nsim1 <- 500
+lam <- 30
+phi <- 0.7
+sig <- 100
 simout1 <- matrix(NA, nsim1, 3)
 colnames(simout1) <- c('lambda', 'phi', 'sigma')
 listout1 <- list()
+
 for(i in 1:nsim1) {
     cat("sim1", i, "\n")
-    breaks <- seq(0, 50, by=10)
+    breaks <- seq(0, 100, by=20)
     T <- 5
-    y1 <- sim2(lambda=30, shape=20, phi=0.7, R=100, T=T, breaks=breaks)
+    y1 <- sim2(lambda=lam, phi=phi, shape=sig, R=100, T=T, breaks=breaks)
     umf1 <- unmarkedFrameGDS(y = y1, survey="point",
         unitsIn="m", dist.breaks=breaks, numPrimary=T)
     m1 <- gdistsamp(~1, ~1, ~1, umf1, output="density", K=100,
-                    starts=c(log(30),qlogis(0.7),log(20)),
+                    starts=c(log(lam),qlogis(phi),log(sig)),
                     se=FALSE)
     listout1[[i]] <- m1
     e <- coef(m1)
