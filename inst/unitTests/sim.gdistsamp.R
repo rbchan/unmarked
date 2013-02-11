@@ -116,44 +116,50 @@ sim2 <- function(lambda=5, phi=0.5, shape=20, scale=10, R=100, T=3,
 
 
 
+integrate(function(x, sigma=25) 2*pi*exp(-x^2/(2*sigma^2))*x, 0, 100)$value / (pi*100^2)
 
 
 library(unmarked)
 
 set.seed(3)
 
-breaks <- seq(0, 50, by=10)
+breaks <- seq(0, 100, by=20)
 T <- 5
-umf <- unmarkedFrameGDS(y = sim2(lambda=30, shape=50, phi=0.7,
+umf <- unmarkedFrameGDS(y = sim2(lambda=20, shape=50, phi=0.7,
                                  T=T, breaks=breaks),
                         survey="point", unitsIn="m",
                         dist.breaks=breaks, numPrimary=T)
 summary(umf)
 
-system.time(m <- gdistsamp(~1, ~1, ~1, umf, K=100, output="density",
-                           starts=c(3, 0, 3))) # 28s
+system.time(m <- gdistsamp(~1, ~1, ~1, umf, K=200, output="density",
+#                           starts=c(log(30), qlogis(0.7), log(50)),
+                           control=list(trace=TRUE))) # 28s
 
-backTransform(m, type="lambda") # 27.9
-backTransform(m, type="phi")    # 0.742
-backTransform(m, type="det")    # 49.3
+backTransform(m, type="lambda") #
+backTransform(m, type="phi")    #
+backTransform(m, type="det")    #
 
 
 
 # Point-transect, half-normal
 set.seed(340098)
 nsim1 <- 500
+lam <- 20 # density E[N] = 20*3.14 = 61
+phi <- 0.7
+sig <- 25
 simout1 <- matrix(NA, nsim1, 3)
 colnames(simout1) <- c('lambda', 'phi', 'sigma')
 listout1 <- list()
+
 for(i in 1:nsim1) {
     cat("sim1", i, "\n")
-    breaks <- seq(0, 50, by=10)
+    breaks <- seq(0, 100, by=20)
     T <- 5
-    y1 <- sim2(lambda=30, shape=20, phi=0.7, R=100, T=T, breaks=breaks)
+    y1 <- sim2(lambda=lam, phi=phi, shape=sig, R=100, T=T, breaks=breaks)
     umf1 <- unmarkedFrameGDS(y = y1, survey="point",
         unitsIn="m", dist.breaks=breaks, numPrimary=T)
-    m1 <- gdistsamp(~1, ~1, ~1, umf1, output="density", K=100,
-                    starts=c(log(30),qlogis(0.7),log(20)),
+    m1 <- gdistsamp(~1, ~1, ~1, umf1, output="density", K=250,
+                    starts=c(log(lam),qlogis(phi),log(sig)),
                     se=FALSE)
     listout1[[i]] <- m1
     e <- coef(m1)
@@ -161,16 +167,22 @@ for(i in 1:nsim1) {
     cat("\tbeta.hat =", simout1[i,], "\n")
     }
 
-pdf("simout2.pdf")
+pdf("simout3.pdf")
 par(mfrow=c(3, 1))
 hist(simout1[,1], xlab=expression(lambda), main="", breaks=50)
-abline(v=30, col=4, lwd=2)
+abline(v=lam, col=4, lwd=2)
 hist(simout1[,2], xlab=expression(phi), main="", breaks=50)
-abline(v=0.7, col=4, lwd=2)
-hist(simout1[,3], xlab=expression(sigma), main="")
-abline(v=20, col=4, lwd=2)
+abline(v=phi, col=4, lwd=2)
+hist(simout1[,3], xlab=expression(sigma), main="", breaks=50)
+abline(v=sig, col=4, lwd=2)
 dev.off()
-system("open simout2.pdf")
+system("open simout3.pdf")
+
+
+
+
+
+
 
 # Point-transect, neg exp
 nsim2 <- 10
