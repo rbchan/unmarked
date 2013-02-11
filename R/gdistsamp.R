@@ -4,6 +4,7 @@ gdistsamp <- function(lambdaformula, phiformula, pformula, data,
     output=c("abund", "density"), unitsOut=c("ha", "kmsq"),
     mixture=c('P', 'NB'), K,
     starts, method = "BFGS", se = TRUE, rel.tol=1e-4,
+    engine=c("C","R"),
     ...)
 {
 if(!is(data, "unmarkedFrameGDS"))
@@ -14,6 +15,7 @@ if(!keyfun %in% c("halfnorm", "exp", "hazard", "uniform"))
     stop("keyfun must be 'halfnorm', 'exp', 'hazard', or 'uniform'")
 output <- match.arg(output)
 unitsOut <- match.arg(unitsOut)
+engine <- match.arg(engine)
 db <- data@dist.breaks
 w <- diff(db)
 tlength <- data@tlength
@@ -138,6 +140,7 @@ for(i in 1:M) {
         }
     }
 
+if(engine=="R") {
 switch(keyfun,
 halfnorm = {
     altdetParms <- paste("sigma", colnames(Xdet), sep="")
@@ -372,6 +375,9 @@ uniform = {
         -sum(log(ll))
     }
 })
+} else if(engine=="C") {
+
+}
 
 fm <- optim(starts, nll, method = method, hessian = se, ...)
 opt <- fm
