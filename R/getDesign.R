@@ -906,8 +906,8 @@ setMethod("getDesign", "unmarkedFrameCo",
     y <- getY(umf, "array")
     yA <- y[,,1,drop=FALSE]
     yB <- y[,,2,drop=FALSE]
-    R <- numSites(umf)
-    J <- obsNum(umf)
+    R <- nrow(yA)
+    J <- ncol(yB)
 
     # siteCovs
     if(is.null(siteCovs(umf))) {

@@ -83,7 +83,7 @@ setClass("unmarkedFrameMPois",
 
 setClass("unmarkedFrameCo",
                 representation(numSpecies = "numeric",
-                               FPsites = "logical")
+                               FPsites = "logical"),
 		contains = "unmarkedFrame")
 
 
@@ -600,6 +600,16 @@ setReplaceMethod("obsToY", "unmarkedFrame", function(object, value) {
 
 setGeneric("getY", function(object) standardGeneric("getY"))
 setMethod("getY", "unmarkedFrame", function(object) object@y)
+
+setMethod("getY", "unmarkedFrameCo",
+    function(object, format=c("matrix", "array")) {
+        format <- match.arg(format)
+        y <- object@y
+        if(identical(format, "array"))
+            y <- array(y, c(nrow(y), ncol(y)/2, 2))
+        return(y)
+    })
+
 
 
 setGeneric("coordinates", function(object) standardGeneric("coordinates"))
