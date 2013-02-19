@@ -125,7 +125,7 @@ set.seed(3)
 
 breaks <- seq(0, 100, by=20)
 T <- 5
-umf <- unmarkedFrameGDS(y = sim2(lambda=20, shape=50, phi=0.7,
+umf <- unmarkedFrameGDS(y = sim2(lambda=1, shape=25, phi=0.7,
                                  T=T, breaks=breaks),
                         survey="point", unitsIn="m",
                         dist.breaks=breaks, numPrimary=T)
@@ -144,7 +144,7 @@ backTransform(m, type="det")    #
 # Point-transect, half-normal
 set.seed(340098)
 nsim1 <- 500
-lam <- 20 # density E[N] = 20*3.14 = 61
+lam <- 1 # density E[N] = 20*3.14 = 61
 phi <- 0.7
 sig <- 25
 simout1 <- matrix(NA, nsim1, 3)
@@ -167,7 +167,7 @@ for(i in 1:nsim1) {
     cat("\tbeta.hat =", simout1[i,], "\n")
     }
 
-pdf("simout3.pdf")
+pdf("simout4.pdf")
 par(mfrow=c(3, 1))
 hist(simout1[,1], xlab=expression(lambda), main="", breaks=50)
 abline(v=lam, col=4, lwd=2)
@@ -176,7 +176,7 @@ abline(v=phi, col=4, lwd=2)
 hist(simout1[,3], xlab=expression(sigma), main="", breaks=50)
 abline(v=sig, col=4, lwd=2)
 dev.off()
-system("open simout3.pdf")
+system("open simout4.pdf")
 
 
 
