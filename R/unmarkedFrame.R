@@ -81,6 +81,11 @@ setClass("unmarkedFrameMPois",
 			piFun = "character"),
 		contains = "unmarkedFrame")
 
+setClass("unmarkedFrameCo",
+                representation(numSpecies = "numeric",
+                               FPsites = "logical")
+		contains = "unmarkedFrame")
+
 
 setClass("unmarkedFrameG3",
          contains = "unmarkedMultFrame")
@@ -175,6 +180,34 @@ unmarkedFrameOccuFP <- function(y, siteCovs = NULL, obsCovs = NULL, type, mapInf
   umf <- as(umf, "unmarkedFrameOccuFP")
   umf@type <- type
   umf
+}
+
+unmarkedFrameCo <- function(yA, yB, yC=NULL, siteCovs=NULL, obsCovs=NULL,
+                            FPsites=NULL, mapInfo) {
+    RA <- nrow(yA)
+    RB <- nrow(yB)
+    JA <- ncol(yA)
+    JB <- ncol(yB)
+    if(RA != RB)
+        stop("yA and yB must have the same number of rows")
+    if(JA != JB)
+        stop("yA and yB must have the same number of columns")
+    if(!is.null(yC))
+        stop("Three-species models are currently not implemented")
+    umf <- unmarkedFrame(y=cbind(yA, yB), siteCovs, obsCovs,
+                         obsToY=diag(J), mapInfo=mapInfo)
+    umf <- as(umf, "unmarkedFrameCo")
+    umf@numSpecies <- 2
+    if(is.null(FPsites))
+        FPsites <- rep(TRUE, RA)
+    else {
+        if(!is.logical(FPsites))
+            stop("FPsites should be a logical vector indicating if false positive observations were possible at each site")
+        if(length(FPsites) != RA)
+            stop("FPsites should be a logical vector of length ", RA)
+    }
+    umf@FPsites <- FPsites
+    return(umf)
 }
 
 

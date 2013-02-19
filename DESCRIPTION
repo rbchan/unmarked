@@ -16,7 +16,8 @@ LazyData: yes
 Collate: 'classes.R' 'unmarkedEstimate.R' 'mapInfo.R' 'unmarkedFrame.R'
     'unmarkedFit.R' 'utils.R' 'getDesign.R' 'colext.R' 'distsamp.R'
     'multinomPois.R' 'occu.R' 'occuRN.R' 'pcount.R' 'gmultmix.R'
-    'pcountOpen.R' 'gdistsamp.R' 'unmarkedFitList.R' 'unmarkedLinComb.R'
+    'pcountOpen.R' 'gdistsamp.R' 'cooccu.R'
+    'unmarkedFitList.R' 'unmarkedLinComb.R'
     'ranef.R' 'boot.R' 'occuFP.R' 'gpcount.R'
 Encoding: UTF-8
 LinkingTo: Rcpp

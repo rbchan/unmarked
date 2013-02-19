@@ -899,33 +899,29 @@ setMethod("handleNA", "unmarkedFrameG3",
 
 
 setMethod("getDesign", "unmarkedFrameCo",
-    function(umf, formula, na.rm = TRUE)
+    function(umf, psiformulaA, psiformulaB, gammaformula,
+             pformulaA, pformulaB, fpformulaA, fpformulaB,
+             na.rm = TRUE)
 {
-    ac1 <- as.character(formula)
-    ac2 <- as.character(formula[[2]])
-
-    detformula <- as.formula(paste(ac1[1], ac1[3]))
-    phiformula <- as.formula(paste(ac2[1], ac2[3]))
-    lamformula <- as.formula(formula[[2]][[2]])
-
-    detVars <- all.vars(detformula)
-
+    y <- getY(umf, "array")
+    yA <- y[,,1,drop=FALSE]
+    yB <- y[,,2,drop=FALSE]
     R <- numSites(umf)
     J <- obsNum(umf)
 
     # siteCovs
     if(is.null(siteCovs(umf))) {
-        siteCovs <- data.frame(placeHolder = rep(1, M))
+        siteCovs <- data.frame(placeHolder = rep(1, R))
     } else siteCovs <- siteCovs(umf)
+    siteCovs$SppB <- siteCovs$SppA <- 1 # Add species as covariate
 
     # obsCovs
     if(is.null(obsCovs(umf))) {
-        obsCovs <- data.frame(placeHolder = rep(1, M*R))
+        obsCovs <- data.frame(placeHolder = rep(1, R*J))
     } else obsCovs <- obsCovs(umf)
-
-    # add observation number if not present
-    if(!("obsNum" %in% names(obsCovs)))
-        obsCovs <- cbind(obsCovs, obsNum = as.factor(rep(1:R, M)))
+    obsCovs$SppA <- obsCovs$SppB <- 1
+    if(!("obsNum" %in% names(obsCovs)))  # add visit number if not present
+        obsCovs <- cbind(obsCovs, obsNum = as.factor(rep(1:J, R)))
 
     # Occupancy design matrices
     XpsiA.mf <- model.frame(psiformulaA, siteCovs, na.action = NULL)
@@ -945,13 +941,20 @@ setMethod("getDesign", "unmarkedFrameCo",
     XpB <- model.matrix(pformulaB, XpB.mf)
     XpB.offset <- as.vector(model.offset(XpB.mf))
     # False positive design matrices
-    XfpA.mf <- model.frame(fpformulaA, obsCovs, na.action = NULL)
-    XfpA <- model.matrix(fpformulaA, XfpA.mf)
-    XfpA.offset <- as.vector(model.offset(XfpA.mf))
-    XfpB.mf <- model.frame(fpformulaB, obsCovs, na.action = NULL)
-    XfpB <- model.matrix(fpformulaB, XfpB.mf)
-    XfpB.offset <- as.vector(model.offset(XfpB.mf))
-
+    if(is.null(fpformulaA))
+        XfpA <- XfpA.offset <- NULL
+    else {
+        XfpA.mf <- model.frame(fpformulaA, obsCovs, na.action = NULL)
+        XfpA <- model.matrix(fpformulaA, XfpA.mf)
+        XfpA.offset <- as.vector(model.offset(XfpA.mf))
+    }
+    if(is.null(fpformulaB))
+        XfpB <- XfpB.offset <- NULL
+    else {
+        XfpB.mf <- model.frame(fpformulaB, obsCovs, na.action = NULL)
+        XfpB <- model.matrix(fpformulaB, XfpB.mf)
+        XfpB.offset <- as.vector(model.offset(XfpB.mf))
+    }
 #    if(na.rm)
 #        out <- handleNA(umf, Xlam, Xlam.offset, Xphi, Xphi.offset, Xdet,
 #            Xdet.offset)
@@ -962,7 +965,6 @@ setMethod("getDesign", "unmarkedFrameCo",
                     XpsiA.offset = XpsiA.offset, XpsiB.offset=XpsiB.offset,
                     Xgamma.offset=Xgamma.offset,
                     removed.sites=integer(0))
-
 #    return(list(y = out$y, Xlam = out$Xlam, Xphi = out$Xphi,
 #                Xdet = out$Xdet,
 #                Xlam.offset = out$Xlam.offset,

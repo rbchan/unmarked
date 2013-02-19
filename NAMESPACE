@@ -6,12 +6,13 @@ importFrom(utils, head)
 importFrom(reshape, melt, cast, recast)
 
 # Fitting functions
-export(occu, occuFP, occuRN, pcount, pcountOpen, multinomPois, distsamp, colext,
-    gmultmix, gdistsamp, gpcount)
+export(occu, occuFP, occuRN, cooccu, pcount, pcountOpen, multinomPois,
+       distsamp, colext, gmultmix, gdistsamp, gpcount)
 export(removalPiFun, doublePiFun)
 
 # S4 classes
-exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitOccuFP, unmarkedFitDS,
+exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitOccuFP,
+    unmarkedFitCo, unmarkedFitDS,
     unmarkedFitPCount, unmarkedFitMPois, unmarkedFitPCO,
     unmarkedFrame, unmarkedFrameOccu, unmarkedFramePCount,
     unmarkedFrameMPois, unmarkedFrameDS, unmarkedMultFrame,
@@ -31,7 +32,8 @@ exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
 
 # Constructors
 export(unmarkedEstimate, fitList, mapInfo, unmarkedFrame,
-    unmarkedFrameOccu, unmarkedFrameOccuFP, unmarkedFramePCount, unmarkedFrameMPois,
+    unmarkedFrameOccu, unmarkedFrameOccuFP, unmarkedFrameCo,
+    unmarkedFramePCount, unmarkedFrameMPois,
     unmarkedFrameDS, unmarkedMultFrame, unmarkedFrameGMM,
     unmarkedFramePCO, unmarkedFrameGDS, unmarkedFrameGPC)
 
