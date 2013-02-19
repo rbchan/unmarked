@@ -10,6 +10,13 @@ cooccu <- function(psiformulaA = ~1, psiformulaB = ~1, dependformula = ~1,
 interaction <- match.arg(interaction)
 fpmodel <- match.arg(fpmodel)
 
+formlist <- list(psiformulaA=psiformulaA, psiformulaB=psiformulaB,
+                 gammaformula=gammaformula,
+                 pformulaA=pformulaA, pformulaB=pformulaB,
+                 fpformulaA=fpformulaA, fpformulaB=fpformulaB)
+formula <- as.formula(paste(unlist(formlist), collapse=" "))
+
+D <- getDesign(data, formula)
 # Could loop over length(D) and assign() each component to object
 yA <- D$yA
 yB <- D$yB
@@ -47,7 +54,6 @@ if(missing(starts))
 else if(length(starts) != nP)
     stop("There should be ", nP, "starting values, not", length(starts))
 
-
 opaNames <- colnames(XpsiA)
 opbNames <- colnames(XpsiB)
 gpNames <- colnames(Xgamma)
@@ -55,7 +61,6 @@ paNames <- colnames(XpA)
 pbNames <- colnames(XpB)
 fpaNames <- colnames(XfpA)
 fpbNames <- colnames(XfpB)
-
 
 nll <- function(pars) {
     psiA <- plogis(XpsiA %*% pars[1:nOPA] + XpsiA.offset)
@@ -191,6 +196,7 @@ if(fpA) {
                                        drop=FALSE],
                        invlink = "logistic", invlinkGrad = "logistic.grad")
 }
+
 if(fpB) {
     estimateList@estimates$fpB <-
         unmarkedEstimate(name = "False positive species B",
@@ -205,11 +211,12 @@ if(fpB) {
                        invlink = "logistic", invlinkGrad = "logistic.grad")
 }
 
-umfit <- new("unmarkedFitCooccu", fitType=""
-             call=match.call(),
-
-
-
+umfit <- new("unmarkedFitCooccu", fitType="cooccu"
+             call=match.call(), formula=formula,
+             data=data, sitesRemoved = removed,
+             estimates = estimateList, AIC = fmAIC, opt = opt,
+             negLogLike = fm$value, nllFun = nll,
+             interaction=interaction, fpmodel=fpmodel)
 
 }
 
