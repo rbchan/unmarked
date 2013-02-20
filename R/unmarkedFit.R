@@ -34,22 +34,17 @@ setClass("unmarkedFitDS",
         output = "character"),
     contains = "unmarkedFit")
 
-
-
 setClass("unmarkedFitPCount",
     representation(
         K = "numeric",
         mixture = "character"),
     contains = "unmarkedFit")
 
-
-
 setClass("unmarkedFitPCO",
         representation(
             formlist = "list",
             dynamics = "character"),
         contains = "unmarkedFitPCount")
-
 
 setClass("unmarkedFitOccu",
     representation(knownOcc = "logical"),
@@ -64,10 +59,13 @@ setClass("unmarkedFitOccuFP",
             type = "numeric"),
          contains = "unmarkedFit")
 
+setClass("unmarkedFitCo",
+    representation(interaction="character",
+                   fpmodel="character"),
+    contains = "unmarkedFit")
 
 setClass("unmarkedFitMPois",
     contains = "unmarkedFit")
-
 
 setClass("unmarkedFitOccuRN",
     contains = "unmarkedFit")
@@ -524,7 +522,7 @@ setMethod("predict", "unmarkedFitOccuFP",
                               offset <- model.offset(mf)
                             })
                    })
-            
+
             out <- data.frame(matrix(NA, nrow(X), 4,
                                      dimnames=list(NULL, c("Predicted", "SE", "lower", "upper"))))
             for(i in 1:nrow(X)) {
@@ -1212,8 +1210,8 @@ setMethod("fitted", "unmarkedFit",
     fitted
 })
 
-    
-    
+
+
 setMethod("fitted", "unmarkedFitOccuFP", function(object, na.rm = FALSE)
 {
   cat("fitted is not implemented for occuFP at this time")
@@ -2629,7 +2627,7 @@ setMethod("simulate", "unmarkedFitOccu",
     return(simList)
 })
 
-    
+
 setMethod("simulate", "unmarkedFitOccuFP",
           function(object, nsim = 1, seed = NULL, na.rm = TRUE)
           {
@@ -2639,7 +2637,7 @@ setMethod("simulate", "unmarkedFitOccuFP",
             Bformula <- object@Bformula
             umf <- object@data
             designMats <- getDesign(newdata, detformula,FPformula,Bformula,stateformula, na.rm = na.rm)
-            X <- designMats$X; V <- designMats$V; U <- designMats$U; W <- designMats$W;  
+            X <- designMats$X; V <- designMats$V; U <- designMats$U; W <- designMats$W;
             y <- designMats$y
             X.offset <- designMats$X.offset; V.offset <- designMats$V.offset; U.offset <- designMats$U.offset; W.offset <- designMats$W.offset
             if(is.null(X.offset)) {
@@ -2668,7 +2666,7 @@ setMethod("simulate", "unmarkedFitOccuFP",
               Z[object@knownOcc] <- 1
               Z <- rep(Z, each = J)
               P <- matrix(0,M*J,3)
-              P[,1] <- Z*rbinom(M * J, 1, prob = (1-p)) + (1-Z)*rbinom(M * J, 1, prob = (1-fp)) 
+              P[,1] <- Z*rbinom(M * J, 1, prob = (1-p)) + (1-Z)*rbinom(M * J, 1, prob = (1-fp))
               P[,2] <- (1-P[,1])*(1-Z) + (1-P[,1])*rbinom(M * J, 1, prob = (1-b))*Z
               P[,3] <- 1 - P[,1]-P[,2]
               yvec <- sapply(1:(M*J),function(x) which(as.logical(rmultinom(1,1,P[x,])))-1)

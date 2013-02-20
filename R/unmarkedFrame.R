@@ -195,7 +195,7 @@ unmarkedFrameCo <- function(yA, yB, yC=NULL, siteCovs=NULL, obsCovs=NULL,
     if(!is.null(yC))
         stop("Three-species models are currently not implemented")
     umf <- unmarkedFrame(y=cbind(yA, yB), siteCovs, obsCovs,
-                         obsToY=diag(J), mapInfo=mapInfo)
+                         obsToY=diag(JA), mapInfo=mapInfo)
     umf <- as(umf, "unmarkedFrameCo")
     umf@numSpecies <- 2
     if(is.null(FPsites))
@@ -598,8 +598,8 @@ setReplaceMethod("obsToY", "unmarkedFrame", function(object, value) {
 
 
 
-setGeneric("getY", function(object) standardGeneric("getY"))
-setMethod("getY", "unmarkedFrame", function(object) object@y)
+setGeneric("getY", function(object, ...) standardGeneric("getY"))
+setMethod("getY", "unmarkedFrame", function(object, ...) object@y)
 
 setMethod("getY", "unmarkedFrameCo",
     function(object, format=c("matrix", "array")) {

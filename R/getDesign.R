@@ -927,43 +927,66 @@ setMethod("getDesign", "unmarkedFrameCo",
     XpsiA.mf <- model.frame(psiformulaA, siteCovs, na.action = NULL)
     XpsiA <- model.matrix(psiformulaA, XpsiA.mf)
     XpsiA.offset <- as.vector(model.offset(XpsiA.mf))
+    if(is.null(XpsiA.offset))
+        XpsiA.offset <- rep(0, R)
     XpsiB.mf <- model.frame(psiformulaB, siteCovs, na.action = NULL)
     XpsiB <- model.matrix(psiformulaB, XpsiA.mf)
     XpsiB.offset <- as.vector(model.offset(XpsiB.mf))
-    Xgamma.mf <- model.frame(gammaformula, siteCovs, na.action = NULL)
-    Xgamma <- model.matrix(gammaformula, Xgamma.mf)
-    Xgamma.offset <- as.vector(model.offset(Xgamma.mf))
+    if(is.null(XpsiB.offset))
+        XpsiB.offset <- rep(0, R)
+    if(is.null(gammaformula)) {
+        Xgamma <- matrix(1, R, 0)
+        Xgamma.offset <- rep(0, R)
+    } else {
+        Xgamma.mf <- model.frame(gammaformula, siteCovs, na.action = NULL)
+        Xgamma <- model.matrix(gammaformula, Xgamma.mf)
+        Xgamma.offset <- as.vector(model.offset(Xgamma.mf))
+        if(is.null(Xgamma.offset))
+            Xgamma.offset <- rep(0, R)
+    }
     # False negative design matrices
     XpA.mf <- model.frame(pformulaA, obsCovs, na.action = NULL)
     XpA <- model.matrix(pformulaA, XpA.mf)
     XpA.offset <- as.vector(model.offset(XpA.mf))
+    if(is.null(XpA.offset))
+        XpA.offset <- rep(0, R*J)
     XpB.mf <- model.frame(pformulaB, obsCovs, na.action = NULL)
     XpB <- model.matrix(pformulaB, XpB.mf)
     XpB.offset <- as.vector(model.offset(XpB.mf))
+    if(is.null(XpB.offset))
+        XpB.offset <- rep(0, R*J)
     # False positive design matrices
-    if(is.null(fpformulaA))
-        XfpA <- XfpA.offset <- NULL
-    else {
+    if(is.null(fpformulaA)) {
+        XfpA <- matrix(1, R*J, 0)
+        XfpA.offset <- rep(0, R*J)
+    } else {
         XfpA.mf <- model.frame(fpformulaA, obsCovs, na.action = NULL)
         XfpA <- model.matrix(fpformulaA, XfpA.mf)
         XfpA.offset <- as.vector(model.offset(XfpA.mf))
+        if(is.null(XfpA.offset))
+            XfpA.offset <- rep(0, R*J)
     }
-    if(is.null(fpformulaB))
-        XfpB <- XfpB.offset <- NULL
-    else {
+    if(is.null(fpformulaB)) {
+        XfpB <- matrix(1, R*J, 0)
+        XfpB.offset <- rep(0, R*J)
+    } else {
         XfpB.mf <- model.frame(fpformulaB, obsCovs, na.action = NULL)
         XfpB <- model.matrix(fpformulaB, XfpB.mf)
         XfpB.offset <- as.vector(model.offset(XfpB.mf))
+        if(is.null(XfpB.offset))
+            XfpB.offset <- rep(0, R*J)
     }
 #    if(na.rm)
 #        out <- handleNA(umf, Xlam, Xlam.offset, Xphi, Xphi.offset, Xdet,
 #            Xdet.offset)
 #    else
         out <- list(yA=yA, yB=yB,
-                    XpsiA=XpsiA, XpsiB=XpsiB, Xgamma,
+                    XpsiA=XpsiA, XpsiB=XpsiB, Xgamma=Xgamma,
                     XpA=XpA, XpB=XpB, XfpA=XfpA, XfpB=XfpB,
                     XpsiA.offset = XpsiA.offset, XpsiB.offset=XpsiB.offset,
                     Xgamma.offset=Xgamma.offset,
+                    XpA.offset=XpA.offset, XpB.offset=XpB.offset,
+                    XfpA.offset=XpA.offset, XfpB.offset=XfpB.offset,
                     removed.sites=integer(0))
 #    return(list(y = out$y, Xlam = out$Xlam, Xphi = out$Xphi,
 #                Xdet = out$Xdet,
