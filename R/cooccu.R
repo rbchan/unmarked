@@ -58,10 +58,6 @@ nPB <- ncol(XpB)
 nFPA <- ncol(XfpA)
 nFPB <- ncol(XfpB)
 nP <- nOPA + nOPB + nGP + nPA + nPB + nFPA + nFPB
-if(missing(starts))
-    starts <- rep(0, nP)
-else if(length(starts) != nP)
-    stop("There should be ", nP, "starting values, not", length(starts))
 
 opaNames <- colnames(XpsiA)
 opbNames <- colnames(XpsiB)
@@ -70,6 +66,18 @@ paNames <- colnames(XpA)
 pbNames <- colnames(XpB)
 fpaNames <- colnames(XfpA)
 fpbNames <- colnames(XfpB)
+
+if("SppA" %in% c(opaNames, opbNames, gpNames, paNames, fpaNames))
+    stop("The variable 'SppA' can only be in pformulaB or fpformulaB")
+if("SppB" %in% c(opaNames, opbNames, gpNames, pbNames, fpbNames))
+    stop("The variable 'SppB' can only be in pformulaA or fpformulaA")
+
+if(missing(starts))
+    starts <- rep(0, nP)
+else if(length(starts) != nP)
+    stop("There should be ", nP, "starting values, not", length(starts))
+names(starts) <- c(opaNames, opbNames, gpNames, paNames, pbNames,
+                  fpaNames, fpbNames)
 
 nll <- function(pars) {
     psiA <- plogis(XpsiA %*% pars[1:nOPA] + XpsiA.offset)
@@ -104,30 +112,35 @@ nll <- function(pars) {
     pApars <- pApars.B0 <- pars[(nOPA+nOPB+nGP+1):(nOPA+nOPB+nGP+nPA)]
     pA.B1 <- matrix(plogis(XpA %*% pApars + XpA.offset),
                     R, J, byrow=TRUE)
-    # Do the next 2 lines if SppB is in pformulaA, otherwise pA.B0=pA.B1
-    pApars.B0["SppB"] <- 0
-    pA.B0 <- matrix(plogis(XpA %*% pApars.B0 + XpA.offset),
-                    R, J, byrow=TRUE)
+    if("SppB" %in% names(pApars)) {
+        pApars.B0["SppB"] <- 0
+        pA.B0 <- matrix(plogis(XpA %*% pApars.B0 + XpA.offset),
+                        R, J, byrow=TRUE)
+    } else pA.B0 <- pA.B1
     # Detection prob of B, possibly dependent upon presence of A
     pBpars <- pBpars.A0 <- pars[(nOPA+nOPB+nGP+nPA+1):
                                 (nOPA+nOPB+nGP+nPA+nPB)]
-    pBpars.A0["SppA"] <- 0
     pB.A1 <- matrix(plogis(XpB %*% pBpars + XpB.offset),
                     R, J, byrow=TRUE)
-    pB.A0 <- matrix(plogis(XpB %*% pBpars.A0 + XpB.offset),
-                    R, J, byrow=TRUE)
-    # Only do the next 2 steps if fpformulae are not NULL
+    if("SppA" %in% names(pBpars)) {
+        pBpars.A0["SppA"] <- 0
+        pB.A0 <- matrix(plogis(XpB %*% pBpars.A0 + XpB.offset),
+                        R, J, byrow=TRUE)
+    } else pB.A0 <- pB.A1
     # False-positive prob of A, possibly dependent upon presence of B
     if(fixfpA) {
         fpA.B1 <- fpA.B0 <- matrix(0, R, J)
     } else {
+#        browser()
         fpApars <- fpApars.B0 <- pars[(nOPA+nOPB+nGP+nPA+nPB+1):
                                       (nOPA+nOPB+nGP+nPA+nPB+nFPA)]
-        fpApars.B0["SppB"] <- 0
         fpA.B1 <- matrix(plogis(XfpA %*% fpApars + XfpA.offset),
                          R, J, byrow=TRUE)
-        fpA.B0 <- matrix(plogis(XfpA %*% fpApars.B0 + XfpA.offset),
-                         R, J, byrow=TRUE)
+        if("SppB" %in% names(fpApars)) {
+            fpApars.B0["SppB"] <- 0
+            fpA.B0 <- matrix(plogis(XfpA %*% fpApars.B0 + XfpA.offset),
+                             R, J, byrow=TRUE)
+        } else fpA.B0 <- fpA.B1
     }
     # False-positive prob of B, possibly dependent upon presence of A
     if(fixfpB) {
@@ -135,11 +148,13 @@ nll <- function(pars) {
     } else {
         fpBpars <- fpBpars.A0 <- pars[(nOPA+nOPB+nGP+nPA+nPB+nFPA+1):
                                       (nOPA+nOPB+nGP+nPA+nPB+nFPA+nFPB)]
-        fpBpars.A0["SppA"] <- 0
         fpB.A1 <- matrix(plogis(XfpB %*% fpBpars + XfpB.offset),
                          R, J, byrow=TRUE)
-        fpB.A0 <- matrix(plogis(XfpB %*% fpBpars.A0 + XfpB.offset),
-                         R, J, byrow=TRUE)
+        if("SppA" %in% names(fpBpars.A0)) {
+            fpBpars.A0["SppA"] <- 0
+            fpB.A0 <- matrix(plogis(XfpB %*% fpBpars.A0 + XfpB.offset),
+                             R, J, byrow=TRUE)
+        } else fpB.A0 <- fpB.A1
     }
     # Conditional on z, observation probs
     bin.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +
