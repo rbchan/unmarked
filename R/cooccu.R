@@ -79,7 +79,7 @@ if(missing(starts)) {
     starts[nOPA+nOPB+nGP+nPA+nPB+nFPA+1] <- -3
 }
 else if(length(starts) != nP)
-    stop("There should be ", nP, "starting values, not", length(starts))
+    stop("There should be ", nP, " starting values, not ", length(starts))
 names(starts) <- c(opaNames, opbNames, gpNames, paNames, pbNames,
                   fpaNames, fpbNames)
 

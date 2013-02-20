@@ -919,9 +919,12 @@ setMethod("getDesign", "unmarkedFrameCo",
     if(is.null(obsCovs(umf))) {
         obsCovs <- data.frame(placeHolder = rep(1, R*J))
     } else obsCovs <- obsCovs(umf)
-    obsCovs$SppA <- obsCovs$SppB <- 1
+#    obsCovs$SppA <- obsCovs$SppB <- 1
     if(!("obsNum" %in% names(obsCovs)))  # add visit number if not present
         obsCovs <- cbind(obsCovs, obsNum = as.factor(rep(1:J, R)))
+
+    # Add siteCovs to obsCovs
+    obsCovs <- cbind(obsCovs, siteCovs[rep(1:R, each=J),])
 
     # Occupancy design matrices
     XpsiA.mf <- model.frame(psiformulaA, siteCovs, na.action = NULL)
@@ -988,12 +991,6 @@ setMethod("getDesign", "unmarkedFrameCo",
                     XpA.offset=XpA.offset, XpB.offset=XpB.offset,
                     XfpA.offset=XpA.offset, XfpB.offset=XfpB.offset,
                     removed.sites=integer(0), FP=umf@FP)
-#    return(list(y = out$y, Xlam = out$Xlam, Xphi = out$Xphi,
-#                Xdet = out$Xdet,
-#                Xlam.offset = out$Xlam.offset,
-#                Xphi.offset = out$Xphi.offset,
-#                Xdet.offset = out$Xdet.offset,
-#                removed.sites = out$removed.sites))
     return(out)
 })
 
