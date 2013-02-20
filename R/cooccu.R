@@ -37,7 +37,7 @@ XpB.offset <- D$XpB.offset
 XfpA.offset <- D$XfpA.offset
 XfpB.offset <- D$XfpB.offset
 removed <- D$removed.sites
-noFPsites <- D$noFPsites # Should be logical. TRUE if Pr(fp)=0
+noFP <- D$noFP # Should be logical. TRUE if Pr(fp)=0
 
 if(is.null(psiformulaA) | is.null(psiformulaB) |
    is.null(pformulaA) | is.null(pformulaB))
@@ -72,8 +72,12 @@ if("SppA" %in% c(opaNames, opbNames, gpNames, paNames, fpaNames))
 if("SppB" %in% c(opaNames, opbNames, gpNames, pbNames, fpbNames))
     stop("The variable 'SppB' can only be in pformulaA or fpformulaA")
 
-if(missing(starts))
+if(missing(starts)) {
     starts <- rep(0, nP)
+    # Start the false-positive probs (intercepts) at small value
+    starts[nOPA+nOPB+nGP+nPA+nPB+1] <- -3
+    starts[nOPA+nOPB+nGP+nPA+nPB+nFPA+1] <- -3
+}
 else if(length(starts) != nP)
     stop("There should be ", nP, "starting values, not", length(starts))
 names(starts) <- c(opaNames, opbNames, gpNames, paNames, pbNames,
@@ -141,6 +145,10 @@ nll <- function(pars) {
             fpA.B0 <- matrix(plogis(XfpA %*% fpApars.B0 + XfpA.offset),
                              R, J, byrow=TRUE)
         } else fpA.B0 <- fpA.B1
+        if(any(noFP)) {
+            fpA.B1[noFP] <- 0
+            fpA.B0[noFP] <- 0
+        }
     }
     # False-positive prob of B, possibly dependent upon presence of A
     if(fixfpB) {
@@ -155,6 +163,10 @@ nll <- function(pars) {
             fpB.A0 <- matrix(plogis(XfpB %*% fpBpars.A0 + XfpB.offset),
                              R, J, byrow=TRUE)
         } else fpB.A0 <- fpB.A1
+        if(any(noFP)) {
+            fpB.A1[noFP] <- 0
+            fpB.A0[noFP] <- 0
+        }
     }
     # Conditional on z, observation probs
     bin.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +

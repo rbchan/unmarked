@@ -83,7 +83,7 @@ setClass("unmarkedFrameMPois",
 
 setClass("unmarkedFrameCo",
                 representation(numSpecies = "numeric",
-                               FPsites = "logical"),
+                               FP = "matrix"),
 		contains = "unmarkedFrame")
 
 
@@ -183,7 +183,7 @@ unmarkedFrameOccuFP <- function(y, siteCovs = NULL, obsCovs = NULL, type, mapInf
 }
 
 unmarkedFrameCo <- function(yA, yB, yC=NULL, siteCovs=NULL, obsCovs=NULL,
-                            FPsites=NULL, mapInfo) {
+                            FP=NULL, mapInfo) {
     RA <- nrow(yA)
     RB <- nrow(yB)
     JA <- ncol(yA)
@@ -198,15 +198,15 @@ unmarkedFrameCo <- function(yA, yB, yC=NULL, siteCovs=NULL, obsCovs=NULL,
                          obsToY=diag(JA), mapInfo=mapInfo)
     umf <- as(umf, "unmarkedFrameCo")
     umf@numSpecies <- 2
-    if(is.null(FPsites))
-        FPsites <- rep(TRUE, RA)
+    if(is.null(FP))
+        FP <- matrix(TRUE, RA, JA)
     else {
-        if(!is.logical(FPsites))
-            stop("FPsites should be a logical vector indicating if false positive observations were possible at each site")
-        if(length(FPsites) != RA)
-            stop("FPsites should be a logical vector of length ", RA)
+        if(!(all(is.logical(FP))))
+            stop("FP should be a TRUE/FALSE matrix indicating if false positive observations were possible at each site and survey occasion")
+        if(nrow(FP) != RA | ncol(FP) != JA)
+            stop("FP should be a matrix with ", RA, "rows, and ", JA, "columns")
     }
-    umf@FPsites <- FPsites
+    umf@FP <- FP
     return(umf)
 }
 

@@ -987,7 +987,7 @@ setMethod("getDesign", "unmarkedFrameCo",
                     Xgamma.offset=Xgamma.offset,
                     XpA.offset=XpA.offset, XpB.offset=XpB.offset,
                     XfpA.offset=XpA.offset, XfpB.offset=XfpB.offset,
-                    removed.sites=integer(0))
+                    removed.sites=integer(0), FP=umf@FP)
 #    return(list(y = out$y, Xlam = out$Xlam, Xphi = out$Xphi,
 #                Xdet = out$Xdet,
 #                Xlam.offset = out$Xlam.offset,

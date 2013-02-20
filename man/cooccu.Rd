@@ -14,7 +14,6 @@ cooccu(psiformulaA = ~1, psiformulaB = ~1, gammaformula = NULL,
        fpmodel = c("full", "confusion"), starts, method = "BFGS",
        se = TRUE, ...)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{psiformulaA}{
     Occupancy model for species A
@@ -151,31 +150,33 @@ fm3 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
 fm3
 
 fm4 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
-              pformulaB=~SppA,
-              data=umf, se=FALSE)
+              pformulaB=~SppA, #se=FALSE,
+              data=umf)
 fm4
 
 fm5 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
-              fpformulaA=~SppB,
-              data=umf, se=FALSE)
+              fpformulaA=~SppB, #se=FALSE,
+              data=umf)
 fm5
 
 fm6 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
               fpformulaA=~SppB,
-              fpformulaB=~SppA,
-              data=umf, se=FALSE)
+              fpformulaB=~SppA, se=FALSE,
+              starts=c(4, 4, 0, 0, -3, 0, -3, 0),
+              data=umf)
 fm6
 
 fm7 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
               fpformulaA=~1,
-              fpformulaB=~1,
-              data=umf, se=FALSE)
+              fpformulaB=~1, #se=FALSE,
+              data=umf)
 fm7
 
 debugonce(cooccu)
 source("cooccu.R")
 source("getDesign.R")
 source("unmarkedEstimate.R")
+source("unmarkedFrame.R")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
