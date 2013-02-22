@@ -10,6 +10,13 @@ cooccu <- function(psiformulaA = ~1, psiformulaB = ~1,
 interaction <- match.arg(interaction)
 fpmodel <- match.arg(fpmodel)
 
+if(identical(fpmodel, "confusion")) {
+    if("SppB" %in% all.vars(fpformulaA))
+        stop("It doesn't make sense to have 'SppB' in fpformulaA when fpmodel='confusion'")
+    if("SppA" %in% all.vars(fpformulaB))
+        stop("It doesn't make sense to have 'SppA' in fpformulaB when fpmodel='confusion'")
+}
+
 formlist <- list(psiformulaA=psiformulaA, psiformulaB=psiformulaB,
                  gammaformula=gammaformula,
                  pformulaA=pformulaA, pformulaB=pformulaB,
@@ -192,9 +199,16 @@ nll <- function(pars) {
 
 fm <- optim(starts, nll, method=method, hessian=se, ...)
 opt <- fm
-if(se)
-    covMat <- solve(fm$hessian) # Add try() or tryCatch()
-else
+if(se) {
+    covMat <- try(solve(fm$hessian), silent=TRUE)
+    if(identical(class(covMat), "try-error")) {
+        warning("Unable to compute variance-covariance matrix because:\n",
+                attr(covMat, "condition"),
+                "Try providing good starting values or using fewer covariates",
+                call.=FALSE)
+        covMat <- matrix(NA, nP, nP)
+    }
+} else
     covMat <- matrix(NA, nP, nP)
 mle <- fm$par
 fmAIC <- 2 * fm$value + 2 * nP
