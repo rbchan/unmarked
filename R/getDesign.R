@@ -979,10 +979,11 @@ setMethod("getDesign", "unmarkedFrameCo",
         if(is.null(XfpB.offset))
             XfpB.offset <- rep(0, R*J)
     }
-#    if(na.rm)
-#        out <- handleNA(umf, Xlam, Xlam.offset, Xphi, Xphi.offset, Xdet,
-#            Xdet.offset)
-#    else
+    if(na.rm)
+        out <- handleNA(umf, XpsiA, XpsiB, Xgamma, XpA, XpB, XfpA, XfpB,
+                        XpsiA.offset, XpsiB.offset, Xgamma.offset,
+                        XpA.offset, XpB.offset, XfpA.offset, XfpB.offset)
+    else
         out <- list(yA=yA, yB=yB,
                     XpsiA=XpsiA, XpsiB=XpsiB, Xgamma=Xgamma,
                     XpA=XpA, XpB=XpB, XfpA=XfpA, XfpB=XfpB,
@@ -995,3 +996,124 @@ setMethod("getDesign", "unmarkedFrameCo",
 })
 
 
+
+
+
+setMethod("handleNA", "unmarkedFrameCo",
+          function(umf, XpsiA, XpsiB, Xgamma, XpA, XpB, XfpA, XfpB,
+                   XpsiA.offset, XpsiB.offset, Xgamma.offset,
+                   XpA.offset, XpB.offset, XfpA.offset, XfpB.offset)
+{
+    obsToY <- obsToY(umf)
+    if(is.null(obsToY))
+        stop("obsToY cannot be NULL to clean data.")
+    browser()
+    y <- getY(umf, "array")
+    yA <- y[,,1,drop=TRUE]
+    yB <- y[,,2,drop=TRUE]
+    FP <- umf@FP
+
+    R <- nrow(yA)
+    J <- ncol(yB)
+
+    XpsiA.long <- XpsiA[rep(1:R, each = J),]
+    XpsiB.long <- XpsiB[rep(1:R, each = J),]
+    Xgamma.long <- Xgamma[rep(1:R, each = J),]
+    XpsiA.long.na <- is.na(XpsiA.long)
+    XpsiB.long.na <- is.na(XpsiB.long)
+    Xgamma.long.na <- is.na(Xgamma.long)
+
+#    browser()
+    XpA.long.na <- apply(XpA, 2, function(x) {
+        x.mat <- matrix(x, R, J, byrow = TRUE)
+        x.mat <- is.na(x.mat)
+        x.mat <- x.mat %*% obsToY
+        x.long <- as.vector(t(x.mat))
+        x.long > 0
+        })
+    XpB.long.na <- apply(XpB, 2, function(x) {
+        x.mat <- matrix(x, R, J, byrow = TRUE)
+        x.mat <- is.na(x.mat)
+        x.mat <- x.mat %*% obsToY
+        x.long <- as.vector(t(x.mat))
+        x.long > 0
+        })
+    XfpA.long.na <- apply(XfpA, 2, function(x) {
+        x.mat <- matrix(x, R, J, byrow = TRUE)
+        x.mat <- is.na(x.mat)
+        x.mat <- x.mat %*% obsToY
+        x.long <- as.vector(t(x.mat))
+        x.long > 0
+        })
+    XfpB.long.na <- apply(XfpB, 2, function(x) {
+        x.mat <- matrix(x, R, J, byrow = TRUE)
+        x.mat <- is.na(x.mat)
+        x.mat <- x.mat %*% obsToY
+        x.long <- as.vector(t(x.mat))
+        x.long > 0
+        })
+    XpA.long.na <- apply(XpA.long.na, 1, any)
+    XpB.long.na <- apply(XpB.long.na, 1, any)
+    if(length(XfpA.long.na) > 0)
+        XfpA.long.na <- apply(XfpA.long.na, 1, any)
+    else
+        XfpA.long.na <- rep(FALSE, R*J)
+    if(length(XfpB.long.na) > 0)
+        XfpB.long.na <- apply(XfpB.long.na, 1, any)
+    else
+        XfpB.long.na <- rep(FALSE, R*J)
+
+    yA.long <- as.vector(t(yA))
+    yB.long <- as.vector(t(yB))
+    yA.long.na <- is.na(yA.long)
+    yB.long.na <- is.na(yB.long)
+
+    covs.na <- apply(cbind(XpsiA.long.na, XpsiB.long.na, Xgamma.long.na,
+                           XpA.long.na, XpB.long.na,
+                           XfpA.long.na, XfpB.long.na), 1, any)
+
+    ## are any NA in covs not in y already?
+    y.new.na <- covs.na & (!yA.long.na | !yB.long.na)
+
+    if(sum(y.new.na) > 0) {
+        yA.long[y.new.na] <- NA
+        yB.long[y.new.na] <- NA
+        warning("Some observations have been discarded because corresponding covariates were missing.", call. = FALSE)
+    }
+
+    yA <- matrix(yA.long, R, J, byrow = TRUE)
+    yB <- matrix(yB.long, R, J, byrow = TRUE)
+    sites.to.remove <- (apply(yA, 1, function(x) all(is.na(x))) |
+                        apply(yB, 1, function(x) all(is.na(x))))
+
+    num.to.remove <- sum(sites.to.remove)
+    if(num.to.remove > 0) {
+        yA <- yA[!sites.to.remove, ,drop = FALSE]
+        yB <- yB[!sites.to.remove, ,drop = FALSE]
+        XpsiA <- XpsiA[!sites.to.remove, ,drop = FALSE]
+        XpsiB <- XpsiB[!sites.to.remove, ,drop = FALSE]
+        Xgamma <- Xgamma[!sites.to.remove, ,drop = FALSE]
+        FP <- FP[!sites.to.remove, , drop=FALSE]
+        XpsiA.offset <- XpsiA.offset[!sites.to.remove]
+        XpsiB.offset <- XpsiB.offset[!sites.to.remove]
+        Xgamma.offset <- Xgamma.offset[!sites.to.remove]
+        XpA <- XpA[!sites.to.remove[rep(1:R, each = J)], ,drop = FALSE]
+        XpB <- XpB[!sites.to.remove[rep(1:R, each = J)], ,drop = FALSE]
+        XfpA <- XfpA[!sites.to.remove[rep(1:R, each = J)], ,drop = FALSE]
+        XfpB <- XfpB[!sites.to.remove[rep(1:R, each = J)], ,drop = FALSE]
+        XpA.offset <- XpA.offset[!sites.to.remove[rep(1:R, each = J)], ]
+        XpB.offset <- XpB.offset[!sites.to.remove[rep(1:R, each = J)], ]
+        XfpA.offset <- XfpA.offset[!sites.to.remove[rep(1:R, each = J)], ]
+        XfpB.offset <- XfpB.offset[!sites.to.remove[rep(1:R, each = J)], ]
+        warning(paste(num.to.remove,"sites have been discarded because of missing data."), call. = FALSE)
+        }
+
+    list(yA=yA, yB=yB,
+         XpsiA=XpsiA, XpsiB=XpsiB, Xgamma=Xgamma,
+         XpA=XpA, XpB=XpB, XfpA=XfpA, XfpB=XfpB,
+         XpsiA.offset = XpsiA.offset, XpsiB.offset=XpsiB.offset,
+         Xgamma.offset=Xgamma.offset,
+         XpA.offset=XpA.offset, XpB.offset=XpB.offset,
+         XfpA.offset=XpA.offset, XfpB.offset=XfpB.offset,
+         removed.sites=which(sites.to.remove), FP=FP)
+    })

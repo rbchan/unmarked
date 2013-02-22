@@ -261,6 +261,7 @@ if(!fixgamma) {
                          else "exp")
 }
 
+
 if(!fixfpA) {
     estimateList@estimates$fpA <-
         unmarkedEstimate(name = "False positive species A",
@@ -287,6 +288,12 @@ if(!fixfpB) {
                                          (nOPA+nOPB+nGP+nPA+nPB+nFPA+nFPB),
                                          drop=FALSE],
                        invlink = "logistic", invlinkGrad = "logistic.grad")
+}
+
+if(!fixgamma) {
+    nms <- names(estimateList@estimates)
+    nms <- nms[!nms %in% c("psiA", "psiB", "gamma")]
+    estimateList@estimates <- estimateList@estimates[c("psiA", "psiB", "gamma", nms)]
 }
 
 umfit <- new("unmarkedFitCo", fitType="cooccu",
