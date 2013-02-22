@@ -188,7 +188,12 @@ nll <- function(pars) {
     else if(identical(fpmodel, "confusion"))
         bin.A0.B0 <- dbinom(yA, 1, 0, log=TRUE) +
             dbinom(yB, 1, 0, log=TRUE)
-    # Handle NAs here
+    # Handle NAs
+    # Shouldn't be NAs in phi since those sites should've been removed
+    bin.A1.B1[is.na(bin.A1.B1)] <- 0
+    bin.A1.B0[is.na(bin.A1.B0)] <- 0
+    bin.A0.B1[is.na(bin.A0.B1)] <- 0
+    bin.A0.B0[is.na(bin.A0.B0)] <- 0
     mu <- cbind(exp(rowSums(bin.A1.B1)),
                 exp(rowSums(bin.A1.B0)),
                 exp(rowSums(bin.A0.B1)),
