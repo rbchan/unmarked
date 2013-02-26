@@ -1007,7 +1007,7 @@ setMethod("handleNA", "unmarkedFrameCo",
     obsToY <- obsToY(umf)
     if(is.null(obsToY))
         stop("obsToY cannot be NULL to clean data.")
-    browser()
+#    browser()
     y <- getY(umf, "array")
     yA <- y[,,1,drop=TRUE]
     yB <- y[,,2,drop=TRUE]

@@ -44,7 +44,7 @@ XpB.offset <- D$XpB.offset
 XfpA.offset <- D$XfpA.offset
 XfpB.offset <- D$XfpB.offset
 removed <- D$removed.sites
-noFP <- D$noFP # Should be logical. TRUE if Pr(fp)=0
+FP <- D$FP # Should be logical. TRUE if Pr(fp)=0
 
 if(is.null(psiformulaA) | is.null(psiformulaB) |
    is.null(pformulaA) | is.null(pformulaB))
@@ -152,9 +152,9 @@ nll <- function(pars) {
             fpA.B0 <- matrix(plogis(XfpA %*% fpApars.B0 + XfpA.offset),
                              R, J, byrow=TRUE)
         } else fpA.B0 <- fpA.B1
-        if(any(noFP)) {
-            fpA.B1[noFP] <- 0
-            fpA.B0[noFP] <- 0
+        if(any(!FP)) {
+            fpA.B1[!FP] <- 0
+            fpA.B0[!FP] <- 0
         }
     }
     # False-positive prob of B, possibly dependent upon presence of A
@@ -170,9 +170,9 @@ nll <- function(pars) {
             fpB.A0 <- matrix(plogis(XfpB %*% fpBpars.A0 + XfpB.offset),
                              R, J, byrow=TRUE)
         } else fpB.A0 <- fpB.A1
-        if(any(noFP)) {
-            fpB.A1[noFP] <- 0
-            fpB.A0[noFP] <- 0
+        if(any(!FP)) {
+            fpB.A1[!FP] <- 0
+            fpB.A0[!FP] <- 0
         }
     }
     # Conditional on z, observation probs
