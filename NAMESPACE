@@ -6,7 +6,7 @@ importFrom(utils, head)
 importFrom(reshape, melt, cast, recast)
 
 # Fitting functions
-export(occu, occuFP, occuRN, cooccu, pcount, pcountOpen, multinomPois,
+export(occu, occuFP, occuRN, cooccur, pcount, pcountOpen, multinomPois,
        distsamp, colext, gmultmix, gdistsamp, gpcount)
 export(removalPiFun, doublePiFun)
 
@@ -23,7 +23,8 @@ exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitOccuFP,
 
 # Methods
 exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
-    getP, getFP, getB, getY, head, hessian, linearComb, mle, modSel, nllFun, numSites,
+    getP, getFP, getB, getY, head, hessian, linearComb, mle, modSel,
+    nllFun, numSites,
     numY, obsCovs, obsNum, "obsCovs<-", obsToY, "obsToY<-", parboot, plot,
     hist, predict, profile, projection, residuals, sampleSize, SE,
     show, simulate, siteCovs, "siteCovs<-", summary, update, vcov,

@@ -243,7 +243,7 @@ psiB <- unmarkedEstimate(name = "Occupancy species B", short.name="psiB",
                                          (nOPA+1):(nOPA+nOPB), drop=FALSE],
                          invlink = "logistic",
                          invlinkGrad = "logistic.grad")
-pA <- unmarkedEstimate(name = "False negative species A", short.name="pA",
+pA <- unmarkedEstimate(name = "Detection species A", short.name="pA",
                        estimates = mle[(nOPA+nOPB+nGP+1):
                                        (nOPA+nOPB+nGP+nPA)],
                        covMat = covMat[(nOPA+nOPB+nGP+1):
@@ -251,7 +251,7 @@ pA <- unmarkedEstimate(name = "False negative species A", short.name="pA",
                                        (nOPA+nOPB+nGP+1):
                                        (nOPA+nOPB+nGP+nPA), drop=FALSE],
                        invlink = "logistic", invlinkGrad = "logistic.grad")
-pB <- unmarkedEstimate(name = "False negative species B", short.name="pB",
+pB <- unmarkedEstimate(name = "Detection species B", short.name="pB",
                        estimates = mle[(nOPA+nOPB+nGP+nPA+1):
                                        (nOPA+nOPB+nGP+nPA+nPB)],
                        covMat = covMat[(nOPA+nOPB+nGP+nPA+1):
@@ -265,7 +265,7 @@ estimateList <- unmarkedEstimateList(list(psiA=psiA, psiB=psiB,
 
 if(!fixgamma) {
     estimateList@estimates$gamma <-
-        unmarkedEstimate(name = "Interaction", short.name="psiB",
+        unmarkedEstimate(name = "Interaction", short.name="gamma",
                          estimates = mle[(nOPA+nOPB+1):(nOPA+nOPB+nGP)],
                          covMat = covMat[(nOPA+nOPB+1):(nOPA+nOPB+nGP),
                          (nOPA+nOPB+1):(nOPA+nOPB+nGP),
@@ -281,8 +281,8 @@ if(!fixgamma) {
 
 if(!fixfpA) {
     estimateList@estimates$fpA <-
-        unmarkedEstimate(name = "False positive species A",
-                         short.name="pA",
+        unmarkedEstimate(name = "Misidentification species A",
+                         short.name="fpA",
                          estimates = mle[(nOPA+nOPB+nGP+nPA+nPB+1):
                                          (nOPA+nOPB+nGP+nPA+nPB+nFPA)],
                        covMat = covMat[(nOPA+nOPB+nGP+nPA+nPB+1):
@@ -295,8 +295,8 @@ if(!fixfpA) {
 
 if(!fixfpB) {
     estimateList@estimates$fpB <-
-        unmarkedEstimate(name = "False positive species B",
-                         short.name="pB",
+        unmarkedEstimate(name = "Misidentification species B",
+                         short.name="fpB",
                          estimates = mle[(nOPA+nOPB+nGP+nPA+nPB+nFPA+1):
                                         (nOPA+nOPB+nGP+nPA+nPB+nFPA+nFPB)],
                          covMat = covMat[(nOPA+nOPB+nGP+nPA+nPB+nFPA+1):

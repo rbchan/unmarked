@@ -83,7 +83,7 @@ setClass("unmarkedFrameMPois",
 
 setClass("unmarkedFrameCo",
                 representation(numSpecies = "numeric",
-                               FP = "matrix"),
+                               xA = "matrix", xB = "matrix"),
 		contains = "unmarkedFrame")
 
 
@@ -183,7 +183,9 @@ unmarkedFrameOccuFP <- function(y, siteCovs = NULL, obsCovs = NULL, type, mapInf
 }
 
 unmarkedFrameCo <- function(yA, yB, yC=NULL, siteCovs=NULL, obsCovs=NULL,
-                            FP=NULL, mapInfo) {
+#                            FP=NULL,
+                            xA=NULL, xB=NULL,
+                            mapInfo) {
     RA <- nrow(yA)
     RB <- nrow(yB)
     JA <- ncol(yA)
@@ -198,15 +200,30 @@ unmarkedFrameCo <- function(yA, yB, yC=NULL, siteCovs=NULL, obsCovs=NULL,
                          obsToY=diag(JA), mapInfo=mapInfo)
     umf <- as(umf, "unmarkedFrameCo")
     umf@numSpecies <- 2
-    if(is.null(FP))
-        FP <- matrix(TRUE, RA, JA)
-    else {
-        if(!(all(is.logical(FP))))
-            stop("FP should be a TRUE/FALSE matrix indicating if false positive observations were possible at each site and survey occasion")
-        if(nrow(FP) != RA | ncol(FP) != JA)
-            stop("FP should be a matrix with ", RA, "rows, and ", JA, "columns")
+    if(is.null(xA)) {
+        xA <- matrix(NA, RA, JA)
+    } else {
+        if(length(dim(xA)) != 2)
+            stop("xA should be a matrix with", RA, "rows and", JA, "columns")
+        if(nrow(xA) != RA)
+            stop("xA should have", RA, "rows")
+        if(ncol(xA) != JA)
+            stop("xA should have", JA, "columns")
+        # TODO: Test if all are real
     }
-    umf@FP <- FP
+    if(is.null(xB)) {
+        xB <- matrix(NA, RB, JB)
+    } else {
+        if(length(dim(xB)) != 2)
+            stop("xB should be a matrix with", RA, "rows and", JA, "columns")
+        if(nrow(xB) != RA)
+            stop("xB should have", RA, "rows")
+        if(ncol(xB) != JA)
+            stop("xB should have", JA, "columns")
+        # TODO: Test if all are real
+    }
+    umf@xA <- xA
+    umf@xB <- xB
     return(umf)
 }
 

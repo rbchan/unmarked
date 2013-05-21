@@ -991,7 +991,8 @@ setMethod("getDesign", "unmarkedFrameCo",
                     Xgamma.offset=Xgamma.offset,
                     XpA.offset=XpA.offset, XpB.offset=XpB.offset,
                     XfpA.offset=XpA.offset, XfpB.offset=XfpB.offset,
-                    removed.sites=integer(0), FP=umf@FP)
+                    removed.sites=integer(0), #FP=umf@FP)
+                    xA=umf@xA, xB=umf@xB)
     return(out)
 })
 
@@ -1011,7 +1012,9 @@ setMethod("handleNA", "unmarkedFrameCo",
     y <- getY(umf, "array")
     yA <- y[,,1,drop=TRUE]
     yB <- y[,,2,drop=TRUE]
-    FP <- umf@FP
+#    FP <- umf@FP
+    xA <- umf@xA
+    xB <- umf@xB
 
     R <- nrow(yA)
     J <- ncol(yB)
@@ -1093,7 +1096,9 @@ setMethod("handleNA", "unmarkedFrameCo",
         XpsiA <- XpsiA[!sites.to.remove, ,drop = FALSE]
         XpsiB <- XpsiB[!sites.to.remove, ,drop = FALSE]
         Xgamma <- Xgamma[!sites.to.remove, ,drop = FALSE]
-        FP <- FP[!sites.to.remove, , drop=FALSE]
+#        FP <- FP[!sites.to.remove, , drop=FALSE]
+        xA <- xA[!sites.to.remove, , drop=FALSE]
+        xB <- xB[!sites.to.remove, , drop=FALSE]
         XpsiA.offset <- XpsiA.offset[!sites.to.remove]
         XpsiB.offset <- XpsiB.offset[!sites.to.remove]
         Xgamma.offset <- Xgamma.offset[!sites.to.remove]
@@ -1115,5 +1120,6 @@ setMethod("handleNA", "unmarkedFrameCo",
          Xgamma.offset=Xgamma.offset,
          XpA.offset=XpA.offset, XpB.offset=XpB.offset,
          XfpA.offset=XpA.offset, XfpB.offset=XfpB.offset,
-         removed.sites=which(sites.to.remove), FP=FP)
+         removed.sites=which(sites.to.remove), #FP=FP)
+         xA=xA, xB=xB)
     })

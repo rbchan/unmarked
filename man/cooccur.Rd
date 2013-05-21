@@ -1,5 +1,5 @@
-\name{cooccu}
-\alias{cooccu}
+\name{cooccur}
+\alias{cooccur}
 \title{
 Co-occurrence model
 }
@@ -8,7 +8,7 @@ A co-occurrence model allowing for (possibly) dependent occurrence,
 false negative errors, and false positive errors.
 }
 \usage{
-cooccu(psiformulaA = ~1, psiformulaB = ~1, gammaformula = NULL,
+cooccur(psiformulaA = ~1, psiformulaB = ~1, gammaformula = NULL,
        pformulaA = ~1, pformulaB = ~1, fpformulaA = NULL,
        fpformulaB = NULL, data, interaction = c("dominance", "general"),
        fpmodel = c("full", "confusion"), starts, method = "BFGS",
@@ -136,44 +136,44 @@ yA <- matrix(rbinom(nSites*nReps, 1, 0.1), nSites, nReps)
 yB <- matrix(rbinom(nSites*nReps, 1, 0.1), nSites, nReps)
 umf <- unmarkedFrameCo(yA=yA, yB=yB)
 
-fm1 <- cooccu(psiformulaA=~1, psiformulaB=~1, #gammaformula=~1,
+fm1 <- cooccur(psiformulaA=~1, psiformulaB=~1, #gammaformula=~1,
               data=umf)
 fm1
 
-fm2 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=~1,
+fm2 <- cooccur(psiformulaA=~1, psiformulaB=~1, gammaformula=~1,
               data=umf)
 fm2
 
-fm3 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
+fm3 <- cooccur(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
               pformulaA=~SppB,
               data=umf)
 fm3
 
-fm4 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
+fm4 <- cooccur(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
               pformulaB=~SppA, #se=FALSE,
               data=umf)
 fm4
 
-fm5 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
+fm5 <- cooccur(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
               fpformulaA=~SppB, #se=FALSE,
               data=umf)
 fm5
 
-fm6 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
+fm6 <- cooccur(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
               fpformulaA=~SppB,
               fpformulaB=~SppA, se=FALSE,
               starts=c(4, 4, 0, 0, -3, 0, -3, 0),
               data=umf)
 fm6
 
-fm7 <- cooccu(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
+fm7 <- cooccur(psiformulaA=~1, psiformulaB=~1, gammaformula=NULL,
               fpformulaA=~1,
               fpformulaB=~1, #se=FALSE,
               data=umf)
 fm7
 
-debugonce(cooccu)
-source("cooccu.R")
+debugonce(cooccur)
+source("cooccur.R")
 source("getDesign.R")
 source("unmarkedEstimate.R")
 source("unmarkedFrame.R")
