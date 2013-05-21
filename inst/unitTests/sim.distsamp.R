@@ -185,3 +185,199 @@ sum(gxhaz(seq(0, 20, by=increment), shape=5, scale=1) * increment)
 
 
 
+
+
+
+
+
+# numeric vs analytic integration
+
+# ------------------------------ Point transects ----------------------
+
+# Half-normal
+
+sigma <- 30
+br <- seq(0, 50, 10)
+
+# numeric
+hn1 <- integrate(grhn, br[1], br[2], sigma=sigma)$value
+a1 <- pi*br[2]^2
+p1 <- 2*pi*hn1/(a1)
+for(i in 2:(length(br)-1)) {
+    hn1[i] <- integrate(grhn, br[i], br[i+1], sigma=sigma)$value
+    a1[i] <- (pi*br[i+1]^2) - sum(a1[1:(i-1)])
+    p1[i] <- 2*pi*hn1[i]/a1[i]
+}
+p1
+
+
+# analytical
+hn2 <- sigma^2*(1 - exp(-br[2]^2/(2*sigma^2))) -
+    sigma^2*(1 - exp(-br[1]^2/(2*sigma^2)))
+a2 <- pi*br[2]^2
+p2 <- 2*pi*hn2/(a2)
+for(i in 2:(length(br)-1)) {
+    hn2[i] <- integrate(grhn, br[i], br[i+1], sigma=sigma)$value
+    a2[i] <- (pi*br[i+1]^2) - sum(a2[1:(i-1)])
+    p2[i] <- 2*pi*hn2[i]/a2[i]
+}
+p2
+
+p1
+
+
+
+
+
+
+# Negative exponential
+
+rate <- 30
+br <- seq(0, 50, 10)
+a <- pi*br[2]^2
+
+# numeric
+nexp1 <- integrate(unmarked:::grexp, br[1], br[2], rate=rate)$value
+p1 <- 2*pi*nexp1/a
+for(i in 2:(length(br)-1)) {
+    nexp1[i] <- integrate(unmarked:::grexp, br[i], br[i+1],
+                          rate=rate)$value
+    a[i] <- (pi*br[i+1]^2) - sum(a[1:(i-1)])
+    p1[i] <- 2*pi*nexp1[i]/a[i]
+}
+p1
+
+
+# analytical
+
+f <- function(x, a) exp(x*a)*x
+f(10, a=-1/30)
+grexp(10, 30)
+
+f(-10, a=1/30)
+grexp(10, 30)
+
+fp <- function(x, a) (x/a - 1/a^2)*exp(x*a)
+fp(10, a=-1/30)
+
+fp(10, a=.5)
+integrate(f, 0, 10, a=0.5)$value
+
+fp(10, a=-.5)
+integrate(f, 0, 10, a=-0.5)$value
+fp2 <- function(x, a) (a*x - 1)*exp(a*x) / a^2
+fp2(10, a=-.5)
+
+
+# Integral of exp(x*a)*x
+# f=exp(x*a)
+# F=x*(1-exp(x*a))
+# g=x
+# gp=x^2/2
+# rate*(1 - exp(-br[2]/rate))
+fp <- function(x, a) {
+    g <- x
+    gp <- x^2/2
+    F <- x*(1-exp(x*a))
+    F*g - 0.5*3*x^2#F*g - \int F*gp
+}
+
+
+fp2 <- function(x, a) (x/abs(a) - 1/a^2)*exp(x*abs(a))
+fp2(10, a=-.5)
+
+exp(r*(-1/rate))*r
+
+(10/(1/rate) - 1/(1/rate)^2)*exp(10*(-1/rate))
+
+(nexp2 <- rate^2*(1 - exp(-br[2]^2/(rate))) -
+    rate^2*(1 - exp(-br[1]^2/(rate))))
+p2 <- 2*pi*nexp2/a
+for(i in 2:(length(br)-1)) {
+    nexp2[i] <- integrate(grhn, br[i], br[i+1], rate=rate)$value
+    p2[i] <- 2*pi*nexp2[i]/a[i]
+}
+p2
+
+p1
+
+nexp1
+nexp2
+
+
+30^2*(1-exp(-10/30)) - 0.5*3*30^2*(1-exp(-10/30))
+
+
+# ------------------------------ Line transects ----------------------
+
+
+
+# Half-normal
+
+sigma <- 30
+br <- seq(0, 50, 10)
+a <- br[2]
+
+# numeric
+hn1 <- integrate(gxhn, br[1], br[2], sigma=sigma)$value
+p1 <- hn1/a
+for(i in 2:(length(br)-1)) {
+    hn1[i] <- integrate(gxhn, br[i], br[i+1], sigma=sigma)$value
+    a[i] <- br[i+1] - sum(a[1:(i-1)])
+    p1[i] <- hn1[i]/a[i]
+}
+p1
+
+
+# analytical
+hn2 <- sigma^2*(1 - exp(-br[2]^2/(2*sigma^2))) -
+    sigma^2*(1 - exp(-br[1]^2/(2*sigma^2)))
+p2 <- hn2/a
+for(i in 2:(length(br)-1)) {
+    hn2[i] <- sigma*(1 - exp(-br[i+1]/sigma)) -
+    sigma*(1 - exp(-br[i]/sigma))
+    p2[i] <- hn2[i]/a
+}
+p2
+
+p1
+
+hn1
+hn2
+
+
+
+
+
+# Negative exponential
+
+rate <- 30
+br <- seq(0, 50, 10)
+a <- br[2]
+
+# numeric
+nexp1 <- integrate(gxexp, br[1], br[2], rate=rate)$value
+p1 <- nexp1/a
+for(i in 2:(length(br)-1)) {
+    nexp1[i] <- integrate(gxexp, br[i], br[i+1], rate=rate)$value
+    a[i] <- br[i+1] - sum(a[1:(i-1)])
+    p1[i] <- nexp1[i]/a[i]
+}
+p1
+
+
+# analytical
+nexp2 <- rate*(1 - exp(-br[2]/rate)) -
+    rate*(1 - exp(-br[1]/rate))
+p2 <- nexp2/a
+for(i in 2:(length(br)-1)) {
+    nexp2[i] <- rate*(1 - exp(-br[i+1]/rate)) -
+    rate*(1 - exp(-br[i]/rate))
+    p2[i] <- nexp2[i]/a
+}
+p2
+
+p1
+
+nexp1
+nexp2

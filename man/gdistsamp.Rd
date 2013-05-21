@@ -144,8 +144,10 @@ umf <- unmarkedFrameGDS(y = y, survey="line", unitsIn="m",
     dist.breaks=breaks, tlength=rep(transect.length, R), numPrimary=T)
 summary(umf)
 
+
 # Fit the model
-m1 <- gdistsamp(~1, ~1, ~1, umf, output="density")
+m1 <- gdistsamp(~1, ~1, ~1, umf, output="density", K=50)
+
 summary(m1)
 
 

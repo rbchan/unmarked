@@ -135,9 +135,10 @@ backTransform(m, type="det")
 
 
 # Point-transect, half-normal
-nsim1 <- 10
+nsim1 <- 2
 simout1 <- matrix(NA, nsim1, 3)
 colnames(simout1) <- c('lambda', 'phi', 'sigma')
+set.seed(4059)
 for(i in 1:nsim1) {
     cat("sim1", i, "\n")
     breaks <- seq(0, 50, by=10)
@@ -146,6 +147,8 @@ for(i in 1:nsim1) {
     umf1 <- unmarkedFrameGDS(y = y1, survey="point",
         unitsIn="m", dist.breaks=breaks, numPrimary=T)
     m1 <- gdistsamp(~1, ~1, ~1, umf1, output="density", K=100,
+                    control=list(trace=TRUE, REPORT=1),
+#                    lower=c(-Inf,-5,-Inf), upper=c(Inf, 5, Inf),
                     starts=c(3,0.5,3), se=FALSE)
     e <- coef(m1)
     simout1[i,] <- c(exp(e[1]), plogis(e[2]), exp(e[3]))

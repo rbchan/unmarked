@@ -90,8 +90,10 @@ ovenFrame <- unmarkedFrameMPois(ovendata.list$data,
 summary(ovenFrame)
 
 
+\dontrun{
 # Set up data for colext()
 frogUMF <- formatMult(masspcru)
 summary(frogUMF)
+}
 
 }

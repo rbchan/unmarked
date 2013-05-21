@@ -8,7 +8,7 @@
 
 \arguments{
     \item{formula}{double right-hand side formula describing covariates of
-        detection and occupancy in that order.}
+        detection and abundance, in that order.}
     \item{data}{Object of class \code{\link{unmarkedFrameOccu}} supplying data
         to the model.}
     \item{K}{the upper summation index used to numerically integrate out the

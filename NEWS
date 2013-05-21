@@ -1,0 +1,25 @@
+All changes can be found here:
+https://github.com/rbchan/unmarked/commits/master.
+The following is just a summary.
+
+
+Version 0.10-0
+
+  Bug fixes
+
+  o  Fixed NA handling in occuFP()
+
+  o  Fixed integration setting in C++ code that were causing segfaults
+     when calling distsamp
+
+  o  Replace raster:::layerNames() with raster:::names()
+
+
+  New features
+
+  o  distsamp() and gdistsamp() should be faster and more stable for
+     some keyfun/survey combinations
+
+
+
+

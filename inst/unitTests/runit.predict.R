@@ -29,7 +29,7 @@ test.occu <- function() {
     checkException(predict(fm1, type="state", newdata=r1))
     s1 <- stack(r1)
     checkException(predict(fm1, type="state", newdata=s1))
-    layerNames(s1) <- c("x3")
+    names(s1) <- c("x3")
     E1.5 <- predict(fm1, type="det", newdata=s1)
     E1.5 <- predict(fm1, type="det", newdata=s1, appendData=TRUE)
 

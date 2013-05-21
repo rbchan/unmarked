@@ -83,13 +83,14 @@ used to manipulate the returned object.
 \section{Warning}{
   Empirical Bayes methods can underestimate the variance of the
   posterior distribution because they do not account for uncertainty in
-  the hyperparameters (lambda or psi). However, we have not found this
-  to be the case in a set of limited simulations studies that can be
-  found in the inst/unitTests directory of unmarked. Simulations do,
-  however, indicate that the posterior mode can exhibit slight (3-5
-  percent) negative bias as a point
-  estimator of site-specific abundance. It appears to be safer to use
-  the posterior mean even though this will not be an integer in general.
+  the hyperparameters (lambda or psi). Eventually, we hope to add
+  methods to account for the uncertainty of the hyperparameters.
+
+  Note also that the posterior mode appears to exhibit some bias as an
+  estimator or abundance. Consider using the posterior mean instead,
+  even though it will not be an integer in general. More
+  simulation studies are needed to evaluate the performance of empirical
+  Bayes methods for these models.
 }
 
 \author{Richard Chandler \email{rchandler@usgs.gov}}
@@ -137,7 +138,6 @@ plot(re, subset=site \%in\% c(1:10), layout=c(5, 2), xlim=c(-1,20))
 # Compare estimates to truth
 sum(N)
 sum(bup(re))
-colSums(confint(re))
 
 # Extract all values in convenient formats
 post.df <- as(re, "data.frame")

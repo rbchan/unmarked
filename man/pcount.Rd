@@ -110,7 +110,6 @@ plogis(coef(fm1, type="det")) # Should be close to p
 (fm1re <- ranef(fm1))
 plot(fm1re, subset=site \%in\% 1:25, xlim=c(-1,40))
 sum(bup(fm1re))         # Estimated population size
-colSums(confint(fm1re)) # and 95\% CI
 sum(N)                  # Actual population size
 
 

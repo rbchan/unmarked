@@ -165,7 +165,7 @@ halfnorm = {
             NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda,
                 size=exp(pars[nP]))))
         for(i in 1:M) {
-            mn <- matrix(0, lk, T)
+            mn <- matrix(-Inf, lk, T)
             for(t in 1:T) {
                 if(all(naflag[i,t,]))
                     next
@@ -179,16 +179,22 @@ halfnorm = {
                     },
                 point = {
                     for(j in 1:J) {
-                        int <- integrate(grhn, db[j], db[j+1],
-                            sigma=sigma[i, t], rel.tol=rel.tol,
-                            stop.on.error=FALSE, subdivisions=50)
-                        if(!identical(int$message, "OK"))
-                            int$value <- NA
-                        p[j] <- int$value * 2 * pi / a[i,j]
+#                        int <- integrate(grhn, db[j], db[j+1],
+#                            sigma=sigma[i, t], rel.tol=rel.tol,
+#                            stop.on.error=FALSE, subdivisions=50)
+#                        if(!identical(int$message, "OK"))
+#                            int$value <- NA
+                        int <- sigma[i,t]^2 *
+                            (1-exp(-db[j+1]^2 / (2*sigma[i,t]^2))) -
+                                sigma[i,t]^2 *
+                                    (1-exp(-db[j]^2 / (2*sigma[i,t]^2)))
+#                        p[j] <- int$value * 2 * pi / a[i,j]
+                        p[j] <- int * 2 * pi / a[i,j]
                         }
                     })
                 cp <- p * u[i,] * phi[i, t]
                 cp[J+1] <- 1 - sum(cp)
+
                 mn[, t] <- lfac.k - lfac.kmyt[i, t,] +
                     sum(y[i, t, !naflag[i,t,]] *
                     log(cp[which(!naflag[i,t,])])) +
@@ -234,12 +240,15 @@ exp = {
                 switch(survey,
                 line = {
                     for(j in 1:J) {
-                        int <- integrate(gxexp, db[j], db[j+1],
-                             rate=rate[i,t], rel.tol=rel.tol,
-                             stop.on.error=FALSE, subdivisions=50)
-                        if(!identical(int$message, "OK"))
-                            int$value <- NA
-                        p[j] <- int$value / w[j]
+#                        int <- integrate(gxexp, db[j], db[j+1],
+#                             rate=rate[i,t], rel.tol=rel.tol,
+#                             stop.on.error=FALSE, subdivisions=50)
+#                        if(!identical(int$message, "OK"))
+#                            int$value <- NA
+                        int <- rate[i,t]*(1-exp(-db[j+1]/rate[i,t])) -
+                            rate[i,t]*(1-exp(-db[j]/rate[i,t]))
+#                        p[j] <- int$value / w[j]
+                        p[j] <- int / w[j]
                         }
                     },
                 point = {

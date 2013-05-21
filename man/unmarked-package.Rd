@@ -17,7 +17,7 @@
 \details{\tabular{ll}{
 Package: \tab unmarked\cr
 Type: \tab Package\cr
-Version: \tab 0.9-9\cr
+Version: \tab 0.10-0\cr
 License: \tab GPL (>= 3)\cr
 }
 
@@ -140,7 +140,6 @@ modSel(fms)
 
 # Empirical Bayes estimates of the number of sites occupied
 sum(bup(ranef(fm3), stat="mode"))     # Sum of posterior modes
-colSums(confint(ranef(fm3)))          # 95\% CI
 sum(z)                                # Actual
 
 

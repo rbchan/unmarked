@@ -158,7 +158,7 @@ attr(sc, "scaled:scale")
 ele.s <- (elevation-1189)/640
 forest.s <- (forest-34.7)/27.7
 ef <- stack(ele.s, forest.s)
-layerNames(ef) <- c("ele", "forest")
+names(ef) <- c("ele", "forest")
 plot(ef, col=terrain.colors(100))
 @
 \begin{figure}
@@ -168,7 +168,7 @@ plot(ef, col=terrain.colors(100))
 \label{fig:ef}
 \end{figure}
 
-It is important to assign \verb+layerNames+
+It is important to assign \verb+names+
 that exactly match the covariate names used to fit the model. This
 is required by the \verb+predict+ function as demonstrated later.
 The \verb+predict+ function is useful for computing
@@ -196,7 +196,7 @@ print(spplot(psi, col.regions=terrain.colors(100)))
 As of version 0.9-6, the \verb+predict+ method in \texttt{unmarked}
 can make predictions using an object of class \verb+RasterStack+ from the
 \texttt{raster} package. As mentioned previously, the rasters must be
-named, perhaps by using the \verb+layerNames(someraster) <- somename+
+named, perhaps by using the \verb+names(someraster) <- somename+
 method. The object
 returned by \verb+predict+ is another raster stack with rasters for
 the expected values of the parameter of interest, the standard errors,
@@ -347,7 +347,7 @@ elev.s <- (elev-202)/125
 forest.s <- (forest-0.0673)/0.137
 chap.s <- (chap-0.270)/0.234
 habitat <- stack(elev.s, forest.s, chap.s, area.raster)
-layerNames(habitat) <- c("elevation", "forest", "chaparral", "area")
+names(habitat) <- c("elevation", "forest", "chaparral", "area")
 @
 
 
