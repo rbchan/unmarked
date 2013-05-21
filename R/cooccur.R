@@ -1,11 +1,11 @@
-cooccu <- function(psiformulaA = ~1, psiformulaB = ~1,
-                   gammaformula = NULL,
-                   pformulaA = ~1, pformulaB = ~1,
-                   fpformulaA = NULL, fpformulaB = NULL,
-                   data,
-                   interaction=c("dominance", "general"),
-                   fpmodel=c("full", "confusion"),
-                   starts, method="BFGS", se=TRUE, ...) {
+cooccur <- function(psiformulaA = ~1, psiformulaB = ~1,
+                    gammaformula = NULL,
+                    pformulaA = ~1, pformulaB = ~1,
+                    fpformulaA = NULL, fpformulaB = NULL,
+                    data,
+                    interaction=c("dominance", "general"),
+                    fpmodel=c("full", "confusion"),
+                    starts, method="BFGS", se=TRUE, ...) {
 
 interaction <- match.arg(interaction)
 fpmodel <- match.arg(fpmodel)
@@ -44,7 +44,9 @@ XpB.offset <- D$XpB.offset
 XfpA.offset <- D$XfpA.offset
 XfpB.offset <- D$XfpB.offset
 removed <- D$removed.sites
-FP <- D$FP # Should be logical. TRUE if Pr(fp)=0
+#FP <- D$FP # Should be logical. TRUE if Pr(fp)=0
+xA <- D$xA
+xB <- D$xB
 
 if(is.null(psiformulaA) | is.null(psiformulaB) |
    is.null(pformulaA) | is.null(pformulaB))
@@ -152,10 +154,10 @@ nll <- function(pars) {
             fpA.B0 <- matrix(plogis(XfpA %*% fpApars.B0 + XfpA.offset),
                              R, J, byrow=TRUE)
         } else fpA.B0 <- fpA.B1
-        if(any(!FP)) {
-            fpA.B1[!FP] <- 0
-            fpA.B0[!FP] <- 0
-        }
+#        if(any(!FP)) {
+#            fpA.B1[!FP] <- 0
+#            fpA.B0[!FP] <- 0
+#        }
     }
     # False-positive prob of B, possibly dependent upon presence of A
     if(fixfpB) {
@@ -170,21 +172,31 @@ nll <- function(pars) {
             fpB.A0 <- matrix(plogis(XfpB %*% fpBpars.A0 + XfpB.offset),
                              R, J, byrow=TRUE)
         } else fpB.A0 <- fpB.A1
-        if(any(!FP)) {
-            fpB.A1[!FP] <- 0
-            fpB.A0[!FP] <- 0
-        }
+#        if(any(!FP)) {
+#            fpB.A1[!FP] <- 0
+#            fpB.A0[!FP] <- 0
+#        }
     }
     # Conditional on z, observation probs
+    # Known FPs
+    prFP.A.B0 <- dbinom(xA, 1, fpA.B0, log=TRUE)
+    prFP.A.B1 <- dbinom(xA, 1, fpA.B1, log=TRUE)
+    prFP.B.A0 <- dbinom(xB, 1, fpB.A0, log=TRUE)
+    prFP.B.A1 <- dbinom(xB, 1, fpB.A1, log=TRUE)
+    prFP.A.B0[is.na(prFP.A.B0)] <- 0
+    prFP.A.B1[is.na(prFP.A.B1)] <- 0
+    prFP.B.A0[is.na(prFP.B.A0)] <- 0
+    prFP.B.A1[is.na(prFP.B.A1)] <- 0
+
     bin.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +
         dbinom(yB, 1, pB.A1, log=TRUE)
     bin.A1.B0 <- dbinom(yA, 1, pA.B0, log=TRUE) +
-        dbinom(yB, 1, fpB.A0, log=TRUE)
+        dbinom(yB, 1, fpB.A0, log=TRUE) + prFP.B.A1
     bin.A0.B1 <- dbinom(yA, 1, fpA.B1, log=TRUE) +
-        dbinom(yB, 1, pB.A1, log=TRUE)
+        dbinom(yB, 1, pB.A1, log=TRUE) + prFP.A.B1
     if(identical(fpmodel, "full"))
         bin.A0.B0 <- dbinom(yA, 1, fpA.B0, log=TRUE) +
-            dbinom(yB, 1, fpB.A0, log=TRUE)
+            dbinom(yB, 1, fpB.A0, log=TRUE) + prFP.A.B0 + prFP.B.A0
     else if(identical(fpmodel, "confusion"))
         bin.A0.B0 <- dbinom(yA, 1, 0, log=TRUE) +
             dbinom(yB, 1, 0, log=TRUE)
