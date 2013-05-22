@@ -48,6 +48,9 @@ removed <- D$removed.sites
 xA <- D$xA
 xB <- D$xB
 
+anyXA <- any(!is.na(xA))
+anyXB <- any(!is.na(xB))
+
 if(is.null(psiformulaA) | is.null(psiformulaB) |
    is.null(pformulaA) | is.null(pformulaB))
     stop("Only gammaformulaA, fpformulaA, and fpformulaB can be NULL")
@@ -179,14 +182,22 @@ nll <- function(pars) {
     }
     # Conditional on z, observation probs
     # Known FPs
-    prFP.A.B0 <- dbinom(xA, 1, fpA.B0, log=TRUE)
-    prFP.A.B1 <- dbinom(xA, 1, fpA.B1, log=TRUE)
-    prFP.B.A0 <- dbinom(xB, 1, fpB.A0, log=TRUE)
-    prFP.B.A1 <- dbinom(xB, 1, fpB.A1, log=TRUE)
-    prFP.A.B0[is.na(prFP.A.B0)] <- 0
-    prFP.A.B1[is.na(prFP.A.B1)] <- 0
-    prFP.B.A0[is.na(prFP.B.A0)] <- 0
-    prFP.B.A1[is.na(prFP.B.A1)] <- 0
+    if(anyXA) {
+        prFP.A.B1 <- dbinom(xA, 1, fpA.B1, log=TRUE)
+        prFP.A.B1[is.na(prFP.A.B1)] <- 0
+        if(identical(fpmodel, "full")) {
+            prFP.A.B0 <- dbinom(xA, 1, fpA.B0, log=TRUE)
+            prFP.A.B0[is.na(prFP.A.B0)] <- 0
+        }
+    } else prFP.A.B1 <- prFP.A.B0 <- matrix(0L, R, J)
+    if(anyXB) {
+        prFP.B.A1 <- dbinom(xB, 1, fpB.A1, log=TRUE)
+        prFP.B.A1[is.na(prFP.B.A1)] <- 0
+        if(identical(fpmodel, "full")) {
+            prFP.B.A0 <- dbinom(xB, 1, fpB.A0, log=TRUE)
+            prFP.B.A0[is.na(prFP.B.A0)] <- 0
+        }
+    } else prFP.B.A1 <- prFP.B.A0 <- matrix(0L, R, J)
 
     bin.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +
         dbinom(yB, 1, pB.A1, log=TRUE)
