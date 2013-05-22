@@ -182,22 +182,37 @@ nll <- function(pars) {
     }
     # Conditional on z, observation probs
     # Known FPs
+    # xA=1 is the event that zA=0 and yA=1
+    # Pr(xA=1) = Pr(xA=1|zA=0)*Pr(zA=0)
     if(anyXA) {
-        prFP.A.B1 <- dbinom(xA, 1, fpA.B1, log=TRUE)
+        prFP.A.B1 <- dbinom(xA, 1, fpA.B1*rowSums(phi[,3:4]), log=TRUE)
         prFP.A.B1[is.na(prFP.A.B1)] <- 0
         if(identical(fpmodel, "full")) {
-            prFP.A.B0 <- dbinom(xA, 1, fpA.B0, log=TRUE)
+            prFP.A.B0 <- dbinom(xA, 1, fpA.B0*rowSums(phi[,3:4]), log=TRUE)
             prFP.A.B0[is.na(prFP.A.B0)] <- 0
         }
     } else prFP.A.B1 <- prFP.A.B0 <- matrix(0L, R, J)
     if(anyXB) {
-        prFP.B.A1 <- dbinom(xB, 1, fpB.A1, log=TRUE)
+        prFP.B.A1 <- dbinom(xB, 1, fpB.A1*rowSums(phi[,c(2,4)]), log=TRUE)
         prFP.B.A1[is.na(prFP.B.A1)] <- 0
         if(identical(fpmodel, "full")) {
-            prFP.B.A0 <- dbinom(xB, 1, fpB.A0, log=TRUE)
+            prFP.B.A0 <- dbinom(xB, 1, fpB.A0*rowSums(phi[,c(2,4)]), log=TRUE)
             prFP.B.A0[is.na(prFP.B.A0)] <- 0
         }
     } else prFP.B.A1 <- prFP.B.A0 <- matrix(0L, R, J)
+
+    pr.y1
+    pr.y2
+    pr.y3
+    pr.y4
+    pr.x1
+    pr.x2
+    pr.x3
+    pr.x4
+    mu <- cbind(exp(rowSums(pr.y1 + pr.x1)),
+                exp(rowSums(pr.y2 + pr.x2)),
+                exp(rowSums(pr.y3 + pr.x3)),
+                exp(rowSums(pr.y3 + pr.x4)))
 
     bin.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +
         dbinom(yB, 1, pB.A1, log=TRUE)
