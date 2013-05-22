@@ -201,18 +201,19 @@ nll <- function(pars) {
         }
     } else prFP.B.A1 <- prFP.B.A0 <- matrix(0L, R, J)
 
-    pr.y1
-    pr.y2
-    pr.y3
-    pr.y4
-    pr.x1
-    pr.x2
-    pr.x3
-    pr.x4
-    mu <- cbind(exp(rowSums(pr.y1 + pr.x1)),
-                exp(rowSums(pr.y2 + pr.x2)),
-                exp(rowSums(pr.y3 + pr.x3)),
-                exp(rowSums(pr.y3 + pr.x4)))
+    ## pr.y1
+    ## pr.y2
+    ## pr.y3
+    ## pr.y4
+    ## pr.x1
+    ## pr.x2
+    ## pr.x3
+    ## pr.x4
+    ## # Or should it be mu1 and mu2 and L <- rowSums(phi*mu1 + phi*mu2)?
+    ## mu <- cbind(exp(rowSums(pr.y1 + pr.x1)),
+    ##             exp(rowSums(pr.y2 + pr.x2)),
+    ##             exp(rowSums(pr.y3 + pr.x3)),
+    ##             exp(rowSums(pr.y3 + pr.x4)))
 
     bin.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +
         dbinom(yB, 1, pB.A1, log=TRUE)
