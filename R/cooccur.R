@@ -184,23 +184,22 @@ nll <- function(pars) {
     # Known FPs
     # xA=1 is the event that zA=0 and yA=1
     # Pr(xA=1) = Pr(xA=1|zA=0)*Pr(zA=0)
-    if(anyXA) {
-        prFP.A.B1 <- dbinom(xA, 1, fpA.B1*rowSums(phi[,3:4]), log=TRUE)
-        prFP.A.B1[is.na(prFP.A.B1)] <- 0
-        if(identical(fpmodel, "full")) {
-            prFP.A.B0 <- dbinom(xA, 1, fpA.B0*rowSums(phi[,3:4]), log=TRUE)
-            prFP.A.B0[is.na(prFP.A.B0)] <- 0
-        }
-    } else prFP.A.B1 <- prFP.A.B0 <- matrix(0L, R, J)
-    if(anyXB) {
-        prFP.B.A1 <- dbinom(xB, 1, fpB.A1*rowSums(phi[,c(2,4)]), log=TRUE)
-        prFP.B.A1[is.na(prFP.B.A1)] <- 0
-        if(identical(fpmodel, "full")) {
-            prFP.B.A0 <- dbinom(xB, 1, fpB.A0*rowSums(phi[,c(2,4)]), log=TRUE)
-            prFP.B.A0[is.na(prFP.B.A0)] <- 0
-        }
-    } else prFP.B.A1 <- prFP.B.A0 <- matrix(0L, R, J)
-
+    ## if(anyXA) {
+    ##     prFP.A.B1 <- dbinom(xA, 1, fpA.B1*rowSums(phi[,3:4]), log=TRUE)
+    ##     prFP.A.B1[is.na(prFP.A.B1)] <- 0
+    ##     if(identical(fpmodel, "full")) {
+    ##         prFP.A.B0 <- dbinom(xA, 1, fpA.B0*rowSums(phi[,3:4]), log=TRUE)
+    ##         prFP.A.B0[is.na(prFP.A.B0)] <- 0
+    ##     }
+    ## } else prFP.A.B1 <- prFP.A.B0 <- matrix(0L, R, J)
+    ## if(anyXB) {
+    ##     prFP.B.A1 <- dbinom(xB, 1, fpB.A1*rowSums(phi[,c(2,4)]), log=TRUE)
+    ##     prFP.B.A1[is.na(prFP.B.A1)] <- 0
+    ##     if(identical(fpmodel, "full")) {
+    ##         prFP.B.A0 <- dbinom(xB, 1, fpB.A0*rowSums(phi[,c(2,4)]), log=TRUE)
+    ##         prFP.B.A0[is.na(prFP.B.A0)] <- 0
+    ##     }
+    ## } else prFP.B.A1 <- prFP.B.A0 <- matrix(0L, R, J)
     ## pr.y1
     ## pr.y2
     ## pr.y3
@@ -215,28 +214,47 @@ nll <- function(pars) {
     ##             exp(rowSums(pr.y3 + pr.x3)),
     ##             exp(rowSums(pr.y3 + pr.x4)))
 
-    bin.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +
+    prY.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE) +
         dbinom(yB, 1, pB.A1, log=TRUE)
-    bin.A1.B0 <- dbinom(yA, 1, pA.B0, log=TRUE) +
-        dbinom(yB, 1, fpB.A0, log=TRUE) + prFP.B.A1
-    bin.A0.B1 <- dbinom(yA, 1, fpA.B1, log=TRUE) +
-        dbinom(yB, 1, pB.A1, log=TRUE) + prFP.A.B1
+    prY.A1.B0 <- dbinom(yA, 1, pA.B0, log=TRUE) +
+#        dbinom(yB, 1, fpB.A0, log=TRUE) #+ prFP.B.A1
+        dbinom(yB, 1, fpB.A1, log=TRUE) #+ prFP.B.A1
+    prY.A0.B1 <- dbinom(yA, 1, fpA.B1, log=TRUE) +
+#        dbinom(yB, 1, pB.A1, log=TRUE) #+ prFP.A.B1
+        dbinom(yB, 1, pB.A0, log=TRUE) #+ prFP.A.B1
     if(identical(fpmodel, "full"))
-        bin.A0.B0 <- dbinom(yA, 1, fpA.B0, log=TRUE) +
-            dbinom(yB, 1, fpB.A0, log=TRUE) + prFP.A.B0 + prFP.B.A0
+        prY.A0.B0 <- dbinom(yA, 1, fpA.B0, log=TRUE) +
+            dbinom(yB, 1, fpB.A0, log=TRUE) #+ prFP.A.B0 + prFP.B.A0
     else if(identical(fpmodel, "confusion"))
-        bin.A0.B0 <- dbinom(yA, 1, 0, log=TRUE) +
-            dbinom(yB, 1, 0, log=TRUE)
+        prY.A0.B0 <- dbinom(yA, 1, 0, log=TRUE) +
+          dbinom(yB, 1, 0, log=TRUE)
+    prX.A1.B1 <- dbinom(xA, 1, pA.B1, log=TRUE) +
+        dbinom(xB, 1, pB.A1, log=TRUE)
+    prX.A1.B0 <- dbinom(xA, 1, pA.B0, log=TRUE) +
+        dbinom(xB, 1, 0, log=TRUE) #+ prFP.B.A1
+    prX.A0.B1 <- dbinom(xA, 1, 0, log=TRUE) +
+#        dbinom(xB, 1, pB.A1, log=TRUE) #+ prFP.A.B1
+        dbinom(xB, 1, pB.A0, log=TRUE) #+ prFP.A.B1
+    prX.A0.B0 <- dbinom(xA, 1, 0, log=TRUE) +
+      dbinom(xB, 1, 0, log=TRUE) #+ prFP.A.B0 + prFP.B.A0
     # Handle NAs
     # Shouldn't be NAs in phi since those sites should've been removed
-    bin.A1.B1[is.na(bin.A1.B1)] <- 0
-    bin.A1.B0[is.na(bin.A1.B0)] <- 0
-    bin.A0.B1[is.na(bin.A0.B1)] <- 0
-    bin.A0.B0[is.na(bin.A0.B0)] <- 0
-    mu <- cbind(exp(rowSums(bin.A1.B1)),
-                exp(rowSums(bin.A1.B0)),
-                exp(rowSums(bin.A0.B1)),
-                exp(rowSums(bin.A0.B0)))
+    prY.A1.B1[is.na(prY.A1.B1)] <- 0
+    prY.A1.B0[is.na(prY.A1.B0)] <- 0
+    prY.A0.B1[is.na(prY.A0.B1)] <- 0
+    prY.A0.B0[is.na(prY.A0.B0)] <- 0
+    prX.A1.B1[is.na(prX.A1.B1)] <- 0
+    prX.A1.B0[is.na(prX.A1.B0)] <- 0
+    prX.A0.B1[is.na(prX.A0.B1)] <- 0
+    prX.A0.B0[is.na(prX.A0.B0)] <- 0
+    mu <- cbind(exp(rowSums(prY.A1.B1 + prX.A1.B1)),
+                exp(rowSums(prY.A1.B0 + prX.A1.B0)),
+                exp(rowSums(prY.A0.B1 + prX.A0.B1)),
+                exp(rowSums(prY.A0.B0 + prX.A0.B0)))
+#    mu <- cbind(exp(rowSums(prY.A1.B1)),
+#                exp(rowSums(prY.A1.B0)),
+#                exp(rowSums(prY.A0.B1)),
+#                exp(rowSums(prY.A0.B0)))
     L <- rowSums(phi * mu)
     -sum(log(L))
    }
