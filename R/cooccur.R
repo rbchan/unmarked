@@ -228,15 +228,30 @@ nll <- function(pars) {
     else if(identical(fpmodel, "confusion"))
         prY.A0.B0 <- dbinom(yA, 1, 0, log=TRUE) +
           dbinom(yB, 1, 0, log=TRUE)
-    prX.A1.B1 <- dbinom(xA, 1, pA.B1, log=TRUE) +
-        dbinom(xB, 1, pB.A1, log=TRUE)
-    prX.A1.B0 <- dbinom(xA, 1, pA.B0, log=TRUE) +
-        dbinom(xB, 1, 0, log=TRUE) #+ prFP.B.A1
-    prX.A0.B1 <- dbinom(xA, 1, 0, log=TRUE) +
+#    prX.A1.B1 <- dbinom(xA, 1, pA.B1*yA, log=TRUE) +
+#        dbinom(xB, 1, pB.A1*yB, log=TRUE)
+#    prX.A1.B0 <- dbinom(xA, 1, pA.B0*yA, log=TRUE) +
+#        dbinom(xB, 1, 0, log=TRUE) #+ prFP.B.A1
+#    prX.A0.B1 <- dbinom(xA, 1, 0, log=TRUE) +
 #        dbinom(xB, 1, pB.A1, log=TRUE) #+ prFP.A.B1
-        dbinom(xB, 1, pB.A0, log=TRUE) #+ prFP.A.B1
-    prX.A0.B0 <- dbinom(xA, 1, 0, log=TRUE) +
-      dbinom(xB, 1, 0, log=TRUE) #+ prFP.A.B0 + prFP.B.A0
+#        dbinom(xB, 1, pB.A0*yB, log=TRUE) #+ prFP.A.B1
+#    prX.A0.B0 <- dbinom(xA, 1, 0, log=TRUE) +
+#      dbinom(xB, 1, 0, log=TRUE) #+ prFP.A.B0 + prFP.B.A0
+    prX.A1.B1 <- dbinom(xA, 1, 0, log=TRUE) +
+        dbinom(xB, 1, 0, log=TRUE)
+    prX.A1.B0 <- dbinom(xA, 1, 0, log=TRUE) +
+        dbinom(xB, 1, yB*fpB.A1, log=TRUE) #+ prFP.B.A1
+    prX.A0.B1 <- dbinom(xA, 1, yA*fpA.B1, log=TRUE) +
+#        dbinom(xB, 1, pB.A1, log=TRUE) #+ prFP.A.B1
+        dbinom(xB, 1, 0, log=TRUE) #+ prFP.A.B1
+    if(identical(fpmodel, "full"))
+        prX.A0.B0 <- dbinom(xA, 1, yA*fpA.B0, log=TRUE) +
+            dbinom(xB, 1, yB*fpB.A0, log=TRUE) #+ prFP.A.B0 + prFP.B.A0
+    else if(identical(fpmodel, "confusion"))
+        prX.A0.B0 <- dbinom(xA, 1, 0, log=TRUE) +
+          dbinom(xB, 1, 0, log=TRUE)
+#    prX.A0.B0 <- dbinom(xA, 1, 0, log=TRUE) +
+#      dbinom(xB, 1, 0, log=TRUE) #+ prFP.A.B0 + prFP.B.A0
     # Handle NAs
     # Shouldn't be NAs in phi since those sites should've been removed
     prY.A1.B1[is.na(prY.A1.B1)] <- 0
