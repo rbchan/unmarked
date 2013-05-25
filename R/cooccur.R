@@ -146,73 +146,41 @@ nll <- function(pars) {
     # False-positive prob of A, possibly dependent upon presence of B
     if(fixfpA) {
         fpA.B1 <- fpA.B0 <- matrix(0, R, J)
-    } else {
-#        browser()
-        fpApars <- fpApars.B0 <- pars[(nOPA+nOPB+nGP+nPA+nPB+1):
-                                      (nOPA+nOPB+nGP+nPA+nPB+nFPA)]
-        fpA.B1 <- matrix(plogis(XfpA %*% fpApars + XfpA.offset),
-                         R, J, byrow=TRUE)
-        if("SppB" %in% names(fpApars)) {
+        } else {
+          fpApars <- fpApars.B0 <- pars[(nOPA+nOPB+nGP+nPA+nPB+1):
+                                        (nOPA+nOPB+nGP+nPA+nPB+nFPA)]
+          fpA.B1 <- matrix(plogis(XfpA %*% fpApars + XfpA.offset),
+                           R, J, byrow=TRUE)
+          if("SppB" %in% names(fpApars)) {
             fpApars.B0["SppB"] <- 0
             fpA.B0 <- matrix(plogis(XfpA %*% fpApars.B0 + XfpA.offset),
                              R, J, byrow=TRUE)
-        } else fpA.B0 <- fpA.B1
-#        if(any(!FP)) {
-#            fpA.B1[!FP] <- 0
-#            fpA.B0[!FP] <- 0
-#        }
-    }
+            } else {
+              if(fpmodel=="full")
+                fpA.B0 <- fpA.B1
+              if(fpmodel=="confusion")
+                fpA.B0 <- 0
+              }
+          }
     # False-positive prob of B, possibly dependent upon presence of A
     if(fixfpB) {
-        fpB.A1 <- fpB.A0 <- matrix(0, R, J)
-    } else {
+      fpB.A1 <- fpB.A0 <- matrix(0, R, J)
+      } else {
         fpBpars <- fpBpars.A0 <- pars[(nOPA+nOPB+nGP+nPA+nPB+nFPA+1):
                                       (nOPA+nOPB+nGP+nPA+nPB+nFPA+nFPB)]
         fpB.A1 <- matrix(plogis(XfpB %*% fpBpars + XfpB.offset),
                          R, J, byrow=TRUE)
         if("SppA" %in% names(fpBpars.A0)) {
-            fpBpars.A0["SppA"] <- 0
-            fpB.A0 <- matrix(plogis(XfpB %*% fpBpars.A0 + XfpB.offset),
-                             R, J, byrow=TRUE)
-        } else fpB.A0 <- fpB.A1
-#        if(any(!FP)) {
-#            fpB.A1[!FP] <- 0
-#            fpB.A0[!FP] <- 0
-#        }
-    }
-    # Conditional on z, observation probs
-    # Known FPs
-    # xA=1 is the event that zA=0 and yA=1
-    # Pr(xA=1) = Pr(xA=1|zA=0)*Pr(zA=0)
-    ## if(anyXA) {
-    ##     prFP.A.B1 <- dbinom(xA, 1, fpA.B1*rowSums(phi[,3:4]), log=TRUE)
-    ##     prFP.A.B1[is.na(prFP.A.B1)] <- 0
-    ##     if(identical(fpmodel, "full")) {
-    ##         prFP.A.B0 <- dbinom(xA, 1, fpA.B0*rowSums(phi[,3:4]), log=TRUE)
-    ##         prFP.A.B0[is.na(prFP.A.B0)] <- 0
-    ##     }
-    ## } else prFP.A.B1 <- prFP.A.B0 <- matrix(0L, R, J)
-    ## if(anyXB) {
-    ##     prFP.B.A1 <- dbinom(xB, 1, fpB.A1*rowSums(phi[,c(2,4)]), log=TRUE)
-    ##     prFP.B.A1[is.na(prFP.B.A1)] <- 0
-    ##     if(identical(fpmodel, "full")) {
-    ##         prFP.B.A0 <- dbinom(xB, 1, fpB.A0*rowSums(phi[,c(2,4)]), log=TRUE)
-    ##         prFP.B.A0[is.na(prFP.B.A0)] <- 0
-    ##     }
-    ## } else prFP.B.A1 <- prFP.B.A0 <- matrix(0L, R, J)
-    ## pr.y1
-    ## pr.y2
-    ## pr.y3
-    ## pr.y4
-    ## pr.x1
-    ## pr.x2
-    ## pr.x3
-    ## pr.x4
-    ## # Or should it be mu1 and mu2 and L <- rowSums(phi*mu1 + phi*mu2)?
-    ## mu <- cbind(exp(rowSums(pr.y1 + pr.x1)),
-    ##             exp(rowSums(pr.y2 + pr.x2)),
-    ##             exp(rowSums(pr.y3 + pr.x3)),
-    ##             exp(rowSums(pr.y3 + pr.x4)))
+          fpBpars.A0["SppA"] <- 0
+          fpB.A0 <- matrix(plogis(XfpB %*% fpBpars.A0 + XfpB.offset),
+                           R, J, byrow=TRUE)
+          } else {
+            if(fpmodel=="full")
+              fpB.A0 <- fpB.A1
+            if(fpmodel=="confusion")
+              fpB.A0 <- 0
+            }
+        }
 
 
     prYA.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE)
@@ -240,26 +208,26 @@ nll <- function(pars) {
     prY.A0.B0 <- prYA.A0.B0 + prYB.A0.B0
 
 
-    prXA.A1.B1 <- dbinom(xA, 1, pA.B1, log=TRUE)
-    prXB.A1.B1 <- dbinom(xB, 1, pB.A1, log=TRUE)
+    prXA.A1.B1 <- dbinom(xA, 1, 0, log=TRUE)
+    prXB.A1.B1 <- dbinom(xB, 1, 0, log=TRUE)
     prXA.A1.B1[is.na(prXA.A1.B1)] <- 0
     prXB.A1.B1[is.na(prXB.A1.B1)] <- 0
     prX.A1.B1 <- prXA.A1.B1 + prXB.A1.B1
 
-    prXA.A1.B0 <- dbinom(xA, 1, pA.B0, log=TRUE)
-    prXB.A1.B0 <- dbinom(xB, 1, 0, log=TRUE)
+    prXA.A1.B0 <- dbinom(xA, 1, 0, log=TRUE)
+    prXB.A1.B0 <- dbinom(xB, 1, fpB.A1, log=TRUE)
     prXA.A1.B0[is.na(prXA.A1.B0)] <- 0
     prXB.A1.B0[is.na(prXB.A1.B0)] <- 0
     prX.A1.B0 <- prXA.A1.B0 + prXB.A1.B0
 
-    prXA.A0.B1 <- dbinom(xA, 1, 0, log=TRUE)
-    prXB.A0.B1 <- dbinom(xB, 1, pB.A0, log=TRUE)
+    prXA.A0.B1 <- dbinom(xA, 1, fpA.B1, log=TRUE)
+    prXB.A0.B1 <- dbinom(xB, 1, 0, log=TRUE)
     prXA.A0.B1[is.na(prXA.A0.B1)] <- 0
     prXB.A0.B1[is.na(prXB.A0.B1)] <- 0
     prX.A0.B1 <- prXA.A0.B1 + prXB.A0.B1
 
-    prXA.A0.B0 <- dbinom(xA, 1, 0, log=TRUE)
-    prXB.A0.B0 <- dbinom(xB, 1, 0, log=TRUE)
+    prXA.A0.B0 <- dbinom(xA, 1, fpA.B0, log=TRUE)
+    prXB.A0.B0 <- dbinom(xB, 1, fpB.A0, log=TRUE)
     prXA.A0.B0[is.na(prXA.A0.B0)] <- 0
     prXB.A0.B0[is.na(prXB.A0.B0)] <- 0
     prX.A0.B0 <- prXA.A0.B0 + prXB.A0.B0
