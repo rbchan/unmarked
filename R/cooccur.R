@@ -208,26 +208,26 @@ nll <- function(pars) {
     prY.A0.B0 <- prYA.A0.B0 + prYB.A0.B0
 
 
-    prXA.A1.B1 <- dbinom(xA, 1, 0, log=TRUE)
-    prXB.A1.B1 <- dbinom(xB, 1, 0, log=TRUE)
+    prXA.A1.B1 <- dbinom(xA, 1, yA, log=TRUE)
+    prXB.A1.B1 <- dbinom(xB, 1, yB, log=TRUE)
     prXA.A1.B1[is.na(prXA.A1.B1)] <- 0
     prXB.A1.B1[is.na(prXB.A1.B1)] <- 0
     prX.A1.B1 <- prXA.A1.B1 + prXB.A1.B1
 
-    prXA.A1.B0 <- dbinom(xA, 1, 0, log=TRUE)
-    prXB.A1.B0 <- dbinom(xB, 1, fpB.A1, log=TRUE)
+    prXA.A1.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
+    prXB.A1.B0 <- dbinom(xB, 1, yB*(1-fpB.A1), log=TRUE)
     prXA.A1.B0[is.na(prXA.A1.B0)] <- 0
     prXB.A1.B0[is.na(prXB.A1.B0)] <- 0
     prX.A1.B0 <- prXA.A1.B0 + prXB.A1.B0
 
-    prXA.A0.B1 <- dbinom(xA, 1, fpA.B1, log=TRUE)
-    prXB.A0.B1 <- dbinom(xB, 1, 0, log=TRUE)
+    prXA.A0.B1 <- dbinom(xA, 1, yA*(1-fpA.B1), log=TRUE)
+    prXB.A0.B1 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
     prXA.A0.B1[is.na(prXA.A0.B1)] <- 0
     prXB.A0.B1[is.na(prXB.A0.B1)] <- 0
     prX.A0.B1 <- prXA.A0.B1 + prXB.A0.B1
 
-    prXA.A0.B0 <- dbinom(xA, 1, fpA.B0, log=TRUE)
-    prXB.A0.B0 <- dbinom(xB, 1, fpB.A0, log=TRUE)
+    prXA.A0.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
+    prXB.A0.B0 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
     prXA.A0.B0[is.na(prXA.A0.B0)] <- 0
     prXB.A0.B0[is.na(prXB.A0.B0)] <- 0
     prX.A0.B0 <- prXA.A0.B0 + prXB.A0.B0
