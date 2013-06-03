@@ -9,6 +9,9 @@ cooccur <- function(psiformulaA = ~1, psiformulaB = ~1,
 
 interaction <- match.arg(interaction)
 fpmodel <- match.arg(fpmodel)
+if(fpmodel != "confusion")
+    stop("only confusion model is allowed")
+
 
 if(identical(fpmodel, "confusion")) {
     if("SppB" %in% all.vars(fpformulaA))
@@ -201,12 +204,16 @@ nll <- function(pars) {
     prYB.A0.B1[is.na(prYB.A0.B1)] <- 0
     prY.A0.B1 <- prYA.A0.B1 + prYB.A0.B1
 
-    prYA.A0.B0 <- dbinom(yA, 1, fpA.B0, log=TRUE)
-    prYB.A0.B0 <- dbinom(yB, 1, fpB.A0, log=TRUE)
+#    prYA.A0.B0 <- dbinom(yA, 1, fpA.B0, log=TRUE)
+#    prYB.A0.B0 <- dbinom(yB, 1, fpB.A0, log=TRUE)
+    prYA.A0.B0 <- dbinom(yA, 1, 0, log=TRUE)
+    prYB.A0.B0 <- dbinom(yB, 1, 0, log=TRUE)
     prYA.A0.B0[is.na(prYA.A0.B0)] <- 0
     prYB.A0.B0[is.na(prYB.A0.B0)] <- 0
     prY.A0.B0 <- prYA.A0.B0 + prYB.A0.B0
 
+    # Pr(xA=0|yA=1) if species B is present
+    # Pr(xA=1|xB=0) if species B is present
 
     prXA.A1.B1 <- dbinom(xA, 1, yA, log=TRUE)
     prXB.A1.B1 <- dbinom(xB, 1, yB, log=TRUE)
@@ -214,29 +221,46 @@ nll <- function(pars) {
     prXB.A1.B1[is.na(prXB.A1.B1)] <- 0
     prX.A1.B1 <- prXA.A1.B1 + prXB.A1.B1
 
-    prXA.A1.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
-    prXB.A1.B0 <- dbinom(xB, 1, yB*(1-fpB.A1), log=TRUE)
+    # To have a FP, xA=0, yA=1, and yB=1 (, and maybe zB=1)
+    # if yA=1, then xA=1 with prob 1-fp
+    # if yA=0, then xA=1 with prob yB
+#    prXA.A1.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
+#    prXB.A1.B0 <- dbinom(xB, 1, yB*(1-fpB.A1), log=TRUE)
+    prXA.A1.B0 <- dbinom(xA, 1, yA + (1-yA)*yB, log=TRUE)
+    prXB.A1.B0 <- dbinom(xB, 1, 0, log=TRUE)
     prXA.A1.B0[is.na(prXA.A1.B0)] <- 0
     prXB.A1.B0[is.na(prXB.A1.B0)] <- 0
     prX.A1.B0 <- prXA.A1.B0 + prXB.A1.B0
 
-    prXA.A0.B1 <- dbinom(xA, 1, yA*(1-fpA.B1), log=TRUE)
-    prXB.A0.B1 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
+#    prXA.A0.B1 <- dbinom(xA, 1, yA*(1-fpA.B1), log=TRUE)
+#    prXB.A0.B1 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
+    prXA.A0.B1 <- dbinom(xA, 1, yA*(1-fpA.B1)*xB, log=TRUE)
+    prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA, log=TRUE)
     prXA.A0.B1[is.na(prXA.A0.B1)] <- 0
     prXB.A0.B1[is.na(prXB.A0.B1)] <- 0
     prX.A0.B1 <- prXA.A0.B1 + prXB.A0.B1
 
-    prXA.A0.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
-    prXB.A0.B0 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
+#    prXA.A0.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
+#    prXB.A0.B0 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
+#    prXA.A0.B0 <- dbinom(xA, 1, yA*(1-fpA.B0) + (1-yA)*xB, log=TRUE)
+#    prXB.A0.B0 <- dbinom(xB, 1, yB*(1-fpB.A0) + (1-yB)*xA, log=TRUE)
+    prXA.A0.B0 <- dbinom(xA, 1, yA, log=TRUE)
+    prXB.A0.B0 <- dbinom(xB, 1, yB, log=TRUE)
     prXA.A0.B0[is.na(prXA.A0.B0)] <- 0
     prXB.A0.B0[is.na(prXB.A0.B0)] <- 0
     prX.A0.B0 <- prXA.A0.B0 + prXB.A0.B0
 
-    mu <- cbind(exp(rowSums(prY.A1.B1 + prX.A1.B1)),
-                exp(rowSums(prY.A1.B0 + prX.A1.B0)),
-                exp(rowSums(prY.A0.B1 + prX.A0.B1)),
-                exp(rowSums(prY.A0.B0 + prX.A0.B0)))
+#    mu <- cbind(exp(rowSums(prY.A1.B1 + prX.A1.B1)),
+#                exp(rowSums(prY.A1.B0 + prX.A1.B0)),
+#                exp(rowSums(prY.A0.B1 + prX.A0.B1)),
+#                exp(rowSums(prY.A0.B0 + prX.A0.B0)))
+    mu <- cbind(exp(prY.A1.B1 + prX.A1.B1),
+                exp(prY.A1.B0 + prX.A1.B0),
+                exp(prY.A0.B1 + prX.A0.B1),
+                exp(prY.A0.B0 + prX.A0.B0))
     L <- rowSums(phi * mu)
+    if(any(L==0))
+        browser()
     -sum(log(L))
    }
 
