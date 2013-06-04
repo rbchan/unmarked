@@ -27,7 +27,7 @@ formlist <- list(psiformulaA=psiformulaA, psiformulaB=psiformulaB,
 formula <- as.formula(paste(unlist(formlist), collapse=" "))
 
 #D <- getDesign(data, formula)
-D <- getDesign(data, psiformulaA, psiformulaB, gammaformula,
+D <- unmarked:::getDesign(data, psiformulaA, psiformulaB, gammaformula,
                pformulaA, pformulaB, fpformulaA, fpformulaB)
 # Could loop over length(D) and assign() each component to object
 yA <- D$yA
@@ -186,8 +186,12 @@ nll <- function(pars) {
         }
 
 
-    prYA.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE)
-    prYB.A1.B1 <- dbinom(yB, 1, pB.A1, log=TRUE)
+#    prYA.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE)
+#    prYB.A1.B1 <- dbinom(yB, 1, pB.A1, log=TRUE)
+    prYA.A1.B1 <- dbinom(yA, 1, pA.B1*(1-fpB.A1) + (1-pA.B1)*fpB.A1,
+                         log=TRUE)
+    prYB.A1.B1 <- dbinom(yB, 1, pB.A1*(1-fpA.B1) + (1-pB.A1)*fpA.B1,
+                         log=TRUE)
     prYA.A1.B1[is.na(prYA.A1.B1)] <- 0
     prYB.A1.B1[is.na(prYB.A1.B1)] <- 0
     prY.A1.B1 <- prYA.A1.B1 + prYB.A1.B1
@@ -214,9 +218,26 @@ nll <- function(pars) {
 
     # Pr(xA=0|yA=1) if species B is present
     # Pr(xA=1|xB=0) if species B is present
-
-    prXA.A1.B1 <- dbinom(xA, 1, yA, log=TRUE)
-    prXB.A1.B1 <- dbinom(xB, 1, yB, log=TRUE)
+    # In state 1, you might still have misclassifications.
+    # e.g. you might classify scat as leopard, but it turns out to be tiger
+    ## so you might have yA=0 and xA=1 if yB=1, or
+    # if yA=1, you might observe xA=0
+    prXA.A1.B1 <- dbinom(xA, 1,
+                         yA*yB*((1-fpA.B1)*(1-fpB.A1) + fpA.B1*fpB.A1) +
+                         yA*(1-yB)*(1-fpA.B1) +
+                         (1-yA)*yB*fpB.A1 +
+                         (1-yA)*(1-yB)*0, log=TRUE)
+    prXB.A1.B1 <- dbinom(xB, 1,
+                         yB*yA*((1-fpB.A1)*(1-fpA.B1) + fpB.A1*fpA.B1) +
+                         yB*(1-yA)*(1-fpB.A1) +
+                         (1-yB)*yA*fpA.B1 +
+                         (1-yB)*(1-yA)*0, log=TRUE)
+#    prXB.A1.B1 <- dbinom(xB, 1, yB*(1-fpB.A1) + (1-yB)*yA*fpA.B1,
+#    log=TRUE)
+#    prXA.A1.B1 <- dbinom(xA, 1, yA + (1-yA)*yB, log=TRUE)
+#    prXB.A1.B1 <- dbinom(xB, 1, yB + (1-yB)*yA, log=TRUE)
+#    prXA.A1.B1 <- dbinom(xA, 1, yA, log=TRUE)
+#    prXB.A1.B1 <- dbinom(xB, 1, yB, log=TRUE)
     prXA.A1.B1[is.na(prXA.A1.B1)] <- 0
     prXB.A1.B1[is.na(prXB.A1.B1)] <- 0
     prX.A1.B1 <- prXA.A1.B1 + prXB.A1.B1
@@ -226,6 +247,10 @@ nll <- function(pars) {
     # if yA=0, then xA=1 with prob yB
 #    prXA.A1.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
 #    prXB.A1.B0 <- dbinom(xB, 1, yB*(1-fpB.A1), log=TRUE)
+    # If yA=1, then xA must be 1
+    # If yA=0, then xA=0 if yB is also 0, or xA=1 if yB=1
+#    prXA.A1.B0 <- dbinom(xA, 1, yA + (1-yA)*yB*(1-fpB.A1), log=TRUE)
+#    prXA.A1.B0 <- dbinom(xA, 1, yA + (1-yA)*yB*fpB.A1, log=TRUE)
     prXA.A1.B0 <- dbinom(xA, 1, yA + (1-yA)*yB, log=TRUE)
     prXB.A1.B0 <- dbinom(xB, 1, 0, log=TRUE)
     prXA.A1.B0[is.na(prXA.A1.B0)] <- 0
@@ -234,7 +259,9 @@ nll <- function(pars) {
 
 #    prXA.A0.B1 <- dbinom(xA, 1, yA*(1-fpA.B1), log=TRUE)
 #    prXB.A0.B1 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
-    prXA.A0.B1 <- dbinom(xA, 1, yA*(1-fpA.B1)*xB, log=TRUE)
+    prXA.A0.B1 <- dbinom(xA, 1, 0, log=TRUE)
+#    prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA*(1-fpA.B1), log=TRUE)
+##    prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA*fpA.B1, log=TRUE)
     prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA, log=TRUE)
     prXA.A0.B1[is.na(prXA.A0.B1)] <- 0
     prXB.A0.B1[is.na(prXB.A0.B1)] <- 0
@@ -244,23 +271,19 @@ nll <- function(pars) {
 #    prXB.A0.B0 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
 #    prXA.A0.B0 <- dbinom(xA, 1, yA*(1-fpA.B0) + (1-yA)*xB, log=TRUE)
 #    prXB.A0.B0 <- dbinom(xB, 1, yB*(1-fpB.A0) + (1-yB)*xA, log=TRUE)
-    prXA.A0.B0 <- dbinom(xA, 1, yA, log=TRUE)
-    prXB.A0.B0 <- dbinom(xB, 1, yB, log=TRUE)
+    # If in state 4, there can be no misID and the x's can never equal 1
+    prXA.A0.B0 <- dbinom(xA, 1, 0, log=TRUE)
+    prXB.A0.B0 <- dbinom(xB, 1, 0, log=TRUE)
     prXA.A0.B0[is.na(prXA.A0.B0)] <- 0
     prXB.A0.B0[is.na(prXB.A0.B0)] <- 0
     prX.A0.B0 <- prXA.A0.B0 + prXB.A0.B0
 
-#    mu <- cbind(exp(rowSums(prY.A1.B1 + prX.A1.B1)),
-#                exp(rowSums(prY.A1.B0 + prX.A1.B0)),
-#                exp(rowSums(prY.A0.B1 + prX.A0.B1)),
-#                exp(rowSums(prY.A0.B0 + prX.A0.B0)))
-    mu <- cbind(exp(prY.A1.B1 + prX.A1.B1),
-                exp(prY.A1.B0 + prX.A1.B0),
-                exp(prY.A0.B1 + prX.A0.B1),
-                exp(prY.A0.B0 + prX.A0.B0))
+    mu <- cbind(exp(rowSums(prY.A1.B1 + prX.A1.B1)),
+                exp(rowSums(prY.A1.B0 + prX.A1.B0)),
+                exp(rowSums(prY.A0.B1 + prX.A0.B1)),
+                exp(rowSums(prY.A0.B0 + prX.A0.B0)))
     L <- rowSums(phi * mu)
-    if(any(L==0))
-        browser()
+#    if(any(L==0)) browser()
     -sum(log(L))
    }
 
@@ -310,7 +333,7 @@ pB <- unmarkedEstimate(name = "Detection species B", short.name="pB",
                                        (nOPA+nOPB+nGP+nPA+nPB),
                                        drop=FALSE],
                        invlink = "logistic", invlinkGrad = "logistic.grad")
-estimateList <- unmarkedEstimateList(list(psiA=psiA, psiB=psiB,
+estimateList <- unmarked:::unmarkedEstimateList(list(psiA=psiA, psiB=psiB,
                                           pA=pA, pB=pB))
 
 if(!fixgamma) {
