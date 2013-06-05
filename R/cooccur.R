@@ -188,14 +188,21 @@ nll <- function(pars) {
 
 #    prYA.A1.B1 <- dbinom(yA, 1, pA.B1, log=TRUE)
 #    prYB.A1.B1 <- dbinom(yB, 1, pB.A1, log=TRUE)
-    prYA.A1.B1 <- dbinom(yA, 1, pA.B1*(1-fpB.A1) + (1-pA.B1)*fpB.A1,
-                         log=TRUE)
-    prYB.A1.B1 <- dbinom(yB, 1, pB.A1*(1-fpA.B1) + (1-pB.A1)*fpA.B1,
-                         log=TRUE)
+#    prYA.A1.B1 <- dbinom(yA, 1, pA.B1*(1-fpB.A1) + (1-pA.B1)*fpB.A1,
+#                         log=TRUE)
+#    prYB.A1.B1 <- dbinom(yB, 1, pB.A1*(1-fpA.B1) + (1-pB.A1)*fpA.B1,
+#                         log=TRUE)
+    # Pr(y=1) = 1 - (1-p)*fp (fp isn't false positive, it is misID prob
+#    prYA.A1.B1 <- dbinom(yA, 1, 1 - (1-pA.B1)*(1-fpA.B1), log=TRUE)
+#    prYB.A1.B1 <- dbinom(yB, 1, 1 - (1-pB.A1)*(1-fpB.A1), log=TRUE)
+    prYA.A1.B1 <- dbinom(yA, 1, pA.B1*(1-fpA.B1) + (1-pA.B1)*fpA.B1, log=TRUE)
+    prYB.A1.B1 <- dbinom(yB, 1, pB.A1*(1-fpB.A1) + (1-pB.A1)*fpB.A1, log=TRUE)
     prYA.A1.B1[is.na(prYA.A1.B1)] <- 0
     prYB.A1.B1[is.na(prYB.A1.B1)] <- 0
     prY.A1.B1 <- prYA.A1.B1 + prYB.A1.B1
 
+#    prYA.A1.B0 <- dbinom(yA, 1, pA.B0, log=TRUE)
+#    prYB.A1.B0 <- dbinom(yB, 1, fpB.A1, log=TRUE)
     prYA.A1.B0 <- dbinom(yA, 1, pA.B0, log=TRUE)
     prYB.A1.B0 <- dbinom(yB, 1, fpB.A1, log=TRUE)
     prYA.A1.B0[is.na(prYA.A1.B0)] <- 0
@@ -222,27 +229,31 @@ nll <- function(pars) {
     # e.g. you might classify scat as leopard, but it turns out to be tiger
     ## so you might have yA=0 and xA=1 if yB=1, or
     # if yA=1, you might observe xA=0
-    prXA.A1.B1 <- dbinom(xA, 1,
-                         yA*yB*((1-fpA.B1)*(1-fpB.A1) + fpA.B1*fpB.A1) +
-                         yA*(1-yB)*(1-fpA.B1) +
-                         (1-yA)*yB*fpB.A1 +
-                         (1-yA)*(1-yB)*0, log=TRUE)
-    prXB.A1.B1 <- dbinom(xB, 1,
-                         yB*yA*((1-fpB.A1)*(1-fpA.B1) + fpB.A1*fpA.B1) +
-                         yB*(1-yA)*(1-fpB.A1) +
-                         (1-yB)*yA*fpA.B1 +
-                         (1-yB)*(1-yA)*0, log=TRUE)
+    ## prXA.A1.B1 <- dbinom(xA, 1,
+    ##                      yA*yB*((1-fpA.B1)*(1-fpB.A1) + fpA.B1*fpB.A1) +
+    ##                      yA*(1-yB)*(1-fpA.B1) +
+    ##                      (1-yA)*yB*fpB.A1 +
+    ##                      (1-yA)*(1-yB)*0, log=TRUE)
+    ## prXB.A1.B1 <- dbinom(xB, 1,
+    ##                      yB*yA*((1-fpB.A1)*(1-fpA.B1) + fpB.A1*fpA.B1) +
+    ##                      yB*(1-yA)*(1-fpB.A1) +
+    ##                      (1-yB)*yA*fpA.B1 +
+    ##                      (1-yB)*(1-yA)*0, log=TRUE)
 #    prXB.A1.B1 <- dbinom(xB, 1, yB*(1-fpB.A1) + (1-yB)*yA*fpA.B1,
 #    log=TRUE)
 #    prXA.A1.B1 <- dbinom(xA, 1, yA + (1-yA)*yB, log=TRUE)
 #    prXB.A1.B1 <- dbinom(xB, 1, yB + (1-yB)*yA, log=TRUE)
 #    prXA.A1.B1 <- dbinom(xA, 1, yA, log=TRUE)
 #    prXB.A1.B1 <- dbinom(xB, 1, yB, log=TRUE)
+#    prXA.A1.B1 <- dbinom(xA, 1, pA.B1, log=TRUE)
+#    prXB.A1.B1 <- dbinom(xB, 1, pB.A1, log=TRUE)
+    prXA.A1.B1 <- dbinom(xA, 1, 1-fpA.B1, log=TRUE) # Pr(x=1|y=1) = correct classification prob
+    prXB.A1.B1 <- dbinom(xB, 1, 1-fpB.A1, log=TRUE)
     prXA.A1.B1[is.na(prXA.A1.B1)] <- 0
     prXB.A1.B1[is.na(prXB.A1.B1)] <- 0
     prX.A1.B1 <- prXA.A1.B1 + prXB.A1.B1
 
-    # To have a FP, xA=0, yA=1, and yB=1 (, and maybe zB=1)
+    # To have a FP, xA=0, yA=1, and xB=1
     # if yA=1, then xA=1 with prob 1-fp
     # if yA=0, then xA=1 with prob yB
 #    prXA.A1.B0 <- dbinom(xA, 1, yA*(1-fpA.B0), log=TRUE)
@@ -251,18 +262,24 @@ nll <- function(pars) {
     # If yA=0, then xA=0 if yB is also 0, or xA=1 if yB=1
 #    prXA.A1.B0 <- dbinom(xA, 1, yA + (1-yA)*yB*(1-fpB.A1), log=TRUE)
 #    prXA.A1.B0 <- dbinom(xA, 1, yA + (1-yA)*yB*fpB.A1, log=TRUE)
-    prXA.A1.B0 <- dbinom(xA, 1, yA + (1-yA)*yB, log=TRUE)
-    prXB.A1.B0 <- dbinom(xB, 1, 0, log=TRUE)
+#    prXA.A1.B0 <- dbinom(xA, 1, pA.B0, log=TRUE)
+#    prXB.A1.B0 <- dbinom(xB, 1, 0, log=TRUE)
+    prXA.A1.B0 <- dbinom(xA, 1, 1, log=TRUE) # must be a 1 if y=1
+    prXB.A1.B0 <- dbinom(xB, 1, 1-fpB.A1, log=TRUE)
     prXA.A1.B0[is.na(prXA.A1.B0)] <- 0
     prXB.A1.B0[is.na(prXB.A1.B0)] <- 0
     prX.A1.B0 <- prXA.A1.B0 + prXB.A1.B0
 
 #    prXA.A0.B1 <- dbinom(xA, 1, yA*(1-fpA.B1), log=TRUE)
 #    prXB.A0.B1 <- dbinom(xB, 1, yB*(1-fpB.A0), log=TRUE)
-    prXA.A0.B1 <- dbinom(xA, 1, 0, log=TRUE)
+#    prXA.A0.B1 <- dbinom(xA, 1, 0, log=TRUE)
 #    prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA*(1-fpA.B1), log=TRUE)
 ##    prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA*fpA.B1, log=TRUE)
-    prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA, log=TRUE)
+#    prXB.A0.B1 <- dbinom(xB, 1, yB + (1-yB)*yA, log=TRUE)
+#    prXA.A0.B1 <- dbinom(xA, 1, 0, log=TRUE)
+#    prXB.A0.B1 <- dbinom(xB, 1, pB.A0, log=TRUE)
+    prXA.A0.B1 <- dbinom(xA, 1, 1-fpA.B1, log=TRUE)
+    prXB.A0.B1 <- dbinom(xB, 1, 1, log=TRUE)
     prXA.A0.B1[is.na(prXA.A0.B1)] <- 0
     prXB.A0.B1[is.na(prXB.A0.B1)] <- 0
     prX.A0.B1 <- prXA.A0.B1 + prXB.A0.B1
@@ -272,6 +289,8 @@ nll <- function(pars) {
 #    prXA.A0.B0 <- dbinom(xA, 1, yA*(1-fpA.B0) + (1-yA)*xB, log=TRUE)
 #    prXB.A0.B0 <- dbinom(xB, 1, yB*(1-fpB.A0) + (1-yB)*xA, log=TRUE)
     # If in state 4, there can be no misID and the x's can never equal 1
+#    prXA.A0.B0 <- dbinom(xA, 1, 0, log=TRUE)
+#    prXB.A0.B0 <- dbinom(xB, 1, 0, log=TRUE)
     prXA.A0.B0 <- dbinom(xA, 1, 0, log=TRUE)
     prXB.A0.B0 <- dbinom(xB, 1, 0, log=TRUE)
     prXA.A0.B0[is.na(prXA.A0.B0)] <- 0
@@ -283,6 +302,15 @@ nll <- function(pars) {
                 exp(rowSums(prY.A0.B1 + prX.A0.B1)),
                 exp(rowSums(prY.A0.B0 + prX.A0.B0)))
     L <- rowSums(phi * mu)
+    ## muY <- cbind(rowSums(prY.A1.B1),
+    ##              rowSums(prY.A1.B0),
+    ##              rowSums(prY.A0.B1),
+    ##              rowSums(prY.A0.B0))
+    ## muX <- cbind(rowSums(prX.A1.B1),
+    ##              rowSums(prX.A1.B0),
+    ##              rowSums(prX.A0.B1),
+    ##              rowSums(prX.A0.B0))
+    ## L <- rowSums(exp(log(phi) + muY + muX))
 #    if(any(L==0)) browser()
     -sum(log(L))
    }
