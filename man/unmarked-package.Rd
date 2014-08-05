@@ -2,9 +2,9 @@
 \alias{unmarked}
 \alias{unmarked-package}
 \title{Models for Data from Unmarked Animals}
-\description{\emph{unmarked} fits hierarchical models of animal
-  occurrence and abundance to data collected on species subject to
-  imperfect detection.  Examples include single- and multi-season site
+\description{This package fits hierarchical models of animal
+  occurrence and abundance to data collected on species that may be
+  detected imperfectly.  Models include single- and multi-season site
   occupancy models, binomial N-mixture models, and multinomial N-mixture
   models. The data can arise from survey methods such as occurrence
   sampling, temporally replicated counts, removal sampling, double
@@ -17,7 +17,7 @@
 \details{\tabular{ll}{
 Package: \tab unmarked\cr
 Type: \tab Package\cr
-Version: \tab 0.10-0\cr
+Version: \tab 0.10-4\cr
 License: \tab GPL (>= 3)\cr
 }
 
@@ -38,7 +38,7 @@ false negatives and false positive detections (e.g., Royle and Link
 MacKenzie et al. (2003).
 
 \code{\link{pcount}} fits N-mixture models (aka binomial mixture models) to
-repeated count data (Royle 2004a, Kéry et al 2005).
+repeated count data (Royle 2004a, Kery et al 2005).
 
 \code{\link{distsamp}} fits the distance sampling model of
 Royle et al. (2004) to distance data recorded in discrete intervals.
@@ -194,7 +194,7 @@ Fiske, I. and R. B. Chandler. 2011. \emph{unmarked}: An R package for
   fitting hierarchical models of wildlife occurrence and
   abundance. \emph{Journal of Statistical Software} 43:1--23.
 
-Kéry, M., Royle, J. A., and Schmid, H. 2005 Modeling avian abundance from
+Kery, M., Royle, J. A., and Schmid, H. 2005 Modeling avian abundance from
   replicated counts using binomial mixture models. \emph{Ecological
   Applications} 15:1450--1461.
 

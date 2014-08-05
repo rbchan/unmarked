@@ -11,7 +11,7 @@ mixture <- match.arg(mixture)
 formlist <- list(lambdaformula = lambdaformula, phiformula = phiformula,
     pformula = pformula)
 form <- as.formula(paste(unlist(formlist), collapse=" "))
-D <- unmarked:::getDesign(data, formula = form)
+D <- getDesign(data, formula = form)
 
 Xlam <- D$Xlam
 Xphi <- D$Xphi

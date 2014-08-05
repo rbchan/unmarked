@@ -260,7 +260,7 @@ setMethod("ranef", "unmarkedFitGMMorGDS",
 {
 
     data <- object@data
-    D <- unmarked:::getDesign(data, object@formula)
+    D <- getDesign(data, object@formula)
 
     Xlam <- D$Xlam
     Xphi <- D$Xphi
@@ -380,7 +380,7 @@ setMethod("ranef", "unmarkedFitGPC",
     function(object, ...)
 {
     data <- object@data
-    D <- unmarked:::getDesign(data, object@formula)
+    D <- getDesign(data, object@formula)
 
     Xlam <- D$Xlam
     Xphi <- D$Xphi
@@ -481,7 +481,7 @@ setMethod("ranef", "unmarkedFitColExt",
         gammaformula=object@gamformula,
         epsilonformula=object@epsformula,
         pformula=object@detformula)
-    designMats <- unmarked:::getDesign(object@data, object@formula)
+    designMats <- getDesign(object@data, object@formula)
     V.itj <- designMats$V
     X.it.gam <- designMats$X.gam
     X.it.eps <- designMats$X.eps
@@ -555,7 +555,7 @@ setMethod("ranef", "unmarkedFitPCO",
     dyn <- object@dynamics
     formlist <- object@formlist
     formula <- as.formula(paste(unlist(formlist), collapse=" "))
-    D <- unmarked:::getDesign(object@data, formula)
+    D <- getDesign(object@data, formula)
     delta <- D$delta
     deltamax <- max(delta, na.rm=TRUE)
 

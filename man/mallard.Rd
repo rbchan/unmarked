@@ -18,7 +18,7 @@ A list with 3 components
 	}
 }
 \references{
-Kéry, M., Royle, J. A., and Schmid, H. (2005) Modeling Avaian Abundance from Replicated
+Kery, M., Royle, J. A., and Schmid, H. (2005) Modeling Avaian Abundance from Replicated
  Counts Using Binomial Mixture Models. \emph{Ecological Applications} 15(4), 
  pp. 1450--1461.}
 \examples{

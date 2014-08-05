@@ -9,7 +9,7 @@
 }
 \note{Two requirements exist to conduct AIC-based model-selection and model-averaging in unmarked. First, the data objects (ie, unmarkedFrames) must be identical among fitted models. Second, the response matrix must be identical among fitted models after missing values have been removed. This means that if a response value was removed in one model due to missingness, it needs to be removed from all models.
 } 
-\author{Richard Chandler \email{rchandler@usgs.gov}}
+\author{Richard Chandler \email{rbchan@uga.edu}}
 \examples{
 data(linetran)
 (dbreaksLine <- c(0, 5, 10, 15, 20)) 

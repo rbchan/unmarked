@@ -63,7 +63,7 @@ describing the model fit.}
 You cannot use obsCovs.
 }
 
-\author{Richard Chandler \email{rchandler@usgs.gov}}
+\author{Richard Chandler \email{rbchan@uga.edu}}
 
 \references{
 

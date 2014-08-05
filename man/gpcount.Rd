@@ -84,7 +84,7 @@ engine = c("C", "R"), ...)
   92:1429-1435.
 }
 \author{
-  Richard Chandler \email{rchandler@usgs.gov}
+  Richard Chandler \email{rbchan@uga.edu}
 }
 \note{
 In the case where availability for detection is due to random temporary

@@ -57,7 +57,7 @@ occuFP <- function(detformula = ~ 1,FPformula = ~ 1,Bformula = ~ 1,stateformula 
     yvec0 <- as.numeric(t(y==0))
     yvec1 <- as.numeric(t(y==1))
     yvec2 <- as.numeric(t(y==2))
-    navec <- is.na(y)
+    navec <- c(t(is.na(y)))
 
 
         nll <- function(params) {

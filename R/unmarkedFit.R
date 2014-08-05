@@ -933,7 +933,7 @@ setMethod("predict", "unmarkedFitGMM",
             stop("raster package must be loaded")
     switch(cls,
         unmarkedFrame = {
-            D <- unmarked:::getDesign(newdata, formula, na.rm = na.rm)
+            D <- getDesign(newdata, formula, na.rm = na.rm)
             switch(type,
                 lambda = {
                     X <- D$Xlam
@@ -1136,8 +1136,8 @@ setMethod("logLik", "unmarkedFit", function(object, ...)
 
 setMethod("LRT", c(m1="unmarkedFit", m2="unmarkedFit"), function(m1, m2)
 {
-    ll1 <- unmarked:::logLik(m1)
-    ll2 <- unmarked:::logLik(m2)
+    ll1 <- logLik(m1)
+    ll2 <- logLik(m2)
     chisq <- 2 * abs(ll1 - ll2)
     DF <- abs(length(coef(m1)) - length(coef(m2)))
     pval <- pchisq(chisq, DF, lower.tail=FALSE)
@@ -1223,7 +1223,7 @@ setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
     data <- object@data
     db <- data@dist.breaks
     w <- diff(db)
-    D <- unmarked:::getDesign(data, object@formula, na.rm = na.rm)
+    D <- getDesign(data, object@formula, na.rm = na.rm)
     X <- D$X
     X.offset <- D$X.offset
     if (is.null(X.offset))
@@ -1310,8 +1310,10 @@ setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
            ZIP = {
                psi <- plogis(coef(object['psi']))
                lambda <- as.numeric(state)
-               fitted <- (1-psi)*lambda
-               fitted <- matrix(fitted, M, J, byrow=TRUE)
+               E.N <- (1-psi)*lambda
+#               fitted <- (1-psi)*lambda
+#               fitted <- matrix(fitted, M, J, byrow=TRUE) # BUG
+               fitted <- E.N * p
            })
     return(fitted)
 })
@@ -1323,7 +1325,7 @@ setMethod("fitted", "unmarkedFitPCO",
     dynamics <- object@dynamics
     mixture <- object@mixture
     data <- getData(object)
-    D <- unmarked:::getDesign(data, object@formula, na.rm = na.rm)
+    D <- getDesign(data, object@formula, na.rm = na.rm)
     Xlam <- D$Xlam; Xgam <- D$Xgam; Xom <- D$Xom; Xp <- D$Xp
     Xlam.offset <- D$Xlam.offset; Xgam.offset <- D$Xgam.offset
     Xom.offset <- D$Xom.offset; Xp.offset <- D$Xp.offset
@@ -1532,7 +1534,7 @@ setMethod("fitted", "unmarkedFitGMM",
 ##     function(object, na.rm = FALSE)
 ## {
 ##     data <- object@data
-##     D <- unmarked:::getDesign(data, object@formula, na.rm = na.rm)
+##     D <- getDesign(data, object@formula, na.rm = na.rm)
 ##     Xlam <- D$Xlam
 ##     Xphi <- D$Xphi
 ##     Xdet <- D$Xdet
@@ -2145,7 +2147,7 @@ setMethod("getP", "unmarkedFitGDS",
     formula <- object@formula
     detformula <- as.formula(formula[[2]])
     umf <- object@data
-    designMats <- unmarked:::getDesign(umf, formula, na.rm = na.rm)
+    designMats <- getDesign(umf, formula, na.rm = na.rm)
     y <- designMats$y
     Xdet <- designMats$Xdet
     Xdet.offset <- designMats$Xdet.offset
@@ -2477,7 +2479,7 @@ setMethod("simulate", "unmarkedFitPCO",
     mix <- object@mixture
     dynamics <- object@dynamics
     umf <- object@data
-    D <- unmarked:::getDesign(umf, object@formula, na.rm = na.rm)
+    D <- getDesign(umf, object@formula, na.rm = na.rm)
     Xlam <- D$Xlam; Xgam <- D$Xgam; Xom <- D$Xom; Xp <- D$Xp
     Xlam.offset <- D$Xlam.offset; Xgam.offset <- D$Xgam.offset
     Xom.offset <- D$Xom.offset; Xp.offset <- D$Xp.offset
@@ -2755,7 +2757,7 @@ setMethod("simulate", "unmarkedFitOccuRN",
 {
     formula <- object@formula
     umf <- object@data
-    designMats <- unmarked:::getDesign(umf, formula, na.rm = na.rm)
+    designMats <- getDesign(umf, formula, na.rm = na.rm)
     y <- designMats$y; X <- designMats$X; V <- designMats$V
     X.offset <- designMats$X.offset
     if (is.null(X.offset)) {
@@ -2789,7 +2791,7 @@ setMethod("simulate", "unmarkedFitGMM",
     formula <- object@formula
     umf <- object@data
     mixture <- object@mixture
-    D <- unmarked:::getDesign(umf, formula, na.rm = na.rm)
+    D <- getDesign(umf, formula, na.rm = na.rm)
     y <- D$y
     Xlam <- D$Xlam
     Xphi <- D$Xphi
@@ -2862,7 +2864,7 @@ setMethod("simulate", "unmarkedFitGPC",
     formula <- object@formula
     umf <- object@data
     mixture <- object@mixture
-    D <- unmarked:::getDesign(umf, formula, na.rm = na.rm)
+    D <- getDesign(umf, formula, na.rm = na.rm)
     y <- D$y
     Xlam <- D$Xlam
     Xphi <- D$Xphi

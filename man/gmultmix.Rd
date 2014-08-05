@@ -81,7 +81,7 @@ density and temporary emigration in unmarked populations. Ecology
 
 }
 \author{
-Richard Chandler \email{rchandler@usgs.gov} and Andy Royle
+Richard Chandler \email{rbchan@uga.edu} and Andy Royle
 }
 
 \note{

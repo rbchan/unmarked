@@ -1,15 +1,14 @@
 Package: unmarked
-Version: 0.10-0
-Date: 2013-02-16
+Version: 0.10-4
+Date: 2014-04-28
 Type: Package
 Title: Models for Data from Unmarked Animals
 Author: Ian Fiske, Richard Chandler, David Miller, Andy Royle, Marc Kery
-Maintainer: Richard Chandler <rchandler@usgs.gov>
-Depends: R (>= 2.12.0), methods, reshape, lattice, Rcpp (>= 0.8.0),
-    RcppArmadillo (>= 0.2.0)
+Maintainer: Richard Chandler <rbchan@uga.edu>
+Depends: R (>= 2.12.0), methods, reshape, lattice, Rcpp (>= 0.8.0)
 Suggests: raster
-Imports: graphics, stats, utils
-Description: Unmarked fits hierarchical models of animal abundance and occurrence to data collected using survey methods such as point counts, site occupancy sampling, distance sampling, removal sampling, and double observer sampling. Parameters governing the state and observation processes can be modeled as functions of covariates.
+Imports: graphics, stats, utils, plyr
+Description: This package fits hierarchical models of animal abundance and occurrence to data collected using survey methods such as point counts, site occupancy sampling, distance sampling, removal sampling, and double observer sampling. Parameters governing the state and observation processes can be modeled as functions of covariates.
 License: GPL (>=3)
 LazyLoad: yes
 LazyData: yes
@@ -19,8 +18,7 @@ Collate: 'classes.R' 'unmarkedEstimate.R' 'mapInfo.R' 'unmarkedFrame.R'
     'pcountOpen.R' 'gdistsamp.R' 'cooccur.R'
     'unmarkedFitList.R' 'unmarkedLinComb.R'
     'ranef.R' 'boot.R' 'occuFP.R' 'gpcount.R'
-Encoding: UTF-8
-LinkingTo: Rcpp
+LinkingTo: Rcpp, RcppArmadillo (>= 0.2.0)
 SystemRequirements: GNU make
 URL: http://groups.google.com/group/unmarked,
      https://sites.google.com/site/unmarkedinfo/home,

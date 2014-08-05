@@ -102,7 +102,7 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
   arma::imat delta = as<arma::imat>(delta_);
   // linear predictors
   arma::colvec lam = exp(Xlam*beta_lam + Xlam_offset);
-  arma::colvec omv = arma::ones<arma::colvec>(M*(T-1));
+  arma::mat omv = arma::ones<arma::colvec>(M*(T-1));
   if((fix != "omega") && (dynamics != "trend"))
     omv = 1.0/(1.0+exp(-1*(Xom*beta_om + Xom_offset)));
   omv.reshape(T-1, M);
@@ -113,12 +113,12 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
     gam = (1-om) % lamMat;
   } else {
     if(fix != "gamma") {
-      arma::colvec gamv = exp(Xgam*beta_gam + Xgam_offset);
+      arma::mat gamv = exp(Xgam*beta_gam + Xgam_offset);
       gamv.reshape(T-1, M);
       gam = arma::trans(gamv);
     }
   }
-  arma::colvec pv = 1.0/(1.0+exp(-1*(Xp*beta_p + Xp_offset)));
+  arma::mat pv = 1.0/(1.0+exp(-1*(Xp*beta_p + Xp_offset)));
   pv.reshape(J*T, M);
   arma::mat pm = trans(pv);
   // format matrices as cubes (shouldn't be done in likelihood)

@@ -24,7 +24,7 @@ mixture <- match.arg(mixture)
 formlist <- list(lambdaformula = lambdaformula, phiformula = phiformula,
     pformula = pformula)
 form <- as.formula(paste(unlist(formlist), collapse=" "))
-D <- unmarked:::getDesign(data, formula = form)
+D <- getDesign(data, formula = form)
 
 Xlam <- D$Xlam
 Xphi <- D$Xphi
@@ -403,7 +403,7 @@ lamEstimates <- unmarkedEstimate(name = "Abundance", short.name = "lambda",
     estimates = ests[1:nLP],
     covMat = as.matrix(covMat[1:nLP, 1:nLP]), invlink = "exp",
     invlinkGrad = "exp")
-estimateList <- unmarked:::unmarkedEstimateList(list(lambda=lamEstimates))
+estimateList <- unmarkedEstimateList(list(lambda=lamEstimates))
 
 if(T>1)
     estimateList@estimates$phi <- unmarkedEstimate(name = "Availability",

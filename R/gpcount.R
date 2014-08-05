@@ -14,7 +14,7 @@ if(identical(mixture, "ZIP") & identical(engine, "R"))
 formlist <- list(lambdaformula = lambdaformula, phiformula = phiformula,
     pformula = pformula)
 form <- as.formula(paste(unlist(formlist), collapse=" "))
-D <- unmarked:::getDesign(data, formula = form)
+D <- getDesign(data, formula = form)
 
 Xlam <- D$Xlam
 Xphi <- D$Xphi
@@ -153,7 +153,7 @@ detEstimates <- unmarkedEstimate(name = "Detection", short.name = "p",
         covMat[(nLP+nPP+1):(nLP+nPP+nDP), (nLP+nPP+1):(nLP+nPP+nDP)]),
     invlink = "logistic", invlinkGrad = "logistic.grad")
 
-estimateList <- unmarked:::unmarkedEstimateList(list(lambda=lamEstimates, phi=phiEstimates, det=detEstimates))
+estimateList <- unmarkedEstimateList(list(lambda=lamEstimates, phi=phiEstimates, det=detEstimates))
 
 if(identical(mixture,"NB"))
     estimateList@estimates$alpha <- unmarkedEstimate(name = "Dispersion",

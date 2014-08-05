@@ -4,6 +4,8 @@ importFrom(stats, confint, fitted, coef, vcov, predict, update, profile,
 importFrom(graphics, plot, hist)
 importFrom(utils, head)
 importFrom(reshape, melt, cast, recast)
+importFrom(plyr, ldply, alply, ddply)
+import(lattice, methods, Rcpp)
 
 # Fitting functions
 export(occu, occuFP, occuRN, cooccur, pcount, pcountOpen, multinomPois,

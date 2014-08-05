@@ -95,7 +95,7 @@ starts, method = "BFGS", se = TRUE, rel.tol=1e-4, ...)
     populations. \emph{Ecology}  92:1429--1435.
     }
 \author{
-    Richard Chandler \email{rchandler@usgs.gov}
+    Richard Chandler \email{rbchan@uga.edu}
     }
 \note{
     You cannot use obsCovs, but you can use yearlySiteCovs (a confusing name

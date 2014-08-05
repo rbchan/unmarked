@@ -6,12 +6,12 @@ setClass("unmarkedFitList",
         testY <- function(fit) {
             f <- fit@formula
             umf <- getData(fit)
-            D <- unmarked:::getDesign(umf, f)
+            D <- getDesign(umf, f)
             D$y
             }
         umf1 <- getData(fl[[1]])
         form1 <- fl[[1]]@formula
-        y1 <- unmarked:::getDesign(umf1, form1)$y
+        y1 <- getDesign(umf1, form1)$y
         dataTest <- sapply(fl, function(x) isTRUE(all.equal(umf1, getData(x))))
         yTest <- sapply(fl, function(x) isTRUE(all.equal(y1, testY(x))))
         if(!all(dataTest)) {

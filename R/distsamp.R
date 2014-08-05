@@ -18,7 +18,7 @@ distsamp <- function(formula, data,
     survey <- data@survey
     w <- diff(db)
     unitsIn <- data@unitsIn
-    designMats <- unmarked:::getDesign(data, formula)
+    designMats <- getDesign(data, formula)
     X <- designMats$X; V <- designMats$V; y <- designMats$y
     X.offset <- designMats$X.offset; V.offset <- designMats$V.offset
     if(is.null(X.offset))
@@ -281,18 +281,18 @@ distsamp <- function(formula, data,
         estimates = estsDP, covMat = covMatDP, invlink = "exp",
         invlinkGrad = "exp")
         if(keyfun != "hazard")
-            estimateList <- unmarked:::unmarkedEstimateList(list(
+            estimateList <- unmarkedEstimateList(list(
                 state=stateEstimates, det=detEstimates))
         else {
             scaleEstimates <- unmarkedEstimate(name = "Hazard-rate(scale)",
                 short.name = "p", estimates = estsScale,
                 covMat = covMatScale, invlink = "exp", invlinkGrad = "exp")
-            estimateList <- unmarked:::unmarkedEstimateList(list(state=stateEstimates,
+            estimateList <- unmarkedEstimateList(list(state=stateEstimates,
                 det=detEstimates, scale=scaleEstimates))
             }
         }
     else
-        estimateList <- unmarked:::unmarkedEstimateList(list(state=stateEstimates))
+        estimateList <- unmarkedEstimateList(list(state=stateEstimates))
     dsfit <- new("unmarkedFitDS", fitType = "distsamp", call = match.call(),
         opt = opt, formula = formula, data = data, keyfun=keyfun,
         sitesRemoved = designMats$removed.sites, unitsOut=unitsOut,

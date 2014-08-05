@@ -24,7 +24,7 @@ SEXP nll_pcount( SEXP yR, SEXP Xr, SEXP Vr, SEXP beta_lamR, SEXP beta_pR, SEXP l
   int J = y.n_cols;
   arma::colvec lam = exp(X*beta_lam + X_offset);
   arma::colvec logit_p = V*beta_p + V_offset;
-  arma::colvec pv = 1.0/(1.0+exp(-logit_p));
+  arma::mat pv = 1.0/(1.0+exp(-logit_p));
   pv.reshape(J,R);
   arma::mat p = trans(pv);
   double L_i=0.0;

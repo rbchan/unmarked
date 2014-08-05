@@ -16,7 +16,7 @@ if(identical(dynamics, "notrend") &
 formlist <- list(lambdaformula=lambdaformula, gammaformula=gammaformula,
     omegaformula=omegaformula, pformula=pformula)
 formula <- as.formula(paste(unlist(formlist), collapse=" "))
-D <- unmarked:::getDesign(data, formula)
+D <- getDesign(data, formula)
 y <- D$y
 
 Xlam <- D$Xlam
@@ -177,7 +177,7 @@ detEstimates <- unmarkedEstimate(name = "Detection", short.name = "p",
     covMat = as.matrix(covMat[(nAP+nGP+nOP+1) : (nAP+nGP+nOP+nDP),
         (nAP+nGP+nOP+1) : (nAP+nGP+nOP+nDP)]),
         invlink = "logistic", invlinkGrad = "logistic.grad")
-estimateList <- unmarked:::unmarkedEstimateList(list(lambda=lamEstimates))
+estimateList <- unmarkedEstimateList(list(lambda=lamEstimates))
 gamName <- switch(dynamics,
                   constant = "gamConst",
                   autoreg = "gamAR",

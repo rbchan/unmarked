@@ -16,7 +16,7 @@
     \item{K}{Integer upper index of integration for N-mixture. This should be
         set high enough so that it does not affect the parameter estimates. Note
         that computation time will increase with K.}
-    \item{mixture}{character specifying mixture: either "P" or "NB".}
+    \item{mixture}{character specifying mixture: "P", "NB", or "ZIP".}
     \item{starts}{vector of starting values}
     \item{method}{Optimization method used by \code{\link{optim}}.}
     \item{se}{logical specifying whether or not to compute standard
@@ -34,7 +34,7 @@ See \code{\link{unmarkedFramePCount}} for a description of how to format data
 for \code{pcount}.
 
 This function fits the latent N-mixture model for point count data
-(Royle 2004, Kéry et al 2005).
+(Royle 2004, Kery et al 2005).
 
 The latent abundance distribution, \eqn{f(N | \mathbf{\theta})}{f(N |
 theta)} can be set as a Poisson, negative binomial, or zero-inflated
@@ -67,7 +67,7 @@ covariates of \eqn{p_{ij}}{p_ij} use the logit link.}
 Royle, J. A. (2004) N-Mixture Models for Estimating Population Size from
 Spatially Replicated Counts. \emph{Biometrics} 60, pp. 108--105.
 
-Kéry, M., Royle, J. A., and Schmid, H. (2005) Modeling Avaian Abundance from
+Kery, M., Royle, J. A., and Schmid, H. (2005) Modeling Avaian Abundance from
 Replicated Counts Using Binomial Mixture Models. \emph{Ecological Applications}
 15(4), pp. 1450--1461.
 

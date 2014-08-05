@@ -24,7 +24,7 @@
   \item{t0}{Numeric vector of statistics for original fitted model.}
   \item{t.star}{nsim by length(t0) matrix of statistics for each simulation fit.}}
 
-\author{Richard Chandler \email{rchandler@usgs.gov}}
+\author{Richard Chandler \email{rbchan@uga.edu}}
 
 \seealso{
   \code{\link{ranef}}

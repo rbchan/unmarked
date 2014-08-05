@@ -93,7 +93,7 @@ used to manipulate the returned object.
   Bayes methods for these models.
 }
 
-\author{Richard Chandler \email{rchandler@usgs.gov}}
+\author{Richard Chandler \email{rbchan@uga.edu}}
 
 
 \references{

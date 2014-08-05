@@ -116,7 +116,7 @@ Repeated Counts of an Open Metapopulation. \emph{Biometrics}. 67, pp
 
 }
 
-\author{Richard Chandler \email{rchandler@usgs.gov}}
+\author{Richard Chandler \email{rbchan@uga.edu}}
 
 \note{
 When gamma or omega are modeled using year-specific covariates, the

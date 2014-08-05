@@ -29,9 +29,9 @@ SEXP nll_gpcount( SEXP y_, SEXP Xlam_, SEXP Xphi_, SEXP Xp_, SEXP beta_lam_, SEX
   int J = ym.n_cols / T;
   arma::colvec lam = exp(Xlam*beta_lam + Xlam_offset);
   arma::colvec logit_phi = Xphi*beta_phi + Xphi_offset;
-  arma::colvec phiv = 1.0/(1.0+exp(-logit_phi));
+  arma::mat phiv = 1.0/(1.0+exp(-logit_phi));
   arma::colvec logit_p = Xp*beta_p + Xp_offset;
-  arma::colvec pv = 1.0/(1.0+exp(-logit_p));
+  arma::mat pv = 1.0/(1.0+exp(-logit_p));
   phiv.reshape(T,R);
   arma::mat phi = trans(phiv);
   pv.reshape(J*T,R);

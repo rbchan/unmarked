@@ -31,7 +31,7 @@ A S4 object with the following slots
 } 
 \references{Nagelkerke, N.J.D. (2004) A Note on a General Definition of the 
 	Coefficient of Determination. \emph{Biometrika} 78, pp. 691-692.}
-\author{Richard Chandler \email{rchandler@usgs.gov}}
+\author{Richard Chandler \email{rbchan@uga.edu}}
 \examples{
 data(linetran)
 (dbreaksLine <- c(0, 5, 10, 15, 20)) 
