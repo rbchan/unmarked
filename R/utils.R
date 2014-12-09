@@ -646,3 +646,130 @@ rzip <- function(n, lambda, psi) {
     x[runif(n) < psi] <- 0
     x
 }
+
+
+
+
+
+## Conway-Maxwell-Poisson distribution
+
+
+dcmp1 <- function(x, lambda, nu, K) {
+    j <- 0:K
+    z <- sum((lambda^j) / ((factorial(j))^nu))
+    lambda^x / (factorial(x)^nu * z)
+}
+
+dcmp2 <- function(x, lambda, nu, K) {
+    j <- 0:K
+    z <- sum(exp((log(lambda)*j) - (lfactorial(j)*nu)))
+    lambda^x / (factorial(x)^nu * z)
+}
+
+dcmp3 <- function(x, lambda, nu, K) {
+    j <- 0:K
+    z <- sum(exp((log(lambda)*j) - (lfactorial(j)*nu)))
+    exp(log(lambda)*x - (lfactorial(x)*nu + log(z)))
+}
+
+dcmp4 <- function(x, lambda, nu, K, log=TRUE) {
+    j <- 0:K
+    z <- sum(exp((log(lambda)*j) - (lfactorial(j)*nu)))
+    ll <- log(lambda)*x - (lfactorial(x)*nu + log(z))
+    if(log) return(ll) else return(exp(ll))
+}
+
+
+
+
+
+
+dcmp1(3, 10, 1, 50)
+dcmp2(3, 10, 1, 50)
+dcmp3(3, 10, 1, 50)
+
+dcom(3, 10, 1)
+
+
+
+
+dcmp1(3, 10, 1, 250)
+dcmp2(3, 10, 1, 250)
+dcmp3(3, 10, 1, 250)
+dcom(3, 10, 1)
+
+
+
+dcmp1(10, 10, .1, 250)
+dcmp2(10, 10, .1, 250)
+dcmp3(10, 10, .1, 250)
+#dcom(10, 10, .1)
+
+
+
+dcmp1(10, 10, 2, 500)
+dcmp2(10, 10, 2, 500)
+dcmp3(10, 10, 2, 500)
+dcom(10, 10, 2)
+
+
+
+
+X <- 0:500
+pX <- sapply(X, function(x) dcmp3(x, 5, 5, 500))
+
+plot(X, pX, type="h", xlim=c(0, 100))
+
+
+mu <- function(lambda, nu) lambda^(1/nu) - (nu-1)/(2*nu)
+mu(1, 0.05)
+
+lam <- function(mu, nu) (mu + (nu-1)/(2*nu))^nu
+
+lam(10.5, 0.05)
+
+
+
+x <- sample(X, size=1000, replace=TRUE, prob=pX)
+
+hist(x)
+
+mean(x)
+var(x)
+
+
+nll1 <- function(pars, data) {
+    lambda <- pars[1]
+    nu <- pars[2]
+    n <- length(data)
+    ll <- numeric(n)
+    for(i in 1:n) {
+        ll[i] <- dcmp4(data[i], lambda, nu, K=500, log=TRUE)
+    }
+    -sum(ll)
+}
+
+
+optim(c(1, 1), nll1, data=x)
+
+
+
+nll2 <- function(pars, data) {
+    mu <- pars[1]
+    nu <- pars[2]
+    lambda <- lam(mu, nu)
+    n <- length(data)
+    ll <- numeric(n)
+    for(i in 1:n) {
+        ll[i] <- dcmp4(data[i], lambda, nu, K=500, log=TRUE)
+    }
+    -sum(ll)
+}
+
+
+optim(c(1, 1), nll2, data=x)
+
+mean(x)
+var(x)
+
+lam(.99, 4.92)
