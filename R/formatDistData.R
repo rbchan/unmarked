@@ -11,6 +11,9 @@ formatDistData <- function (distData, distCol, transectNameCol, dist.breaks, occ
     T <- 1
     occasions <- factor(rep(1, nrow(distData)))
   }
+  if (missing(effortMatrix)) {
+    effortMatrix <- matrix(nrow=length(unique(transects)),ncol=T,1)
+  }
   else {
     occasions <- distData[, occasionCol]
     if (!is.factor(occasions)) {
@@ -36,9 +39,10 @@ formatDistData <- function (distData, distCol, transectNameCol, dist.breaks, occ
     }
   }
   y <- matrix(ya, nrow = M, ncol = J * T)
+  # takes into account the effortMatrix to allow for the insertion of NAs instead of 0s for surveys which were not completed  
   ee <- array(NA, c(M,length(occasion.levels)*(length(dist.breaks)-1)))
   for(i in 1:length(occasion.levels)){
-  ee[,((ncol(ee)/length(occasion.levels)*(i-1)+1):(ncol(ee)/length(occasion.levels)*i))] <- matrix(rep(effortMatrix[,i], times=length(dist.breaks)-1), ncol=length(dist.breaks)-1)
+  ee[,((ncol(ee)/length(occasion.levels)*(i-1)+1):(ncol(ee)/length(occasion.levels)*i))] <- matrix(effortMatrix[,i], ncol=(length(dist.breaks)-1), nrow=nrow(effortMatrix))
   }
   ee[ee==0] <- NA
   y <- y * ee
