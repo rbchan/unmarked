@@ -19,6 +19,7 @@ transect names.}
   than once, this can be used to format data for \code{gdistsamp}. It is
   the name of the column in distData that contains the occasion
   numbers. The occasion column should be a factor.}
+\item{effortMatrix}{optional matrix of 1 and 0s that is M * J in size and will allow for the insertion of NAs where the matrix = 0, indicating that a survey was not completed. When not supplied a matrix of all 1s is created since it is assumed all surveys were completed.}
 }
 \details{This function creates a site (M) by distance interval (J) response
 matrix from a data.frame containing the detection distances for each
@@ -72,3 +73,12 @@ umf <- unmarkedFrameGDS(y=y2, numPrimary=4, survey="point",
                         dist.breaks=cutpt, unitsIn="m")
 
 }
+ 
+ ## Example for datda from multiple occasions with effortMatrix
+ 
+ dat3 <-  data.frame(distance=1:100, site=gl(5, 20), visit=factor(rep(1:4, each=5)))
+ cutpt <- seq(0, 100, by=25)
+ 
+ effortMatrix <- matrix(ncol=4, nrow=5, rbinom(20,1,0.8))
+ 
+ y3 <- formatDistData(dat2, "distance", "site", cutpt, "visit", effortMatrix)

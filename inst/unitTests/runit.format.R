@@ -28,5 +28,16 @@ test.formatDistData <- function() {
 0, 5, 0, 0,   0, 5, 0, 0,   0, 0, 5, 0,   0, 0, 5, 0,
 0, 0, 5, 0,   0, 0, 5, 0,   0, 0, 5, 0,   0, 0, 0, 5,
 0, 0, 0, 5,   0, 0, 0, 5,   0, 0, 0, 5,   0, 0, 0, 5), 5, 16, byrow=TRUE))
+    
+    effortMatrix <- matrix(ncol=4, nrow=5,c(1,0))
+    y4 <- formatDistData(dat, "distance","site",cutpt, "visit",effortMatrix)
+    checkEqualsNumeric(y4, matrix(c(
+      5, 0, 0, 0,   NA,NA,NA,NA,  5, 0, 0, 0,   NA,NA,NA,NA,
+      NA,NA,NA,NA,  0, 5, 0, 0,   NA,NA,NA,NA,   0, 5, 0, 0,
+      0, 5, 0, 0,   NA,NA,NA,NA,  0, 0, 5, 0,   NA,NA,NA,NA,
+      NA,NA,NA,NA,   0, 0, 5, 0,   NA,NA,NA,NA,  0, 0, 0, 5,
+      0, 0, 0, 5,   NA,NA,NA,NA,   0, 0, 0, 5,   NA,NA,NA,NA), 5, 16, byrow=TRUE))
 
+    effortMatrix <- matrix(ncol=4, nrow=5,"a")
+    checkException(formatDistData(dat, "distance","site",cutpt, "visit",effortMatrix))
 }
