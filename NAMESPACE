@@ -36,7 +36,7 @@ exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitOccuFP, unmarkedFitDS,
 
 # Methods
 exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
-              getP, getFP, getB, getY, head, hessian, linearComb, mle,
+              getP, getFP, getB, getY, getN, head, hessian, linearComb, mle,
               modSel, nllFun, numSites, numY, obsCovs, obsNum, "obsCovs<-",
               obsToY, "obsToY<-", parboot, plot, hist, predict, profile,
               projection, residuals, sampleSize, SE, show, simulate, siteCovs,

@@ -2721,7 +2721,7 @@ setMethod("hist", "unmarkedFitDS", function(x, lwd=1, lty=1, ...) {
 setGeneric("getP", function(object, ...) standardGeneric("getP"))
 setGeneric("getFP", function(object, ...) standardGeneric("getFP"))
 setGeneric("getB", function(object, ...) standardGeneric("getB"))
-
+setGeneric("getN", function(object, ...) standardGeneric("getN"))
 
 setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE)
 {
@@ -3202,7 +3202,27 @@ setMethod("getP", "unmarkedFitGPC",
     return(p)
 })
 
+setMethod("getN", "unmarkedFitOccu", function(object, newdata=NULL, 
+                                              appendData=FALSE, level=0.95)
+{
+  
+  il <- object@estimates@estimates$state@invlink
+  if(il!="cloglog"){
+    stop("Requires cloglog link function for psi")
+  }
+  
+  if(is.null(newdata)){
+    newdata <- getData(object) 
+  }
+  
+  object@estimates@estimates$state@invlink <- "exp"
+  object@estimates@estimates$state@invlinkGrad <- "exp"
+  pr <- predict(object, type='state', newdata=newdata, 
+                appendData=appendData, level=level)
 
+  names(pr)[1] <- "N"
+  pr
+})
 
 
 

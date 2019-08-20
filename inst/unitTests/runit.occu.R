@@ -205,4 +205,16 @@ test.occu.cloglog <- function() {
   
   #Check error if wrong link function
   checkException(occu(~ele+wind ~ele+forest, occ.frame, linkPsi="fake"))
+  
+  #Check predictions
+  pr <- predict(occ_test, 'state')
+  checkEqualsNumeric(pr$Predicted[1:3],c(0.2934,0.6651,0.3915),tol=1e-4)
+
+  #Check derived abundance estimates
+  n_est <- getN(occ_test)
+  checkEqualsNumeric(n_est$N[1:3], c(0.3473,1.0939,00.4968), tol=1e-4)
+  
+  #Check for error when link function isn't cloglog
+  logit_mod <- occu(~1~1, occ.frame, se=F)  
+  checkException(getN(logit_mod))
 }
