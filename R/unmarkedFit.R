@@ -2164,6 +2164,7 @@ setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
             m = A <- A / 1e6,
             km = A <- A)
         switch(object@unitsOut,
+            m = A <- A * 1e6,
             ha = A <- A * 100,
             kmsq = A <- A)
         lambda <- lambda * A
@@ -3380,11 +3381,13 @@ setMethod("getP", "unmarkedFitDS",
     point = {
         for(i in 1:M) {
             a[i, 1] <- pi*db[2]^2
-            for(j in 2:J)
+            if(J > 1){
+              for(j in 2:J)
                 a[i, j] <- pi*db[j+1]^2 - sum(a[i, 1:(j-1)])
-            u[i,] <- a[i,] / sum(a[i,])
             }
-        })
+            u[i,] <- a[i,] / sum(a[i,])
+        }
+            })
 
 
     switch(key,
@@ -3809,6 +3812,7 @@ setMethod("simulate", "unmarkedFitDS",
             m = A <- A / 1e6,
             km = A <- A)
         switch(object@unitsOut,
+            m = A <- A * 1e6,
             ha = A <- A * 100,
             kmsq = A <- A)
         lambda <- lambda * A
@@ -3821,7 +3825,6 @@ setMethod("simulate", "unmarkedFitDS",
         }
     return(simList)
 })
-
 
 
 

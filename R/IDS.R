@@ -1,0 +1,396 @@
+setClassUnion("unmarkedFrameOrNULL", members=c("unmarkedFrame", "NULL"))
+
+setClass("unmarkedFitIDS",
+    representation(
+        formlist = "list",
+        keyfun = "character",
+        K = "numeric",
+        dataPC = "unmarkedFrameOrNULL",
+        dataOC = "unmarkedFrameOrNULL",
+        unitsOut = "character"),
+        contains = "unmarkedFit")
+
+get_ds_info <- function(db){
+  J <- length(db) - 1
+  a <- u <- rep(NA, J)
+  a[1] <- pi*db[2]^2
+  if(J > 1){
+    for (j in 2:J){
+      a[j] <- pi*db[j+1]^2 - sum(a[1:(j-1)])
+    }
+  }
+
+  total_area <- sum(a)
+  u <- a/total_area
+  w <- diff(db)
+  list(total_area=total_area, a=a, u=u, w=w)
+}
+
+IDS <- function(lambdaformula = ~1,
+                detformulaDS = ~1,
+                detformulaPC = NULL,
+                detformulaOC = NULL,
+                dataDS,
+                dataPC = NULL,
+                dataOC = NULL,
+                keyfun = "halfnorm",
+                maxDistPC,
+                maxDistOC,
+                K = 100,
+                unitsOut = "ha",
+                starts = NULL,
+                method = "BFGS",
+                ...
+                ){
+
+  # Process inputs-------------------------------------------------------------
+
+  form_hds <- as.formula(paste(c(as.character(detformulaDS),
+                                 as.character(lambdaformula)), collapse=""))
+
+  if(is.null(detformulaPC)){
+    form_pc <- as.formula(paste(c(as.character(detformulaDS),
+                                 as.character(lambdaformula)), collapse=""))
+  } else{
+    form_pc <- as.formula(paste(c(as.character(detformulaPC),
+                                 as.character(lambdaformula)), collapse=""))
+  }
+
+  if(is.null(detformulaOC)){
+    form_oc <- as.formula(paste(c(as.character(detformulaDS),
+                                 as.character(lambdaformula)), collapse=""))
+  } else{
+    form_oc <- as.formula(paste(c(as.character(detformulaOC),
+                                 as.character(lambdaformula)), collapse=""))
+  }
+
+  formlist <- list(lam=lambdaformula, ds=form_hds, pc=form_pc, oc=form_oc)
+
+  stopifnot(inherits(dataDS, "unmarkedFrameDS"))
+  stopifnot(inherits(dataPC, c("unmarkedFramePCount", "NULL")))
+  stopifnot(inherits(dataOC, c("unmarkedFrameOccu", "NULL")))
+  #stopifnot(!is.null(dataPC) | !is.null(dataOC))
+
+  stopifnot(keyfun %in% c("halfnorm", "exp"))
+  keyidx <- switch(keyfun, "halfnorm"={1}, "exp"={2})
+
+  if(missing(maxDistPC)) maxDistPC <- max(dataDS@dist.breaks)
+  if(missing(maxDistOC)) maxDistOC <- max(dataDS@dist.breaks)
+
+
+  # Design matrices------------------------------------------------------------
+
+  # Need to add offset support here eventually
+  gd_hds <- getDesign(dataDS, form_hds)
+  ds_hds <- get_ds_info(dataDS@dist.breaks)
+
+  gd_pc <- list(y=matrix(0,0,0), X=matrix(0,0,0), V=matrix(0,0,0))
+  ds_pc <- list(total_area=0, db=c(0,0), a=0, w=0, u=0)
+  if(!is.null(dataPC)){
+    gd_pc <- getDesign(dataPC, form_pc)
+    ds_pc <- get_ds_info(c(0, maxDistPC))
+  }
+
+  gd_oc <- list(y=matrix(0,0,0), X=matrix(0,0,0), V=matrix(0,0,0))
+  ds_oc <- list(total_area=0, db=c(0,0), a=0, w=0, u=0)
+  Kmin_oc <- rep(0,0)
+  if(!is.null(dataOC)){
+    gd_oc <- getDesign(dataOC, form_oc)
+    ds_oc <- get_ds_info(c(0, maxDistOC))
+    Kmin_oc <- apply(gd_oc$y, 1, max, na.rm=T)
+  }
+
+  # Density conversion and unequal area correction
+  lam_adjust <- c(ds_hds$total_area, ds_pc$total_area, ds_oc$total_area)
+  names(lam_adjust) <- c("hds", "pc", "oc")
+
+  switch(dataDS@unitsIn,
+    m = lam_adjust <- lam_adjust / 1e6,
+    km = lam_adjust <- lam_adjust)
+
+  switch(unitsOut,
+    m = lam_adjust <- lam_adjust * 1e6,
+    ha = lam_adjust <- lam_adjust * 100,
+    kmsq = lam_adjust <- lam_adjust)
+
+  # Parameter stuff------------------------------------------------------------
+  # Doesn't support hazard
+  pind_mat <- matrix(0, nrow=4, ncol=2)
+  pind_mat[1,] <- c(1, ncol(gd_hds$X))
+  pind_mat[2,] <- max(pind_mat) + c(1, ncol(gd_hds$V))
+  if(!is.null(detformulaPC) & !is.null(dataPC)){
+    pind_mat[3,] <- max(pind_mat) + c(1, ncol(gd_pc$V))
+  }
+  if(!is.null(detformulaOC) & !is.null(dataOC)){
+    pind_mat[4,] <- max(pind_mat) + c(1, ncol(gd_oc$V))
+  }
+
+  if(is.null(starts)){
+    lam_init <- log(mean(apply(dataDS@y, 1, sum, na.rm=TRUE)) / lam_adjust[1])
+    params_tmb <- list(beta_lam = c(lam_init, rep(0, ncol(gd_hds$X)-1)),
+                     beta_hds = c(log(median(dataDS@dist.breaks)),rep(0, ncol(gd_hds$V)-1)),
+                     beta_pc = rep(0,0),
+                     beta_oc = rep(0,0))
+
+    if(!is.null(detformulaPC) & !is.null(dataPC)){
+      params_tmb$beta_pc <- c(log(maxDistPC/2), rep(0, ncol(gd_pc$V)-1))
+    }
+    if(!is.null(detformulaOC) & !is.null(dataOC)){
+      params_tmb$beta_oc <- c(log(maxDistOC/2), rep(0, ncol(gd_oc$V)-1))
+    }
+    starts <- unlist(params_tmb)
+  } else {
+    if(length(starts) != max(pind_mat)){
+      stop("Length of starts should be ", max(pind_mat), call.=FALSE)
+    }
+    params_tmb <- list(beta_lam = starts[pind_mat[1,1]:pind_mat[1,2]],
+                     beta_hds = starts[pind_mat[2,1]:pind_mat[2,2]],
+                     beta_pc = rep(0,0),
+                     beta_oc = rep(0,0))
+
+    if(!is.null(detformulaPC) & !is.null(dataPC)){
+      params_tmb$beta_pc <- starts[pind_mat[3,1]:pind_mat[3,2]]
+    }
+    if(!is.null(detformulaOC) & !is.null(dataOC)){
+      params_tmb$beta_oc <- starts[pind_mat[4,1]:pind_mat[4,2]]
+    }
+  }
+
+  # Construct TMB data list----------------------------------------------------
+  tmb_dat <- list(
+    # Common
+    pind = pind_mat, lam_adjust = lam_adjust,
+
+    # HDS data
+    y_hds = gd_hds$y, X_hds = gd_hds$X, V_hds = gd_hds$V, key_hds = keyidx,
+    db_hds = umf_hds@dist.breaks, a_hds = ds_hds$a, w_hds = ds_hds$w,
+    u_hds = ds_hds$u,
+
+    # PC data
+    y_pc = gd_pc$y, X_pc = gd_pc$X, V_pc = gd_pc$V, key_pc = keyidx,
+    db_pc = c(0, maxDistPC), a_pc = ds_pc$a, w_pc = ds_pc$w, u_pc = ds_pc$u,
+
+    # occ data
+    y_oc = gd_oc$y, X_oc = gd_oc$X, V_oc = gd_oc$V, key_oc = keyidx,
+    db_oc = c(0, maxDistOC), a_oc = ds_oc$a, w_oc = ds_oc$w, u_oc = ds_oc$u,
+    K_oc = K, Kmin_oc = Kmin_oc
+  )
+
+  tmb_obj <- TMB::MakeADFun(data = c(model = "tmb_IDS", tmb_dat), parameters = params_tmb,
+                            DLL = "unmarked_TMBExports", silent=TRUE)
+
+  opt <- optim(unlist(params_tmb), fn=tmb_obj$fn, gr=tmb_obj$gr, method=method, ...)
+
+  fmAIC <- 2 * opt$value + 2 * length(unlist(params_tmb))
+
+  sdr <- TMB::sdreport(tmb_obj)
+
+  lam_coef <- get_coef_info(sdr, "lam", colnames(gd_hds$X),
+                                       pind_mat[1,1]:pind_mat[1,2])
+
+  lam_est <- unmarkedEstimate(name="Density", short.name="lam",
+    estimates = lam_coef$ests, covMat = lam_coef$cov, fixed=1:ncol(gd_hds$X),
+    invlink = "exp", invlinkGrad = "exp")
+
+  dist_coef <- get_coef_info(sdr, "hds", colnames(gd_hds$V),
+                                       pind_mat[2,1]:pind_mat[2,2])
+
+  dist_est <- unmarkedEstimate(name="Distance Sampling", short.name="ds",
+    estimates = dist_coef$ests, covMat = dist_coef$cov, fixed=1:ncol(gd_hds$V),
+    invlink = "exp", invlinkGrad = "exp")
+
+  est_list <- list(lam=lam_est, ds=dist_est)
+
+  if(!is.null(detformulaPC) & !is.null(dataPC)){
+    pc_coef <- get_coef_info(sdr, "pc", colnames(gd_pc$V),
+                                        pind_mat[3,1]:pind_mat[3,2])
+
+    pc_est <- unmarkedEstimate(name="Point Count", short.name="pc",
+      estimates = pc_coef$ests, covMat = pc_coef$cov, fixed=1:ncol(gd_pc$V),
+      invlink = "exp", invlinkGrad = "exp")
+    est_list <- c(est_list, list(pc=pc_est))
+  }
+
+  if(!is.null(detformulaOC) & !is.null(dataOC)){
+    oc_coef <- get_coef_info(sdr, "oc", colnames(gd_oc$V),
+                                        pind_mat[4,1]:pind_mat[4,2])
+    oc_est <- unmarkedEstimate(name="Presence/Absence", short.name="oc",
+      estimates = oc_coef$ests, covMat = oc_coef$cov, fixed=1:ncol(gd_oc$V),
+      invlink = "exp", invlinkGrad = "exp")
+    est_list <- c(est_list, list(oc=oc_est))
+  }
+
+  est_list <- unmarkedEstimateList(est_list)
+
+  new("unmarkedFitIDS", fitType = "IDS", call = match.call(),
+    opt = opt, formula = lambdaformula, formlist=formlist,
+    data = dataDS, dataPC=dataPC, dataOC=dataOC,
+    keyfun=keyfun,
+    # this needs to be fixed
+    sitesRemoved = gd_hds$removed.sites,
+    unitsOut=unitsOut,
+    estimates = est_list, AIC = fmAIC, negLogLike = opt$value,
+    nllFun = tmb_obj$fn, TMB=tmb_obj)
+
+}
+
+IDS_convert_class <- function(inp, type){
+  stopifnot(type %in% names(inp))
+  if(type == "lam") type <- "ds"
+  data <- inp@data
+  if(type == "pc"){
+    tempdat <- inp@dataPC
+    maxDist <- inp@call$maxDistPC
+  }
+  if(type == "oc"){
+    tempdat <- inp@dataOC
+    maxDist <- inp@call$maxDistOC
+  }
+  if(type %in% c("pc", "oc")){
+    if(is.null(maxDist)) maxDist <- max(data@dist.breaks)
+    data <- unmarkedFrameDS(y=tempdat@y, siteCovs=siteCovs(tempdat),
+                            dist.breaks=c(0, maxDist), survey="point",
+                            unitsIn=data@unitsIn)
+  }
+
+  est <- inp@estimates@estimates[c("lam", type)]
+  names(est) <- c("state", "det")
+
+  new("unmarkedFitDS", fitType="IDS", opt=inp@opt, formula=inp@formlist[[type]],
+      data=data, keyfun=inp@keyfun, unitsOut=inp@unitsOut,
+      estimates=unmarkedEstimateList(est),
+      AIC=inp@AIC, output="density", TMB=inp@TMB)
+}
+
+
+setMethod("predict", "unmarkedFitIDS", function(object, type, newdata,
+          backTransform=TRUE, appendData=FALSE, level=0.95, ...){
+  stopifnot(type %in% names(object))
+  conv <- IDS_convert_class(object, type)
+  type <- switch(type, lam="state", ds="det", pc="det", oc="det")
+  predict(conv, type, newdata, backTransform=backTransform, appendData=appendData,
+          level=level, ...)
+})
+
+
+setMethod("fitted", "unmarkedFitIDS", function(object, na.rm=FALSE){
+
+  dists <- names(object)[names(object) %in% c("ds", "pc")]
+
+  # distance and N-mix data
+  out <- lapply(dists, function(x){
+    conv <- IDS_convert_class(object, type=x)
+    fitted(conv)
+  })
+  names(out) <- dists
+
+  # occupancy data
+  if("oc" %in% names(object)){
+    conv <- IDS_convert_class(object, type="oc")
+    lam <- predict(object, 'lam')$Predicted
+    A <- pi*max(conv@data@dist.breaks)^2
+    switch(conv@data@unitsIn,
+            m = A <- A / 1e6,
+            km = A <- A)
+    switch(object@unitsOut,
+            m = A <- A * 1e6,
+            ha = A <- A * 100,
+            kmsq = A <- A)
+    lam <- lam * A
+
+    p <- getP(conv)
+    out$oc <- 1 - exp(-lam*p) ## analytical integration.
+  }
+
+  out
+})
+
+
+setMethod("getP", "unmarkedFitIDS", function(object, ...){
+
+  dets <- names(object)[names(object) != "lam"]
+
+  out <- lapply(dets, function(x){
+    conv <- IDS_convert_class(object, type=x)
+    getP(conv)
+  })
+  names(out) <- dets
+  out
+})
+
+
+setMethod("residuals", "unmarkedFitIDS", function(object, ...){
+
+  dists <- names(object)[names(object) %in% c("ds", "pc")]
+
+  # distance and N-mix data
+  out <- lapply(dists, function(x){
+    conv <- IDS_convert_class(object, type=x)
+    residuals(conv)
+  })
+  names(out) <- dists
+
+  # occupancy data
+  if("oc" %in% names(object)){
+    y <- object@dataOC@y
+    ft <- fitted(object)$oc
+    out$oc <- y - ft
+  }
+
+  out
+})
+
+setMethod("hist", "unmarkedFitIDS", function(x, lwd=1, lty=1, ...){
+
+  conv <- IDS_convert_class(x, type='ds')
+  hist(conv, lwd=lwd, lty=lty, ...)
+
+})
+
+setMethod("plot", c(x="unmarkedFitIDS", y="missing"), function(x, y, ...){
+
+  r <- residuals(x)
+  f <- fitted(x)
+  nr <- length(r)
+  long_names <- sapply(x@estimates@estimates, function(x) x@name)
+  long_names <- long_names[long_names != "Density"]
+
+  old_par <- par()$mfrow
+  par(mfrow=c(nr,1))
+
+  for (i in 1:nr){
+    plot(f[[i]], r[[i]], ylab = "Residuals", xlab = "Predicted values",
+         main=long_names[i])
+    abline(h = 0, lty = 3, col = "gray")
+  }
+  par(mfrow=old_par)
+
+})
+
+setMethod("simulate", "unmarkedFitIDS",
+          function(object,  nsim = 1, seed = NULL, na.rm = FALSE){
+
+  dets <- c("ds","pc","oc")
+
+  temp <- lapply(dets, function(x){
+    if(! x %in% names(object)) return(NULL)
+    conv <- IDS_convert_class(object, type=x)
+    s <- simulate(conv, nsim=nsim, seed=seed, na.rm=na.rm)
+    if(x=="oc"){
+      s <- lapply(s, function(z){
+                    z[z>1] <- 1
+                    z
+                  })
+    }
+    s
+  })
+
+  #"permute"
+  lapply(1:nsim, function(i){
+    sim <- lapply(temp, function(x) x[[i]])
+    names(sim) <- c("ds","pc","oc")
+    sim
+  })
+
+})
+
