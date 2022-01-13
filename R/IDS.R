@@ -394,3 +394,123 @@ setMethod("simulate", "unmarkedFitIDS",
 
 })
 
+
+setMethod("update", "unmarkedFitIDS",
+  function(object, lambdaformula, detformulaDS, detformulaPC, detformulaOC,
+           dataDS, dataPC, dataOC, ...){
+    call <- object@call
+
+    if(!missing(lambdaformula)){
+      call[["lambdaformula"]] <- lambdaformula
+    } else {
+      call[["lambdaformula"]] <- object@formlist$lam
+    }
+
+    if(!missing(detformulaDS)){
+      call[["detformulaDS"]] <- detformulaDS
+    } else {
+      call[["detformulaDS"]] <- split_formula(object@formlist$ds)[[1]]
+    }
+
+    if(!missing(detformulaPC)){
+      call[["detformulaPC"]] <- detformulaPC
+    } else {
+      call[["detformulaPC"]] <- split_formula(object@formlist$pc)[[1]]
+    }
+
+    if(!missing(detformulaOC)){
+      call[["detformulaOC"]] <- detformulaOC
+    } else {
+      call[["detformulaOC"]] <- split_formula(object@formlist$oc)[[1]]
+    }
+
+    if(!missing(dataDS)){
+      call[["dataDS"]] <- dataDS
+    } else {
+      call[["dataDS"]] <- object@data
+    }
+
+    if(!missing(dataPC)){
+      call[["dataPC"]] <- dataPC
+    } else {
+      call[["dataPC"]] <- object@dataPC
+    }
+
+    if(!missing(dataOC)){
+      call[["dataOC"]] <- dataOC
+    } else {
+      call[["dataOC"]] <- object@dataOC
+    }
+
+    extras <- match.call(call=sys.call(-1),
+                         expand.dots = FALSE)$...
+    if (length(extras) > 0) {
+        existing <- !is.na(match(names(extras), names(call)))
+        for (a in names(extras)[existing])
+            call[[a]] <- extras[[a]]
+        if (any(!existing)) {
+            call <- c(as.list(call), extras[!existing])
+            call <- as.call(call)
+            }
+        }
+
+    eval(call, parent.frame(2))
+
+})
+
+
+setMethod("parboot", "unmarkedFitIDS",
+    function(object, statistic=SSE, nsim=10, ...)
+{
+    dots <- list(...)
+    statistic <- match.fun(statistic)
+    call <- match.call(call = sys.call(-1))
+    starts <- as.numeric(coef(object))
+
+    t0 <- statistic(object, ...)
+    lt0 <- length(t0)
+    t.star <- matrix(NA, nsim, lt0)
+    #if(!missing(report))
+    #    cat("t0 =", t0, "\n")
+
+    simList <- simulate(object, nsim = nsim, na.rm = FALSE)
+
+    dataDS <- object@data
+    dataPC <- object@dataPC
+    has_pc <- "pc" %in% names(object)
+    dataOC <- object@dataOC
+    has_oc <- "oc" %in% names(object)
+
+    t.star <- pbapply::pbsapply(1:nsim, function(i){
+      dataDS@y <- simList[[i]]$ds
+      if(has_pc) dataPC@y <- simList[[i]]$pc
+      if(has_oc) dataOC@y <- simList[[i]]$oc
+      fit <- update(object, dataDS=dataDS, dataPC=dataPC, dataOC=dataOC, starts=starts)
+      statistic(fit)
+    })
+    if(lt0 > 1){
+      t.star <- t(t.star)
+    } else {
+      t.star <- matrix(t.star, ncol=lt0)
+    }
+
+    if (!is.null(names(t0))){
+      colnames(t.star) <- names(t0)
+    } else{
+      colnames(t.star) <- paste("t*", 1:lt0, sep="")
+    }
+
+    out <- new("parboot", call = call, t0 = t0, t.star = t.star)
+    return(out)
+})
+
+setMethod("SSE", "unmarkedFitIDS", function(fit, ...){
+    r <- unlist(residuals(fit))
+    return(c(SSE = sum(r^2, na.rm=T)))
+})
+
+setMethod("nonparboot", "unmarkedFitIDS",
+    function(object, B = 0, keepOldSamples = TRUE, ...)
+{
+   stop("Not currently supported for unmarkedFitIDS", call.=FALSE)
+})
