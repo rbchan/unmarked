@@ -195,7 +195,7 @@ IDS <- function(lambdaformula = ~1,
   dist_coef <- get_coef_info(sdr, "hds", colnames(gd_hds$V),
                                        pind_mat[2,1]:pind_mat[2,2])
 
-  dist_est <- unmarkedEstimate(name="Distance Sampling", short.name="ds",
+  dist_est <- unmarkedEstimate(name="Distance sampling detection", short.name="ds",
     estimates = dist_coef$ests, covMat = dist_coef$cov, fixed=1:ncol(gd_hds$V),
     invlink = "exp", invlinkGrad = "exp")
 
@@ -205,7 +205,7 @@ IDS <- function(lambdaformula = ~1,
     pc_coef <- get_coef_info(sdr, "pc", colnames(gd_pc$V),
                                         pind_mat[3,1]:pind_mat[3,2])
 
-    pc_est <- unmarkedEstimate(name="Point Count", short.name="pc",
+    pc_est <- unmarkedEstimate(name="Point count detection", short.name="pc",
       estimates = pc_coef$ests, covMat = pc_coef$cov, fixed=1:ncol(gd_pc$V),
       invlink = "exp", invlinkGrad = "exp")
     est_list <- c(est_list, list(pc=pc_est))
@@ -214,7 +214,7 @@ IDS <- function(lambdaformula = ~1,
   if(!is.null(detformulaOC) & !is.null(dataOC)){
     oc_coef <- get_coef_info(sdr, "oc", colnames(gd_oc$V),
                                         pind_mat[4,1]:pind_mat[4,2])
-    oc_est <- unmarkedEstimate(name="Presence/Absence", short.name="oc",
+    oc_est <- unmarkedEstimate(name="Presence/absence detection", short.name="oc",
       estimates = oc_coef$ests, covMat = oc_coef$cov, fixed=1:ncol(gd_oc$V),
       invlink = "exp", invlinkGrad = "exp")
     est_list <- c(est_list, list(oc=oc_est))
@@ -233,6 +233,28 @@ IDS <- function(lambdaformula = ~1,
     nllFun = tmb_obj$fn, TMB=tmb_obj)
 
 }
+
+setMethod("summary", "unmarkedFitIDS", function(object)
+{
+    cat("\nCall:\n")
+    print(object@call)
+    cat("\n")
+    summaryOut <- summary(object@estimates)
+    cat("AIC:", object@AIC,"\n")
+    cat("Number of distance sampling sites:", numSites(object@data))
+    if(!is.null(object@dataPC)){
+      cat("\nNumber of point count sites:", numSites(object@dataPC))
+    }
+    if(!is.null(object@dataOC)){
+      cat("\nNumber of presence/absence sites:", numSites(object@dataOC))
+    }
+    cat("\noptim convergence code:", object@opt$convergence)
+    cat("\noptim iterations:", object@opt$counts[1], "\n")
+    if(!identical(object@opt$convergence, 0L))
+    warning("Model did not converge. Try providing starting values or increasing maxit control argment.")
+    cat("Bootstrap iterations:", length(object@bootstrapSamples), "\n\n")
+    invisible(summaryOut)
+})
 
 IDS_convert_class <- function(inp, type){
   stopifnot(type %in% names(inp))
