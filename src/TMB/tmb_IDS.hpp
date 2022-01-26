@@ -36,10 +36,18 @@ Type tmb_IDS(objective_function<Type>* obj) {
   DATA_INTEGER(K_oc);
   DATA_IVECTOR(Kmin_oc);
 
+  DATA_VECTOR(durationDS);
+  DATA_VECTOR(durationPC);
+  DATA_VECTOR(durationOC);
+  DATA_MATRIX(Xa_hds);
+  DATA_MATRIX(Xa_pc);
+  DATA_MATRIX(Xa_oc);
+
   PARAMETER_VECTOR(beta_lam);
   PARAMETER_VECTOR(beta_hds);
   PARAMETER_VECTOR(beta_pc);
   PARAMETER_VECTOR(beta_oc);
+  PARAMETER_VECTOR(beta_avail);
 
   int survey = 1; // Only point counts supported
 
@@ -56,13 +64,21 @@ Type tmb_IDS(objective_function<Type>* obj) {
   vector<Type> sigma_hds = V_hds * beta_hds;
   sigma_hds = exp(sigma_hds);
 
+  vector<Type> p_avail(M);
+  p_avail.setOnes();
+  if(beta_avail.size() > 0){
+    vector<Type> phi = Xa_hds * beta_avail;
+    phi = exp(phi);
+    p_avail = 1 - exp(-1 * durationDS.array() * phi.array());
+  }
+
   for (int i=0; i<M; i++){
 
     vector<Type> cp = distance_prob(key_hds, sigma_hds(i), Type(0), survey,
                                     db_hds, w_hds, a_hds, u_hds);
 
     for (int j=0; j<J; j++){
-      loglik -= dpois(y_hds(i,j), lam_hds(i) * cp(j), true);
+      loglik -= dpois(y_hds(i,j), lam_hds(i) * cp(j) * p_avail(i), true);
     }
   }
 
@@ -86,10 +102,18 @@ Type tmb_IDS(objective_function<Type>* obj) {
   }
   sigma_pc = exp(sigma_pc);
 
+  vector<Type> p_avail_pc(M);
+  p_avail_pc.setOnes();
+  if(beta_avail.size() > 0){
+    vector<Type> phi = Xa_pc * beta_avail;
+    phi = exp(phi);
+    p_avail_pc = 1 - exp(-1 * durationPC.array() * phi.array());
+  }
+
   for (int i=0; i<M; i++){
     vector<Type> cp = distance_prob(key_pc, sigma_pc(i), Type(0), survey,
                                     db_pc, w_pc, a_pc, u_pc);
-    loglik -= dpois(y_pc(i,0), lam_pc(i) * cp(0), true);
+    loglik -= dpois(y_pc(i,0), lam_pc(i) * cp(0) * p_avail_pc(i), true);
   }
 
   }
@@ -114,6 +138,14 @@ Type tmb_IDS(objective_function<Type>* obj) {
   }
   sigma_oc = exp(sigma_oc);
 
+  vector<Type> p_avail_oc(M);
+  p_avail_oc.setOnes();
+  if(beta_avail.size() > 0){
+    vector<Type> phi = Xa_oc * beta_avail;
+    phi = exp(phi);
+    p_avail_oc = 1 - exp(-1 * durationOC.array() * phi.array());
+  }
+
   Type f;
   Type g;
   Type p;
@@ -122,7 +154,9 @@ Type tmb_IDS(objective_function<Type>* obj) {
   for (int i=0; i<M; i++){
 
     vector<Type> q = 1 - distance_prob(key_oc, sigma_oc(i), Type(0), survey,
-                                    db_oc, w_oc, a_oc, u_oc);
+                                    db_oc, w_oc, a_oc, u_oc) * p_avail_oc(i);
+    //vector<Type> q = 1 - distance_prob(key_oc, sigma_oc(i), Type(0), survey,
+    //                                db_oc, w_oc, a_oc, u_oc);
 
     site_lp = 0.0;
     for (int k=Kmin_oc(i); k<(K_oc+1); k++){

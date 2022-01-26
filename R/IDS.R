@@ -33,6 +33,10 @@ IDS <- function(lambdaformula = ~1,
                 dataDS,
                 dataPC = NULL,
                 dataOC = NULL,
+                availformula = NULL,
+                durationDS = NULL,
+                durationPC = NULL,
+                durationOC = NULL,
                 keyfun = "halfnorm",
                 maxDistPC,
                 maxDistOC,
@@ -71,6 +75,20 @@ IDS <- function(lambdaformula = ~1,
   stopifnot(inherits(dataOC, c("unmarkedFrameOccu", "NULL")))
   #stopifnot(!is.null(dataPC) | !is.null(dataOC))
 
+  has_avail <- FALSE
+  if(!is.null(durationDS) | !is.null(durationPC) | !is.null(durationOC)){
+    has_avail <- TRUE
+    if(is.null(availformula)) availformula <- ~1
+    form_avail <- as.formula(paste("~1", paste(as.character(availformula), collapse="")))
+    stopifnot(!is.null(durationDS))
+    if(!is.null(dataPC)) stopifnot(!is.null(durationPC))
+    if(!is.null(dataOC)) stopifnot(!is.null(durationOC))
+  }
+
+  stopifnot(is.null(durationDS) || (length(durationDS) == numSites(dataDS)))
+  stopifnot(is.null(durationPC) || (length(durationPC) == numSites(dataPC)))
+  stopifnot(is.null(durationOC) || (length(durationOC) == numSites(dataOC)))
+
   stopifnot(keyfun %in% c("halfnorm", "exp"))
   keyidx <- switch(keyfun, "halfnorm"={1}, "exp"={2})
 
@@ -83,21 +101,30 @@ IDS <- function(lambdaformula = ~1,
   # Need to add offset support here eventually
   gd_hds <- getDesign(dataDS, form_hds)
   ds_hds <- get_ds_info(dataDS@dist.breaks)
+  Xavail_ds <- matrix(0,0,0)
+  if(has_avail) Xavail_ds <- getDesign(dataDS, form_avail)$X
+  if(is.null(durationDS)) durationDS <- rep(0,0)
 
   gd_pc <- list(y=matrix(0,0,0), X=matrix(0,0,0), V=matrix(0,0,0))
   ds_pc <- list(total_area=0, db=c(0,0), a=0, w=0, u=0)
+  Xavail_pc <- matrix(0,0,0)
+  if(is.null(durationPC)) durationPC <- rep(0,0)
   if(!is.null(dataPC)){
     gd_pc <- getDesign(dataPC, form_pc)
     ds_pc <- get_ds_info(c(0, maxDistPC))
+    if(has_avail) Xavail_pc <- getDesign(dataPC, form_avail)$X
   }
 
   gd_oc <- list(y=matrix(0,0,0), X=matrix(0,0,0), V=matrix(0,0,0))
   ds_oc <- list(total_area=0, db=c(0,0), a=0, w=0, u=0)
   Kmin_oc <- rep(0,0)
+  Xavail_oc <- matrix(0,0,0)
+  if(is.null(durationOC)) durationOC <- rep(0,0)
   if(!is.null(dataOC)){
     gd_oc <- getDesign(dataOC, form_oc)
     ds_oc <- get_ds_info(c(0, maxDistOC))
     Kmin_oc <- apply(gd_oc$y, 1, max, na.rm=T)
+    if(has_avail) Xavail_oc <- getDesign(dataOC, form_avail)$X
   }
 
   # Density conversion and unequal area correction
@@ -115,7 +142,7 @@ IDS <- function(lambdaformula = ~1,
 
   # Parameter stuff------------------------------------------------------------
   # Doesn't support hazard
-  pind_mat <- matrix(0, nrow=4, ncol=2)
+  pind_mat <- matrix(0, nrow=5, ncol=2)
   pind_mat[1,] <- c(1, ncol(gd_hds$X))
   pind_mat[2,] <- max(pind_mat) + c(1, ncol(gd_hds$V))
   if(!is.null(detformulaPC) & !is.null(dataPC)){
@@ -124,19 +151,26 @@ IDS <- function(lambdaformula = ~1,
   if(!is.null(detformulaOC) & !is.null(dataOC)){
     pind_mat[4,] <- max(pind_mat) + c(1, ncol(gd_oc$V))
   }
+  if(has_avail){
+    pind_mat[5,] <- max(pind_mat) + c(1, ncol(Xavail_ds))
+  }
 
   if(is.null(starts)){
     lam_init <- log(mean(apply(dataDS@y, 1, sum, na.rm=TRUE)) / lam_adjust[1])
     params_tmb <- list(beta_lam = c(lam_init, rep(0, ncol(gd_hds$X)-1)),
                      beta_hds = c(log(median(dataDS@dist.breaks)),rep(0, ncol(gd_hds$V)-1)),
                      beta_pc = rep(0,0),
-                     beta_oc = rep(0,0))
+                     beta_oc = rep(0,0),
+                     beta_avail = rep(0,0))
 
     if(!is.null(detformulaPC) & !is.null(dataPC)){
       params_tmb$beta_pc <- c(log(maxDistPC/2), rep(0, ncol(gd_pc$V)-1))
     }
     if(!is.null(detformulaOC) & !is.null(dataOC)){
       params_tmb$beta_oc <- c(log(maxDistOC/2), rep(0, ncol(gd_oc$V)-1))
+    }
+    if(has_avail){
+      params_tmb$beta_avail <- rep(0, ncol(Xavail_ds))
     }
     starts <- unlist(params_tmb)
   } else {
@@ -146,13 +180,17 @@ IDS <- function(lambdaformula = ~1,
     params_tmb <- list(beta_lam = starts[pind_mat[1,1]:pind_mat[1,2]],
                      beta_hds = starts[pind_mat[2,1]:pind_mat[2,2]],
                      beta_pc = rep(0,0),
-                     beta_oc = rep(0,0))
+                     beta_oc = rep(0,0),
+                     beta_avail = rep(0,0))
 
     if(!is.null(detformulaPC) & !is.null(dataPC)){
       params_tmb$beta_pc <- starts[pind_mat[3,1]:pind_mat[3,2]]
     }
     if(!is.null(detformulaOC) & !is.null(dataOC)){
       params_tmb$beta_oc <- starts[pind_mat[4,1]:pind_mat[4,2]]
+    }
+    if(has_avail){
+      params_tmb$beta_avail <- starts[pind_mat[5,1]:pind_mat[5,2]]
     }
   }
 
@@ -173,7 +211,11 @@ IDS <- function(lambdaformula = ~1,
     # occ data
     y_oc = gd_oc$y, X_oc = gd_oc$X, V_oc = gd_oc$V, key_oc = keyidx,
     db_oc = c(0, maxDistOC), a_oc = ds_oc$a, w_oc = ds_oc$w, u_oc = ds_oc$u,
-    K_oc = K, Kmin_oc = Kmin_oc
+    K_oc = K, Kmin_oc = Kmin_oc,
+
+    # avail data
+    durationDS = durationDS, durationPC = durationPC, durationOC = durationOC,
+    Xa_hds = Xavail_ds, Xa_pc = Xavail_pc, Xa_oc = Xavail_oc
   )
 
   tmb_obj <- TMB::MakeADFun(data = c(model = "tmb_IDS", tmb_dat), parameters = params_tmb,
@@ -218,6 +260,15 @@ IDS <- function(lambdaformula = ~1,
       estimates = oc_coef$ests, covMat = oc_coef$cov, fixed=1:ncol(gd_oc$V),
       invlink = "exp", invlinkGrad = "exp")
     est_list <- c(est_list, list(oc=oc_est))
+  }
+
+  if(has_avail){
+    avail_coef <- get_coef_info(sdr, "avail", colnames(Xavail_ds),
+                                pind_mat[5,1]:pind_mat[5,2])
+    avail_est <- unmarkedEstimate(name="Availability", short.name="phi",
+      estimates=avail_coef$ests, covMat=avail_coef$cov, fixed=1:ncol(Xavail_ds),
+      invlink="exp", invlinkGrad="exp")
+    est_list <- c(est_list, list(phi=avail_est))
   }
 
   est_list <- unmarkedEstimateList(est_list)
