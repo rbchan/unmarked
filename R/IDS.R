@@ -201,7 +201,7 @@ IDS <- function(lambdaformula = ~1,
 
     # HDS data
     y_hds = gd_hds$y, X_hds = gd_hds$X, V_hds = gd_hds$V, key_hds = keyidx,
-    db_hds = umf_hds@dist.breaks, a_hds = ds_hds$a, w_hds = ds_hds$w,
+    db_hds = dataDS@dist.breaks, a_hds = ds_hds$a, w_hds = ds_hds$w,
     u_hds = ds_hds$u,
 
     # PC data
