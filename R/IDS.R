@@ -7,6 +7,8 @@ setClass("unmarkedFitIDS",
         K = "numeric",
         dataPC = "unmarkedFrameOrNULL",
         dataOC = "unmarkedFrameOrNULL",
+        maxDist = "list",
+        surveyDurations = "list",
         unitsOut = "character"),
         contains = "unmarkedFit")
 
@@ -68,7 +70,8 @@ IDS <- function(lambdaformula = ~1,
                                  as.character(lambdaformula)), collapse=""))
   }
 
-  formlist <- list(lam=lambdaformula, ds=form_hds, pc=form_pc, oc=form_oc)
+  formlist <- list(lam=lambdaformula, ds=form_hds, pc=form_pc, oc=form_oc,
+                   phi=availformula)
 
   stopifnot(inherits(dataDS, "unmarkedFrameDS"))
   stopifnot(inherits(dataPC, c("unmarkedFramePCount", "NULL")))
@@ -88,6 +91,7 @@ IDS <- function(lambdaformula = ~1,
   stopifnot(is.null(durationDS) || (length(durationDS) == numSites(dataDS)))
   stopifnot(is.null(durationPC) || (length(durationPC) == numSites(dataPC)))
   stopifnot(is.null(durationOC) || (length(durationOC) == numSites(dataOC)))
+  surveyDurations <- list(ds=durationDS, pc=durationPC, oc=durationOC)
 
   stopifnot(keyfun %in% c("halfnorm", "exp"))
   keyidx <- switch(keyfun, "halfnorm"={1}, "exp"={2})
@@ -135,6 +139,7 @@ IDS <- function(lambdaformula = ~1,
     m = lam_adjust <- lam_adjust / 1e6,
     km = lam_adjust <- lam_adjust)
 
+  stopifnot(unitsOut %in% c("m","ha","kmsq"))
   switch(unitsOut,
     m = lam_adjust <- lam_adjust * 1e6,
     ha = lam_adjust <- lam_adjust * 100,
@@ -276,6 +281,8 @@ IDS <- function(lambdaformula = ~1,
   new("unmarkedFitIDS", fitType = "IDS", call = match.call(),
     opt = opt, formula = lambdaformula, formlist=formlist,
     data = dataDS, dataPC=dataPC, dataOC=dataOC,
+    surveyDurations=surveyDurations,
+    maxDist = list(pc=maxDistPC, oc=maxDistOC),
     keyfun=keyfun,
     # this needs to be fixed
     sitesRemoved = gd_hds$removed.sites,
@@ -307,81 +314,142 @@ setMethod("summary", "unmarkedFitIDS", function(object)
     invisible(summaryOut)
 })
 
-IDS_convert_class <- function(inp, type){
+# Need special method since an included dataset may not have a corresponding
+# unique submodel in the unmarked estimates
+setMethod("names", "unmarkedFitIDS", function(x){
+  out <- c("lam","ds")
+  if(!is.null(x@dataPC)) out <- c(out, "pc")
+  if(!is.null(x@dataOC)) out <- c(out, "oc")
+  if("phi" %in% names(x@estimates)) out <- c(out, "phi")
+  out
+})
+
+# This function converts IDS objects into simpler distsamp objects
+# so we can re-use distsamp methods
+# the abundance model (lam) is combined with one of the detection models
+# to yield a distsamp model
+IDS_convert_class <- function(inp, type, ds_type=NULL){
   stopifnot(type %in% names(inp))
+  if(is.null(ds_type)) ds_type <- type
   if(type == "lam") type <- "ds"
   data <- inp@data
-  if(type == "pc"){
+  if(ds_type == "pc"){
     tempdat <- inp@dataPC
-    maxDist <- inp@call$maxDistPC
+    maxDist <- inp@maxDist$pc
   }
-  if(type == "oc"){
+  if(ds_type == "oc"){
     tempdat <- inp@dataOC
-    maxDist <- inp@call$maxDistOC
+    maxDist <- inp@maxDist$oc
   }
-  if(type %in% c("pc", "oc")){
+  if(ds_type %in% c("pc", "oc")){
     if(is.null(maxDist)) maxDist <- max(data@dist.breaks)
     data <- unmarkedFrameDS(y=tempdat@y, siteCovs=siteCovs(tempdat),
                             dist.breaks=c(0, maxDist), survey="point",
                             unitsIn=data@unitsIn)
   }
 
-  est <- inp@estimates@estimates[c("lam", type)]
+  # Select appropriate model estimates; if sigma was not estimated
+  # separately for this model, pick the DS model for detection
+  det_mod <- type
+  if(! det_mod %in% names(inp@estimates)) det_mod <- "ds"
+  est <- inp@estimates@estimates[c("lam", det_mod)]
   names(est) <- c("state", "det")
 
-  new("unmarkedFitDS", fitType="IDS", opt=inp@opt, formula=inp@formlist[[type]],
+  form <- inp@formlist[[type]]
+  if(type=="phi") form <- as.formula(paste(c(as.character(form), "~1"), collapse=""))
+
+  new("unmarkedFitDS", fitType="IDS", opt=inp@opt, formula=form,
       data=data, keyfun=inp@keyfun, unitsOut=inp@unitsOut,
       estimates=unmarkedEstimateList(est),
       AIC=inp@AIC, output="density", TMB=inp@TMB)
 }
 
-
+# This predict method uses IDS_convert_class to allow pass-through to
+# distsamp predict method
 setMethod("predict", "unmarkedFitIDS", function(object, type, newdata,
           backTransform=TRUE, appendData=FALSE, level=0.95, ...){
   stopifnot(type %in% names(object))
-  conv <- IDS_convert_class(object, type)
-  type <- switch(type, lam="state", ds="det", pc="det", oc="det")
-  predict(conv, type, newdata, backTransform=backTransform, appendData=appendData,
-          level=level, ...)
+
+  # Special case of phi and  no newdata
+  # We need a separate prediction for each detection dataset
+  if(type == "phi" & missing(newdata)){
+
+    dists <- names(object)[names(object) %in% c("ds", "pc", "oc")]
+    out <- lapply(dists, function(x){
+      conv <- IDS_convert_class(object, "phi", ds_type=x)
+      predict(conv, "det", backTransform=backTransform, appendData=appendData,
+              level=level, ...)
+    })
+    names(out) <- dists
+
+  } else { # Regular situation
+    conv <- IDS_convert_class(object, type)
+    type <- switch(type, lam="state", ds="det", pc="det", oc="det", phi="det")
+    out <- predict(conv, type, newdata, backTransform=backTransform, appendData=appendData,
+                   level=level, ...)
+  }
+  out
 })
 
+# Get availability probability
+setGeneric("getAvail", function(object, ...) standardGeneric("getAvail"))
 
+# Get availability for each data type and site as a probability
+setMethod("getAvail", "unmarkedFitIDS", function(object, ...){
+  stopifnot("phi" %in% names(object))
+  phi <- predict(object, "phi")
+  dur <- object@surveyDurations
+  out <- lapply(names(phi), function(x){
+    1 - exp(-1 * dur[[x]] * phi[[x]]$Predicted)
+  })
+  names(out) <- names(phi)
+  out
+})
+
+# Fitted method returns a list of matrices, one per data type
 setMethod("fitted", "unmarkedFitIDS", function(object, na.rm=FALSE){
 
   dists <- names(object)[names(object) %in% c("ds", "pc")]
 
-  # distance and N-mix data
+  # If there is an availability model, get availability
+  # Otherwise set it to 1
+  avail <- list(ds=1, pc=1, oc=1)
+  if("phi" %in% names(object)){
+    avail <- getAvail(object)
+  }
+
+  # fitted for distance and N-mix data components
   out <- lapply(dists, function(x){
     conv <- IDS_convert_class(object, type=x)
-    fitted(conv)
+    fitted(conv) * avail[[x]]
   })
   names(out) <- dists
 
-  # occupancy data
+  # fitted for occupancy data
   if("oc" %in% names(object)){
     conv <- IDS_convert_class(object, type="oc")
-    lam <- predict(object, 'lam')$Predicted
+    lam <- predict(conv, 'state')$Predicted
     A <- pi*max(conv@data@dist.breaks)^2
     switch(conv@data@unitsIn,
             m = A <- A / 1e6,
             km = A <- A)
-    switch(object@unitsOut,
+    switch(conv@unitsOut,
             m = A <- A * 1e6,
             ha = A <- A * 100,
             kmsq = A <- A)
     lam <- lam * A
 
-    p <- getP(conv)
+    p <- getP(conv) * avail$oc
     out$oc <- 1 - exp(-lam*p) ## analytical integration.
   }
 
   out
 })
 
-
+# getP returns detection probability WITHOUT availability
 setMethod("getP", "unmarkedFitIDS", function(object, ...){
 
-  dets <- names(object)[names(object) != "lam"]
+  dets <- names(object)[! names(object) %in% c("lam","phi")]
 
   out <- lapply(dets, function(x){
     conv <- IDS_convert_class(object, type=x)
