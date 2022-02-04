@@ -118,6 +118,19 @@ setMethod("simulate", "character",
     } else if(object=="gdistremoval"){
       umf@yDistance=x$yDistance
       umf@yRemoval=x$yRemoval
+    } else if(object == "IDS"){
+      out <- list()
+      out$ds <- fit@data
+      out$ds@y <- x$ds
+      if("pc" %in% names(fit)){
+        out$pc <- fit@dataPC
+        out$pc@y <- x$pc
+      }
+      if("oc" %in% names(fit)){
+        out$oc <- fit@dataOC
+        out$oc@y <- x$oc
+      }
+      umf <- out
     } else {
       umf@y <- x
     }
