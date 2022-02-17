@@ -1959,6 +1959,7 @@ setMethod("predict", "unmarkedFitNmixTTD",
   #Allow passthrough to colext predict method
   new_obj <- object
   class(new_obj)[1] <- "unmarkedFitColExt"
+  if(type == "psi") stop("Use backTransform for zero-inflation parameter", call.=FALSE)
   if(type == "state") type <- 'psi'
   names(new_obj@estimates@estimates)[1] <- 'psi'
   if(cls == "unmarkedFrameOccuTTD"){
@@ -4416,6 +4417,9 @@ setMethod("simulate", "unmarkedFitNmixTTD",
     } else if(mix=="NB"){
       alpha <- exp(coef(object, "alpha"))
       N <- rnbinom(M, mu=abun, size=alpha)
+    } else if(mix=="ZIP"){
+      psi <- plogis(coef(object, "psi"))
+      N <- rzip(M, abun, psi)
     }
 
     lamN <- lam*rep(N, each=J)
