@@ -118,7 +118,8 @@ head(occu_umf) # note one covariate, elev
 forms2 <- list(state=~elev+landcover, det=~1)
 
 # Guide
-guide <- list(landcover=factor(levels=c("forest","grass")), # landcover is factor, you must provide the levels 
+# landcover is factor, you must provide the levels
+guide <- list(landcover=factor(levels=c("forest","grass")),  
               elev=list(dist=rnorm, mean=2, sd=0.5)) # custom distribution
 
 # Updated coefficients list

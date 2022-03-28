@@ -22,7 +22,7 @@ setClass("unmarkedCrossVal",
 setMethod("crossVal", "unmarkedFit",
           function(object, method=c("Kfold","holdout","leaveOneOut"),
                    folds=10, holdoutPct=0.25,
-                   statistic=RMSE_MAE, parallel=FALSE, ...){
+                   statistic=RMSE_MAE, parallel=FALSE, ncores, ...){
 
   method <- match.arg(method, c('Kfold','holdout','leaveOneOut'))
 
@@ -57,7 +57,8 @@ setMethod("crossVal", "unmarkedFit",
   }
 
   if(parallel){
-    cl <- parallel::makeCluster(detectCores()-1)
+    if(missing(ncores)) ncores <- parallel::detectCores()-1
+    cl <- parallel::makeCluster(ncores)
     on.exit(parallel::stopCluster(cl))
     stat_raw <- pblapply(1:n_reps, do_crossval, object,
                                      partitions, statistic, ..., cl = cl)
@@ -157,14 +158,15 @@ setClass("unmarkedCrossValList",
 setMethod("crossVal", "unmarkedFitList",
           function(object, method=c("Kfold","holdout","leaveOneOut"),
                    folds=10, holdoutPct=0.25,
-                   statistic=RMSE_MAE, parallel=FALSE,
+                   statistic=RMSE_MAE, parallel=FALSE, ncores,
                    sort = c("none", "increasing", "decreasing"), ...){
 
     method <- match.arg(method, c('Kfold','holdout','leaveOneOut'))
     sort <- match.arg(sort, c('none','increasing','decreasing'))
 
+    if(missing(ncores)) ncores <- parallel::detectCores()-1
     stats <- lapply(object@fits, crossVal, method, folds,
-                    holdoutPct, statistic, parallel, ...)
+                    holdoutPct, statistic, parallel, ncores, ...)
 
     out <- new("unmarkedCrossValList", stats_list=stats, method=method,
                folds=folds, holdoutPct=holdoutPct, sort=sort)

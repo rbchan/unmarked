@@ -317,6 +317,10 @@ unmarkedFrameMPois <- function(y, siteCovs = NULL, obsCovs = NULL, type,
             depDouble = {
               obsToY <- matrix(1, 2, 2)
               piFun <- "depDoublePiFun"
+              if(ncol(y) != 2){
+                stop("y must have exactly 2 columns when type = 'depDouble'",
+                     call.=FALSE)
+              }
               })
     } else {
         if(missing(obsToY))
@@ -436,6 +440,9 @@ unmarkedFrameGMM <- function(y, siteCovs = NULL, obsCovs = NULL, numPrimary,
           piFun <- "doublePiFun"
           },
         depDouble = {
+          if(J!=2){
+            stop("y must have exactly 2 columns per primary period", call.=FALSE)
+          }
           obsToY <- matrix(1, 2, 2)
           obsToY <- kronecker(diag(numPrimary), obsToY)
           piFun <- "depDoublePiFun"
@@ -1337,12 +1344,28 @@ setMethod("[", c("unmarkedFrameOccuMS", "numeric", "missing", "missing"),
 setMethod("[", c("unmarkedFrameGMM", "numeric", "missing", "missing"),
 		function(x, i, j)
 {
-    multf <- callNextMethod(x, i, j) # unmarkedMultFrame
-    unmarkedFrameGMM(y=getY(multf), siteCovs=siteCovs(multf),
-                     yearlySiteCovs=yearlySiteCovs(multf),
-                     obsCovs=obsCovs(multf),
+    M <- nrow(x@y)
+    y <- x@y[i,,drop=FALSE]
+    R <- obsNum(x)
+    T <- x@numPrimary
+
+    sc <- siteCovs(x)[i,,drop=FALSE]
+
+    ysc_ind <- rep(1:M, each=T)
+    ysc <- do.call("rbind", lapply(i, function(ind){
+      yearlySiteCovs(x)[ysc_ind == ind,,drop=FALSE]
+    }))
+
+    oc_ind <- rep(1:M, each=R)
+    oc <- do.call("rbind", lapply(i, function(ind){
+      obsCovs(x)[oc_ind == ind,,drop=FALSE]
+    }))
+
+    unmarkedFrameGMM(y=y, siteCovs=sc,
+                     yearlySiteCovs=ysc,
+                     obsCovs=oc,
                      piFun=x@piFun, type=x@samplingMethod,
-                     obsToY=multf@obsToY, numPrimary=multf@numPrimary)
+                     obsToY=x@obsToY, numPrimary=x@numPrimary)
 })
 
 

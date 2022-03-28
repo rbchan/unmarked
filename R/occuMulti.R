@@ -58,7 +58,7 @@ occuMulti <- function(detformulas, stateformulas,  data, maxOrder,
       }
     }
     psi <- exp(f %*% t_dmF)
-    psi <- psi/rowSums(psi)
+    psi <- psi/rowSums(as.matrix(psi))
 
     #p
     p <- matrix(NA,nrow=nrow(y),ncol=S)
@@ -82,7 +82,7 @@ occuMulti <- function(detformulas, stateformulas,  data, maxOrder,
     pen <- penalty * 0.5 * sum(params^2)
 
     #neg log likelihood
-    -1 * (sum(log(rowSums(psi*prdProbY))) - pen)
+    -1 * (sum(log(rowSums(as.matrix(psi*prdProbY)))) - pen)
   }
   #----------------------------------------------------------------------------
 

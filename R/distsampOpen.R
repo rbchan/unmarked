@@ -90,8 +90,18 @@ distsampOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
     K <- max(y, na.rm=T) + 20
     warning("K was not specified and was set to ", K, ".")
   }
-  if(K <= max(y, na.rm = TRUE))
-    stop("specified K is too small. Try a value larger than any observation")
+
+  J <- ncol(data@y) / data@numPrimary
+  inds <- split(1:ncol(data@y), ceiling(1:ncol(data@y)/J))
+  Tobs <- sapply(1:length(inds), function(i){
+    rowSums(data@y[,inds[[i]], drop=FALSE], na.rm=TRUE)
+  })
+  Kmin <- max(Tobs, na.rm=TRUE)
+
+  if(K < Kmin){
+    stop("Specified K is too small, must be larger than the max total count in a primary period",
+         call.=FALSE)
+  }
   k <- 0:K
   lk <- length(k)
   #Some k-related indices to avoid repeated calculations in likelihood

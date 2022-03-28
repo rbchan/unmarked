@@ -1599,7 +1599,7 @@ setMethod("predict", "unmarkedFitOccuMulti",
     psi_est <- calc_psi(params)
 
     if(se.fit){
-      cat('Bootstrapping confidence intervals with',nsims,'samples\n')
+      message('Bootstrapping confidence intervals with',nsims,'samples')
       Sigma <- vcov(object)
       samp <- array(NA,c(dim(psi_est),nsims))
       for (i in 1:nsims){
@@ -1740,9 +1740,9 @@ setMethod("predict", "unmarkedFitOccuMS",
 
   #Index guide used to organize p values
   guide <- matrix(NA,nrow=S,ncol=S)
-  guide <- lower.tri(guide,diag=T)
+  guide <- lower.tri(guide,diag=TRUE)
   guide[,1] <- FALSE
-  guide <- which(guide,arr.ind=T)
+  guide <- which(guide,arr.ind=TRUE)
   #----------------------------------------------------------------------------
 
   #Utility functions-----------------------------------------------------------
@@ -1860,7 +1860,7 @@ setMethod("predict", "unmarkedFitOccuMS",
     upr <- lwr <- se <- matrix(NA,M,P)
 
     if(se.fit){
-      cat('Bootstrapping confidence intervals with',nsims,'samples\n')
+      message('Bootstrapping confidence intervals with',nsims,'samples')
 
       sig <- vcov(object)
       param_mean <- coef(object)
@@ -2431,9 +2431,9 @@ setMethod("fitted", "unmarkedFitOccuMS", function(object, na.rm = FALSE)
   }
 
   guide <- matrix(NA,nrow=S,ncol=S)
-  guide <- lower.tri(guide,diag=T)
+  guide <- lower.tri(guide,diag=TRUE)
   guide[,1] <- FALSE
-  guide <- which(guide,arr.ind=T)
+  guide <- which(guide,arr.ind=TRUE)
 
   #Get predictions
   pr <- predict(object, 'psi', se.fit=F)
@@ -4234,9 +4234,9 @@ setMethod("simulate", "unmarkedFitOccuMS",
   p <- getP(object)
 
   guide <- matrix(NA,nrow=S,ncol=S)
-  guide <- lower.tri(guide,diag=T)
+  guide <- lower.tri(guide,diag=TRUE)
   guide[,1] <- FALSE
-  guide <- which(guide,arr.ind=T)
+  guide <- which(guide,arr.ind=TRUE)
 
   out <- vector("list",nsim)
 

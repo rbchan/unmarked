@@ -105,7 +105,7 @@ names(MesoCarnivores)
 Presence/absence matrices for the three species are in list elements \code{bobcat}, \code{coyote}, and \code{redfox}, and \code{sitecovs} contains the site-level covariate data.
 
 Using this information, we will create an \code{unmarkedFrameOccuMulti} object. 
-You can information by looking at the help file for \code{unmarkedFrameOccuMulti}:
+You can get more information by looking at the help file for \code{unmarkedFrameOccuMulti}:
 
 <<eval=FALSE>>=
 ?unmarkedFrameOccuMulti
