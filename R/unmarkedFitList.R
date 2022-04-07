@@ -150,7 +150,7 @@ setMethod("predict", "unmarkedFitList", function(object, type, newdata=NULL,
             raster::extent(i.raster) <- raster::extent(newdata)
             out.rasters[[i]] <- i.raster
           }
-          out.stack <- stack(out.rasters)
+          out.stack <- raster::stack(out.rasters)
           names(out.stack) <- colnames(out)
           raster::crs(out.stack) <- raster::crs(newdata)
           return(out.stack)

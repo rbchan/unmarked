@@ -46,6 +46,7 @@ Sillett, S. and Chandler, R.B. and Royle, J.A. and Kery, M. and
   endemic. \emph{Ecological Applications}
 }
 \examples{
+library(lattice)
 data(cruz)
 str(cruz)
 

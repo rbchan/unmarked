@@ -7,5 +7,5 @@
 .Rhistory
 [.].Rhistory
 README.md
-
+^tests/testthat/_snaps$
 ^\.github$

@@ -120,6 +120,7 @@ it---here is an example of mapping elevation using the
 \verb+levelplot+ function in the \texttt{lattice} package \citep{sarkar:2008}.
 
 <<swiss,fig=TRUE,include=FALSE,width=5,height=4>>=
+library(lattice)
 data(Switzerland)
 print(levelplot(elevation ~ x + y, Switzerland, aspect="iso",
                 xlab="Easting (m)", ylab="Northing (m)",

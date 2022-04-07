@@ -104,11 +104,10 @@ test_that("multinomPois can fit a removal model",{
     expect_equal(dim(r@post), c(3,56,1))
     expect_equal(bup(r), c(10.794,0.000,2.655), tol=1e-4)
 
-    expect_warning(s <- simulate(m2_C, 2))
+    expect_warning(s <- simulate(m2_C, 2, na.rm=FALSE))
     expect_equal(length(s), 2)
 
-    # Fix this
-    #expect_equal(dim(s[[1]]), dim(umf1@y))
+    expect_equal(dim(s[[1]]), dim(umf1@y))
 
     expect_warning(pb <- parboot(m2_C, nsim=1))
     expect_is(pb, "parboot")

@@ -11,7 +11,6 @@ importFrom(graphics, plot, hist, abline)
 importFrom(utils, head, read.csv)
 importFrom(plyr, ldply, alply, ddply)
 importFrom(grDevices, devAskNewPage, dev.interactive, palette.colors)
-importFrom(raster, raster, stack, extent, "extent<-", getValues)
 importFrom(MASS, mvrnorm)
 importFrom(parallel, detectCores, makeCluster, stopCluster, clusterExport,
            clusterEvalQ)

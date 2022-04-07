@@ -37,6 +37,7 @@ permission must be obtained from the Swiss Federal Statistical Office
 Swiss Federal Statistical Office (http://www.bfs.admin.ch)
 }
 \examples{
+library(lattice)
 data(Switzerland)
 str(Switzerland)
 

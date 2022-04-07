@@ -441,7 +441,7 @@ setMethod("predict", "unmarkedFit",
              raster::extent(i.raster) <- raster::extent(newdata)
              out.rasters[[i]] <- i.raster
          }
-         out.stack <- stack(out.rasters)
+         out.stack <- raster::stack(out.rasters)
          names(out.stack) <- colnames(out)
          out <- out.stack
      }
@@ -530,7 +530,7 @@ setMethod("predict", "unmarkedFitPCount",
         isfac <- is.factor(newdata)
         if(any(isfac))
             stop("This method currently does not handle factors")
-        z <- as.data.frame(matrix(getValues(newdata), npix))
+        z <- as.data.frame(matrix(raster::getValues(newdata), npix))
         names(z) <- cd.names
         switch(type,
                state = {
@@ -634,17 +634,17 @@ setMethod("predict", "unmarkedFitPCount",
     if(identical(cls, "RasterStack")) {
         E.mat <- matrix(out[,1], dim(newdata)[1], dim(newdata)[2],
                         byrow=TRUE)
-        E.raster <- raster(E.mat)
-        extent(E.raster) <- extent(newdata)
+        E.raster <- raster::raster(E.mat)
+        raster::extent(E.raster) <- raster::extent(newdata)
         out.rasters <- list(E.raster)
         for(i in 2:ncol(out)) {
             i.mat <- matrix(out[,i], dim(newdata)[1], dim(newdata)[2],
                             byrow=TRUE)
-            i.raster <- raster(i.mat)
-            extent(i.raster) <- extent(newdata)
+            i.raster <- raster::raster(i.mat)
+            raster::extent(i.raster) <- raster::extent(newdata)
             out.rasters[[i]] <- i.raster
         }
-        out.stack <- stack(out.rasters)
+        out.stack <- raster::stack(out.rasters)
         names(out.stack) <- colnames(out)
         out <- out.stack
     }
@@ -908,7 +908,7 @@ setMethod("predict", "unmarkedFitColExt",
             raster::extent(i.raster) <- raster::extent(newdata)
             out.rasters[[i]] <- i.raster
         }
-        out.stack <- stack(out.rasters)
+        out.stack <- raster::stack(out.rasters)
         names(out.stack) <- colnames(out)
         out <- out.stack
     }
@@ -1123,7 +1123,7 @@ setMethod("predict", "unmarkedFitPCO",
             raster::extent(i.raster) <- raster::extent(newdata)
             out.rasters[[i]] <- i.raster
         }
-        out.stack <- stack(out.rasters)
+        out.stack <- raster::stack(out.rasters)
         names(out.stack) <- colnames(out)
         out <- out.stack
     }
@@ -1325,7 +1325,7 @@ setMethod("predict", "unmarkedFitDSO",
             raster::extent(i.raster) <- raster::extent(newdata)
             out.rasters[[i]] <- i.raster
         }
-        out.stack <- stack(out.rasters)
+        out.stack <- raster::stack(out.rasters)
         names(out.stack) <- colnames(out)
         out <- out.stack
     }
@@ -1531,7 +1531,7 @@ setMethod("predict", "unmarkedFitGMM",
             raster::extent(i.raster) <- raster::extent(newdata)
             out.rasters[[i]] <- i.raster
         }
-        out.stack <- stack(out.rasters)
+        out.stack <- raster::stack(out.rasters)
         names(out.stack) <- colnames(out)
         out <- out.stack
     }
