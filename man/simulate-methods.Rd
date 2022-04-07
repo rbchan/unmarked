@@ -19,6 +19,7 @@
 \alias{simulate,unmarkedFitDSO-method}
 \alias{simulate,unmarkedFitMMO-method}
 \alias{simulate,unmarkedFitGDR-method}
+\alias{simulate,unmarkedFitIDS-method}
 \alias{simulate,character-method}
 \title{Methods for Function simulate in Package `unmarked'}
 \description{

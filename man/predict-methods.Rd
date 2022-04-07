@@ -16,6 +16,7 @@
 \alias{predict,unmarkedFitPCO-method}
 \alias{predict,unmarkedFitDSO-method}
 \alias{predict,unmarkedFitGDR-method}
+\alias{predict,unmarkedFitIDS-method}
 \alias{predict,unmarkedFitList-method}
 \alias{predict,unmarkedRanef-method}
 \title{ Methods for Function predict in Package `unmarked' }

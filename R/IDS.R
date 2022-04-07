@@ -496,15 +496,15 @@ setMethod("plot", c(x="unmarkedFitIDS", y="missing"), function(x, y, ...){
   long_names <- sapply(x@estimates@estimates, function(x) x@name)
   long_names <- long_names[long_names != "Density"]
 
-  old_par <- par()$mfrow
-  par(mfrow=c(nr,1))
+  old_par <- graphics::par()$mfrow
+  graphics::par(mfrow=c(nr,1))
 
   for (i in 1:nr){
     plot(f[[i]], r[[i]], ylab = "Residuals", xlab = "Predicted values",
          main=long_names[i])
     abline(h = 0, lty = 3, col = "gray")
   }
-  par(mfrow=old_par)
+  graphics::par(mfrow=old_par)
 
 })
 

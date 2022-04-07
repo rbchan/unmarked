@@ -16,6 +16,7 @@
 \alias{fitted,unmarkedFitGMM-method}
 \alias{fitted,unmarkedFitDSO-method}
 \alias{fitted,unmarkedFitGDR-method}
+\alias{fitted,unmarkedFitIDS-method}
 \title{Methods for Function fitted in Package `unmarked'}
 \description{Extracted fitted values from a fitted model.
 }

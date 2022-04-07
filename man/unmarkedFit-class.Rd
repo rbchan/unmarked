@@ -18,6 +18,7 @@
 \alias{plot,unmarkedFit,missing-method}
 \alias{plot,unmarkedFitOccuMulti,missing-method}
 \alias{plot,unmarkedFitGDR,missing-method}
+\alias{plot,unmarkedFitIDS,missing-method}
 \alias{profile,unmarkedFit-method}
 \alias{residuals,unmarkedFit-method}
 \alias{residuals,unmarkedFitOccu-method}
@@ -26,6 +27,7 @@
 \alias{residuals,unmarkedFitOccuMulti-method}
 \alias{residuals,unmarkedFitOccuTTD-method}
 \alias{residuals,unmarkedFitGDR-method}
+\alias{residuals,unmarkedFitIDS-method}
 \alias{update,unmarkedFit-method}
 \alias{update,unmarkedFitColExt-method}
 \alias{update,unmarkedFitPCOorDSO-method}
@@ -35,6 +37,7 @@
 \alias{update,unmarkedFitOccuTTD-method}
 \alias{update,unmarkedFitNmixTTD-method}
 \alias{update,unmarkedFitGDR-method}
+\alias{update,unmarkedFitIDS-method}
 \alias{sampleSize}
 \alias{sampleSize,unmarkedFit-method}
 \alias{unmarkedFitOccu-class}
@@ -52,10 +55,12 @@
 \alias{unmarkedFitNmixTTD-class}
 \alias{unmarkedFitDSO-class}
 \alias{unmarkedFitMMO-class}
+\alias{unmarkedFitIDS-class}
 \alias{plot,profile,missing-method}
 \alias{show,unmarkedFit-method}
 \alias{summary,unmarkedFit-method}
 \alias{summary,unmarkedFitDS-method}
+\alias{summary,unmarkedFitIDS-method}
 \alias{smoothed}
 \alias{smoothed,unmarkedFitColExt-method}
 \alias{projected}
