@@ -1122,9 +1122,6 @@ setMethod("[", c("unmarkedFrame", "numeric", "missing", "missing"),
         i <- (1:M)[i]
         }
     y <- getY(x)[i,,drop=FALSE]
-    if (length(i) == 1) {
-        y <- t(y)
-        }
     siteCovs <- siteCovs(x)
     obsCovs <- obsCovs(x)
     if (!is.null(siteCovs)) {
