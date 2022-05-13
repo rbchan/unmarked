@@ -74,7 +74,7 @@ get bootstrap estimates of standard errors." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">unmarked</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.5</span>
       </span>
     </div>
 
@@ -82,12 +82,42 @@ get bootstrap estimates of standard errors." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
+  <a href="../articles/unmarked.html">Get started</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/cap-recap.html">Modeling variation in abundance using capture-recapture data</a>
+    </li>
+    <li>
+      <a href="../articles/colext.html">Dynamic occupancy models in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/distsamp.html">Distance sampling analysis in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/powerAnalysis.html">Power Analysis in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/simulate.html">Simulating datasets</a>
+    </li>
+    <li>
+      <a href="../articles/spp-dist.html">Modeling and mapping species distributions</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -96,7 +126,7 @@ get bootstrap estimates of standard errors." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/rbchan/unmarked/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -198,14 +228,14 @@ siteCovs<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/pkg/r
 <span class='fu'><a href='https://rdrr.io/r/stats/vcov.html'>vcov</a></span><span class='op'>(</span><span class='va'>fm</span>, method <span class='op'>=</span> <span class='st'>"hessian"</span><span class='op'>)</span>
 </div><div class='output co'>#&gt;               lambda(Int)   lambda(ufc)  lambda(trba)        p(Int)
 #&gt; lambda(Int)   0.014052472 -1.228179e-03  2.364962e-03 -4.323007e-03
-#&gt; lambda(ufc)  -0.001228179  1.594197e-02  8.057614e-03 -2.506707e-11
-#&gt; lambda(trba)  0.002364962  8.057614e-03  1.831812e-02 -3.278435e-11
-#&gt; p(Int)       -0.004323007 -2.506707e-11 -3.278435e-11  5.415986e-02</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/stats/vcov.html'>vcov</a></span><span class='op'>(</span><span class='va'>fm</span>, method <span class='op'>=</span> <span class='st'>"nonparboot"</span><span class='op'>)</span>
+#&gt; lambda(ufc)  -0.001228179  1.594197e-02  8.057614e-03 -3.200697e-11
+#&gt; lambda(trba)  0.002364962  8.057614e-03  1.831812e-02 -3.459628e-11
+#&gt; p(Int)       -0.004323007 -3.200697e-11 -3.459628e-11  5.415986e-02</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/stats/vcov.html'>vcov</a></span><span class='op'>(</span><span class='va'>fm</span>, method <span class='op'>=</span> <span class='st'>"nonparboot"</span><span class='op'>)</span>
 </div><div class='output co'>#&gt;               lambda(Int)  lambda(ufc) lambda(trba)        p(Int)
-#&gt; lambda(Int)   0.028845631 -0.001084086 0.0049178634 -0.0157796398
+#&gt; lambda(Int)   0.028845631 -0.001084086 0.0049178635 -0.0157796398
 #&gt; lambda(ufc)  -0.001084086  0.013770757 0.0110038361 -0.0046697094
-#&gt; lambda(trba)  0.004917863  0.011003836 0.0186061311  0.0009194528
-#&gt; p(Int)       -0.015779640 -0.004669709 0.0009194528  0.0948140632</div><div class='input'><span class='va'>avg.abundance</span> <span class='op'>&lt;-</span> <span class='fu'><a href='backTransform-methods.html'>backTransform</a></span><span class='op'>(</span><span class='fu'><a href='linearComb-methods.html'>linearComb</a></span><span class='op'>(</span><span class='va'>fm</span>, type <span class='op'>=</span> <span class='st'>"state"</span>, coefficients <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0</span>, <span class='fl'>0</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
+#&gt; lambda(trba)  0.004917864  0.011003836 0.0186061311  0.0009194527
+#&gt; p(Int)       -0.015779640 -0.004669709 0.0009194527  0.0948140633</div><div class='input'><span class='va'>avg.abundance</span> <span class='op'>&lt;-</span> <span class='fu'><a href='backTransform-methods.html'>backTransform</a></span><span class='op'>(</span><span class='fu'><a href='linearComb-methods.html'>linearComb</a></span><span class='op'>(</span><span class='va'>fm</span>, type <span class='op'>=</span> <span class='st'>"state"</span>, coefficients <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='fl'>0</span>, <span class='fl'>0</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
 
 <span class='co'>## Bootstrap sample information propagates through to derived quantities.</span>
 <span class='fu'><a href='https://rdrr.io/r/stats/vcov.html'>vcov</a></span><span class='op'>(</span><span class='va'>avg.abundance</span>, method <span class='op'>=</span> <span class='st'>"hessian"</span><span class='op'>)</span>

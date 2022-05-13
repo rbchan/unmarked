@@ -73,7 +73,7 @@ extracted using the methods described below." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">unmarked</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.5</span>
       </span>
     </div>
 
@@ -81,12 +81,42 @@ extracted using the methods described below." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
+  <a href="../articles/unmarked.html">Get started</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/cap-recap.html">Modeling variation in abundance using capture-recapture data</a>
+    </li>
+    <li>
+      <a href="../articles/colext.html">Dynamic occupancy models in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/distsamp.html">Distance sampling analysis in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/powerAnalysis.html">Power Analysis in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/simulate.html">Simulating datasets</a>
+    </li>
+    <li>
+      <a href="../articles/spp-dist.html">Modeling and mapping species distributions</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -95,7 +125,7 @@ extracted using the methods described below." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/rbchan/unmarked/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -301,7 +331,7 @@ extracted using the methods described below.</p>
 #&gt; AIC: 326.1387 
 #&gt; Number of sites: 70
 #&gt; optim convergence code: 0
-#&gt; optim iterations: 31 
+#&gt; optim iterations: 30 
 #&gt; Bootstrap iterations: 0 
 #&gt; </div><div class='input'>
 <span class='co'># Apply a bunch of methods to the fitted model</span>
@@ -410,7 +440,78 @@ extracted using the methods described below.</p>
 #&gt; [70,] 0.6806401 0.2917206 0.12503070 0.05358784</div><div class='input'>
 <span class='co'># Original data</span>
 <span class='fu'>getData</span><span class='op'>(</span><span class='va'>fm1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in name == "GADM": comparison (1) is possible only for atomic and list types</span></div><div class='input'>
+</div><div class='output co'>#&gt; Data frame representation of unmarkedFrame object.
+#&gt;    y.1 y.2 y.3 y.4         ufc        trba
+#&gt; 1    0   0   0   0  0.84177975 -1.53958767
+#&gt; 2    1   0   0   0  0.03022367 -1.25741503
+#&gt; 3    0   0   0   0  2.10015927 -0.50495466
+#&gt; 4    0   0   0   0  1.08597395 -1.63364522
+#&gt; 5    0   0   0   0  1.00492226  0.71779345
+#&gt; 6    0   0   0   0  0.84177975  0.15344817
+#&gt; 7    0   0   0   0 -0.90290994  1.56431137
+#&gt; 8    0   0   0   0 -0.74080655 -0.50495466
+#&gt; 9    2   0   0   0 -0.58493791  0.24750572
+#&gt; 10   1   0   0   0  1.32912904 -0.41089711
+#&gt; 11   0   0   0   0 -0.61922901 -0.69306975
+#&gt; 12   0   0   0   0  1.08597395 -0.22278202
+#&gt; 13   2   0   1   0 -0.01030218  0.34156326
+#&gt; 14   1   0   0   0 -1.43078508 -0.31683956
+#&gt; 15   1   0   0   0 -0.78133240  1.56431137
+#&gt; 16   0   0   0   0 -0.25345726  0.62373590
+#&gt; 17   0   1   0   1 -1.18763000  0.43562081
+#&gt; 18   0   1   0   0  2.34435347 -1.72770276
+#&gt; 19   0   0   0   0  0.03022367  0.81185099
+#&gt; 20   0   0   0   0 -0.57870316  1.56431137
+#&gt; 21   1   0   0   0 -1.06605246  1.56431137
+#&gt; 22   1   1   0   0 -1.06605246  0.99996609
+#&gt; 23   1   0   0   0 -0.86238410  0.99996609
+#&gt; 24   1   0   0   0 -0.57870316  0.24750572
+#&gt; 25   0   1   0   0  1.16702565 -2.00987540
+#&gt; 26   1   0   0   0 -0.78133240  0.71779345
+#&gt; 27   1   1   0   1  1.28860319 -0.12872447
+#&gt; 28   0   0   0   0 -1.22919497 -1.35147258
+#&gt; 29   0   0   0   0 -0.70028071  0.52967835
+#&gt; 30   0   0   0   0 -1.39025924 -0.31683956
+#&gt; 31   0   0   0   0  0.92283144  0.52967835
+#&gt; 32   0   0   0   0 -1.02552661  0.90590854
+#&gt; 33   0   0   0   0 -1.10657831  1.18808118
+#&gt; 34   0   0   0   0 -1.14710415  1.94054155
+#&gt; 35   0   0   0   0 -0.98500076  1.18808118
+#&gt; 36   2   0   1   0  0.72020220 -0.88118484
+#&gt; 37   1   0   0   0  1.57228412 -0.50495466
+#&gt; 38   0   1   0   0 -0.70028071  0.15344817
+#&gt; 39   1   1   0   0 -0.74080655  0.83066250
+#&gt; 40   1   0   0   0 -0.49765147  0.05939062
+#&gt; 41   2   1   0   0  1.65437494 -0.31683956
+#&gt; 42   0   1   0   0  1.04544811 -0.88118484
+#&gt; 43   1   2   0   0  0.63915051 -0.31683956
+#&gt; 44   0   0   0   1  1.16702565 -1.18216899
+#&gt; 45   1   0   1   0 -0.17240556 -1.63364522
+#&gt; 46   3   0   0   0  0.19232706 -0.97524239
+#&gt; 47   1   0   0   0  1.04544811  0.24750572
+#&gt; 48   2   0   1   0 -0.65975486 -0.22278202
+#&gt; 49   0   0   0   2  1.53175828 -0.97524239
+#&gt; 50   1   1   0   0  1.28860319 -1.16335748
+#&gt; 51   3   0   0   0 -0.13187972 -0.69306975
+#&gt; 52   0   0   0   0  0.27337876 -0.12872447
+#&gt; 53   2   0   0   0  1.32912904 -0.61782371
+#&gt; 54   1   0   0   0  1.85700418  0.05939062
+#&gt; 55   1   0   0   0  0.07074952 -0.59901220
+#&gt; 56   1   0   0   0  0.11127537  0.99996609
+#&gt; 57   1   0   0   0 -0.70028071 -0.78712730
+#&gt; 58   1   1   0   0 -0.33554808 -0.88118484
+#&gt; 59   1   1   0   0 -0.74080655  0.15344817
+#&gt; 60   2   0   0   1  0.07074952 -0.31683956
+#&gt; 61   0   1   0   0 -1.06605246 -1.25741503
+#&gt; 62   2   0   0   0  1.20755150 -0.69306975
+#&gt; 63   1   0   1   1 -0.05082802  0.52967835
+#&gt; 64   2   1   0   0 -0.37607393  0.81185099
+#&gt; 65   0   0   0   0 -1.34973339  0.05939062
+#&gt; 66   1   0   0   0 -0.25345726  1.28213873
+#&gt; 67   0   0   0   0 -0.74080655 -0.12872447
+#&gt; 68   0   0   0   0 -0.37607393  1.56431137
+#&gt; 69   0   0   0   0 -1.47131093  2.88111702
+#&gt; 70   0   0   0   0 -0.45712562 -0.69306975</div><div class='input'>
 <span class='co'># Detection probabilities</span>
 <span class='fu'><a href='getP-methods.html'>getP</a></span><span class='op'>(</span><span class='va'>fm1</span><span class='op'>)</span>
 </div><div class='output co'>#&gt;            [,1]      [,2]      [,3]      [,4]

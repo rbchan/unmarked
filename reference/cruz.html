@@ -73,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">unmarked</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.5</span>
       </span>
     </div>
 
@@ -81,12 +81,42 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
 <li>
+  <a href="../articles/unmarked.html">Get started</a>
+</li>
+<li>
   <a href="../reference/index.html">Reference</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/cap-recap.html">Modeling variation in abundance using capture-recapture data</a>
+    </li>
+    <li>
+      <a href="../articles/colext.html">Dynamic occupancy models in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/distsamp.html">Distance sampling analysis in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/powerAnalysis.html">Power Analysis in unmarked</a>
+    </li>
+    <li>
+      <a href="../articles/simulate.html">Simulating datasets</a>
+    </li>
+    <li>
+      <a href="../articles/spp-dist.html">Modeling and mapping species distributions</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -95,7 +125,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/rbchan/unmarked/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -161,31 +191,22 @@
   endemic. <em>Ecological Applications</em></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://lattice.r-forge.r-project.org/'>lattice</a></span><span class='op'>)</span>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='http://lattice.r-forge.r-project.org/'>lattice</a></span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>cruz</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/utils/str.html'>str</a></span><span class='op'>(</span><span class='va'>cruz</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; 'data.frame':	2787 obs. of  5 variables:
-#&gt;  $ x        : num  230737 231037 231337 230437 230737 ...
-#&gt;  $ y        : num  3774324 3774324 3774324 3774024 3774024 ...
-#&gt;  $ elevation: int  241 323 277 13 590 533 378 329 265 282 ...
-#&gt;  $ forest   : num  0 0 0 0 0 0 0 0 0 0 ...
-#&gt;  $ chaparral: num  0 0 0 0 0 0 0 0.02 0.01 0.02 ...</div><div class='input'>
+
 <span class='fu'><a href='https://rdrr.io/pkg/lattice/man/levelplot.html'>levelplot</a></span><span class='op'>(</span><span class='va'>elevation</span> <span class='op'>~</span> <span class='va'>x</span> <span class='op'>+</span> <span class='va'>y</span>, <span class='va'>cruz</span>, aspect<span class='op'>=</span><span class='st'>"iso"</span>,
     col.regions<span class='op'>=</span><span class='fu'><a href='https://rdrr.io/r/grDevices/palettes.html'>terrain.colors</a></span><span class='op'>(</span><span class='fl'>100</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='img'><img src='cruz-1.png' alt='' width='700' height='433' /></div><div class='input'>
+
 <span class='kw'>if</span><span class='op'>(</span><span class='kw'><a href='https://rdrr.io/r/base/library.html'>require</a></span><span class='op'>(</span><span class='va'><a href='https://rspatial.org/raster'>raster</a></span><span class='op'>)</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='va'>elev</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/rasterFromXYZ.html'>rasterFromXYZ</a></span><span class='op'>(</span><span class='va'>cruz</span><span class='op'>[</span>,<span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>]</span>,
      crs<span class='op'>=</span><span class='st'>"+proj=utm +zone=11 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"</span><span class='op'>)</span>
 <span class='va'>elev</span>
 <span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span><span class='op'>(</span><span class='va'>elev</span><span class='op'>)</span>
 <span class='op'>}</span>
-</div><div class='output co'>#&gt; <span class='message'>Loading required package: raster</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: sp</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>Attaching package: ‘sp’</span></div><div class='output co'>#&gt; <span class='message'>The following object is masked from ‘package:unmarked’:</span>
-#&gt; <span class='message'></span>
-#&gt; <span class='message'>    coordinates</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>Attaching package: ‘raster’</span></div><div class='output co'>#&gt; <span class='message'>The following objects are masked from ‘package:unmarked’:</span>
-#&gt; <span class='message'></span>
-#&gt; <span class='message'>    getData, projection</span></div><div class='img'><img src='cruz-2.png' alt='' width='700' height='433' /></div><div class='input'>
+<span class='op'>}</span>
+
 
 
 </div></pre>

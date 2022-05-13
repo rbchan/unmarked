@@ -1,6 +1,13 @@
 pandoc: 2.7.1
 pkgdown: 1.6.1
 pkgdown_sha: ~
-articles: {}
-last_built: 2022-04-27T18:35Z
+articles:
+  cap-recap: cap-recap.html
+  colext: colext.html
+  distsamp: distsamp.html
+  powerAnalysis: powerAnalysis.html
+  simulate: simulate.html
+  spp-dist: spp-dist.html
+  unmarked: unmarked.html
+last_built: 2022-05-13T11:24Z
 
