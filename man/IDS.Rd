@@ -11,17 +11,6 @@ Fit the integrated distance sampling model of Kery et al. (2022).
   and other similar data types, including simple point counts (PC) and 
   occupancy/detection-nondetection (OC/DND) data.}
 
-\description{
-This function facilitates a combined analysis of distance sampling data (DS) with other similar
-data types, including simple point counts (PC) and occupancy/detection-nondetection (OC/DND) data.
-The combined approach capitalizes on the strengths and minimizes the weaknesses
-of each type. The PC and OC/DND data are viewed as latent distance sampling surveys
-with an underlying abundance model shared by all data types. All analyses
-must include some distance sampling data, but can include either PC or DND data
-or both. If surveys are of variable duration, it is also possible to estimate
-availability.
-}
-
 \usage{
 IDS(lambdaformula = ~1, detformulaDS = ~1, detformulaPC = NULL, detformulaOC = NULL,
     dataDS, dataPC = NULL, dataOC = NULL, availformula = NULL,
