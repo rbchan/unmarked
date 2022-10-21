@@ -1,4 +1,5 @@
 context("multmixOpen fitting function")
+skip_on_cran()
 
 simData <- function(lambda=1, gamma=0.5, omega=0.8, p=0.5, M=100, T=5,
                     p2=NULL, type="removal")

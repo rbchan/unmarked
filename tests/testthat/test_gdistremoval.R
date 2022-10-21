@@ -1,4 +1,5 @@
 context("gdistremoval fitting function")
+skip_on_cran()
 
 simData <- function(lambda=1, sigma=40, scale=NULL, remP=0.4, remJ=4,
                     M=100, J=4,type="point", keyfun="halfnorm", T=1, phi=1)
@@ -337,6 +338,11 @@ test_that("gdistremoval can fit models",{
   pb <- parboot(fit, nsim=2)
   expect_is(pb, "parboot")
 
+  # Fit list construction
+  fl <- fitList(fits=list(fit1=fit, fit2=fit))
+  expect_is(fl, "unmarkedFitList")
+  ms <- modSel(fl)
+  expect_is(ms, "unmarkedModSel")
 })
 
 test_that("gdistremoval predict method works",{

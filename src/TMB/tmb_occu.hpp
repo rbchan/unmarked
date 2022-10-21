@@ -30,8 +30,7 @@ Type tmb_occu(objective_function<Type>* obj) {
   PARAMETER_VECTOR(b_det);
   PARAMETER_VECTOR(lsigma_det);
 
-  //Define the log likelihood so that it can be calculated in parallel over sites
-  parallel_accumulator<Type> loglik(obj);
+  Type loglik = 0.0;
 
   int M = y.rows(); //# of sites
   int J = y.cols(); //# of observations per site

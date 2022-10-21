@@ -1,4 +1,5 @@
 context("occuMS fitting function")
+skip_on_cran()
 
 test_that("unmarkedFrameOccuMS is constructed properly",{
 
@@ -212,7 +213,7 @@ test_that("occuMS can fit the multinomial model",{
   expect_equivalent(length(sim),3)
   expect_true(all(unlist(sim)%in%c(0:2)))
   expect_equivalent(mean(fit_C@data@y),0.268)
-  expect_equivalent(sapply(sim,mean),c(0.244,0.280,0.288))
+  expect_equivalent(sapply(sim,mean),c(0.232,0.252,0.276))
 
   #check fitted
   set.seed(123)
@@ -325,7 +326,7 @@ test_that("occuMS can fit the conditional binomial model",{
   expect_equivalent(length(sim),3)
   expect_true(all(unlist(sim)%in%c(0:2)))
   expect_equivalent(mean(fit_C@data@y),0.2)
-  expect_equivalent(sapply(sim,mean),c(0.200,0.156,0.128))
+  expect_equivalent(sapply(sim,mean),c(0.172,0.196,0.184))
 })
 
 test_that("occuMS handles NAs properly",{
@@ -360,9 +361,21 @@ test_that("occuMS handles NAs properly",{
 
   yna <- y
   yna[1,1] <- NA
+  obs_covs[1,1] <- NA
   umf <- unmarkedFrameOccuMS(y=yna,siteCovs=site_covs,obsCovs=obs_covs)
   fit <- occuMS(rep('~1',3),rep('~1',2),data=umf,se=F)
   expect_equivalent(fit@AIC,53.06711,tol=1e-4)
+
+  # Check simulate and ranef methods
+  fit <- occuMS(rep('~V1',3),rep('~1',2),data=umf,se=F)
+  s <- simulate(fit, nsim=3)
+  expect_equal(sum(is.na(unlist(s))), 3)
+  r <- ranef(fit)
+  expect_true(!any(is.na(r@post)))
+
+  fit_cb <- occuMS(rep('~V1',3),rep('~1',2),data=umf,se=F, parameterization='condbinom')
+  s <- simulate(fit_cb, nsim=3)
+  expect_equal(sum(is.na(unlist(s))), 3)
 
   yna <- y
   yna[1,] <- NA
@@ -513,7 +526,7 @@ expect_equivalent(length(coef(fit_new)),14)
 
 set.seed(123)
 fit_sim <- simulate(fitC,nsim=2)
-expect_equivalent(fit_sim[[1]][2,],c(0,2,1,0,0,2))
+expect_equivalent(fit_sim[[1]][2,],c(0,0,0,0,0,0))
 
 nul <- capture.output(pr_phi <- predict(fitC,'phi'))
 pr_phi <- sapply(pr_phi, function(x) x$Predicted[1])
@@ -641,7 +654,7 @@ expect_equivalent(fit_cbC@AIC,820.0645,tol=1e-4)
 
 set.seed(123)
 fit_sim <- simulate(fit_cbC,nsim=1)
-expect_equivalent(fit_sim[[1]][1,],c(0,0,0,2,1,0))
+expect_equivalent(fit_sim[[1]][1,],c(0,0,0,0,2,1))
 
 nul <- capture.output(pr_phi <- predict(fit_cbC,'phi'))
 pr_phi <- sapply(pr_phi, function(x) x$Predicted[1])

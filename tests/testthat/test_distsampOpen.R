@@ -1,4 +1,5 @@
 context("distsampOpen fitting function")
+skip_on_cran()
 
 simData <- function(lambda=1, gamma=0.5, omega=0.8, sigma=40, scale=NULL,
                     M=100, T=5, J=4,type="line", keyfun="halfnorm")

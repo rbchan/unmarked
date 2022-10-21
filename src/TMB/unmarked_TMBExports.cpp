@@ -1,6 +1,6 @@
 #define TMB_LIB_INIT R_init_unmarked_TMBExports
-#include <TMB.hpp>
 #include <float.h>
+#include <TMB.hpp>
 #include "tmb_utils.hpp"
 #include "tmb_pifun.hpp"
 #include "tmb_keyfun.hpp"

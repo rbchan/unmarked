@@ -9,7 +9,7 @@ vector<Type> cloglog(vector<Type> inp) {
 }
 
 template<class Type>
-vector<Type> add_ranef(vector<Type> par, parallel_accumulator<Type>& loglik, 
+vector<Type> add_ranef(vector<Type> par, Type& loglik, 
                 vector<Type> b, Eigen::SparseMatrix<Type> Z,
                 vector<Type> lsigma, int n_group_vars, vector<int> n_grouplevels) {
   

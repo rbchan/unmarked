@@ -1,4 +1,5 @@
 context("nonparboot")
+skip_on_cran()
 
 test_that("nonparboot works with occu",{
 

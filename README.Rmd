@@ -1,0 +1,86 @@
+---
+output: 
+    md_document:
+        variant: gfm
+---
+
+# R package unmarked
+
+<!-- badges: start -->
+[![R build status](https://github.com/rbchan/unmarked/workflows/R-CMD-check/badge.svg)](https://github.com/rbchan/unmarked/actions)
+[![CRAN status](https://www.r-pkg.org/badges/version/unmarked)](https://cran.r-project.org/package=unmarked)
+<!-- badges: end -->
+
+`unmarked` is an [R](https://www.r-project.org/) package for analyzing ecological data arising from several popular sampling techniques.  The sampling methods include point counts, occurrence sampling, distance sampling, removal, double observer, and many others.  `unmarked` uses hierarchical models to incorporate covariates of the latent abundance (or occupancy) and imperfect detection processes.
+
+## Installation
+
+The latest stable version of unmarked can be downloaded from [CRAN](https://cran.r-project.org/package=unmarked):
+
+```{r, eval=FALSE}
+install.packages("unmarked")
+```
+
+The latest development version can be installed from Github:
+
+```{r, eval=FALSE}
+install.packages("remotes")
+remotes::install_github("rbchan/unmarked")
+```
+
+## Support
+
+Support is provided through the [unmarked Google group](http://groups.google.com/group/unmarked).
+The package [website](https://rbchan.github.io/unmarked) has more information.
+You can report bugs [here](https://github.com/rbchan/unmarked/issues), by posting to the Google group, or by emailing [the current maintainer](https://kenkellner.com).
+
+## Example analysis
+
+Below we demonstrate a simple single-season occupancy analysis using `unmarked`.
+First, load in a dataset from a CSV file and format:
+
+```{r}
+library(unmarked)
+wt <- read.csv(system.file("csv","widewt.csv", package="unmarked"))
+
+# Presence/absence matrix
+y <- wt[,2:4]
+
+# Site and observation covariates
+siteCovs <-  wt[,c("elev", "forest", "length")]
+obsCovs <- list(date=wt[,c("date.1", "date.2", "date.3")]) 
+```
+
+Create an `unmarkedFrame`, a special type of `data.frame` for `unmarked` analyses:
+
+```{r}
+umf <- unmarkedFrameOccu(y = y, siteCovs = siteCovs, obsCovs = obsCovs)
+summary(umf)
+```
+
+Fit a null occupancy model and a model with covariates, using the `occu` function:
+
+```{r}
+(mod_null <- occu(~1~1, data=umf))
+(mod_covs <- occu(~date~elev, data=umf))
+```
+
+Rank them using AIC:
+
+```{r}
+fl <- fitList(null=mod_null, covs=mod_covs)
+modSel(fl)
+```
+
+Estimate occupancy probability using the top-ranked model at the first six sites:
+
+```{r}
+head(predict(mod_covs, type='state'))
+```
+
+Predict occupancy probability at a new site with given covariate values:
+
+```{r}
+nd <- data.frame(elev = 1.2)
+predict(mod_covs, type="state", newdata=nd)
+```

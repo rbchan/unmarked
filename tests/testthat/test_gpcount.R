@@ -1,4 +1,5 @@
 context("gpcount fitting function")
+skip_on_cran()
 
 test_that("unmarkedFrameGPC subset works",{
     y <- matrix(1:27, 3)

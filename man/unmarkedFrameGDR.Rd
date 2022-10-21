@@ -59,9 +59,3 @@
 
 \seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}},
   \code{\link{gdistremoval}}}
-
-\examples{
-
-# More here later
-
-}

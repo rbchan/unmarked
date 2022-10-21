@@ -1,4 +1,5 @@
 context("ranef predict method")
+skip_on_cran()
 
 test_that("ranef predict method works",{
   #Single-season model

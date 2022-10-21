@@ -1,4 +1,5 @@
 context("occuTTD fitting function")
+skip_on_cran()
 
 test_that("unmarkedFrameOccuTTD can be constructed",{
 

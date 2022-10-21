@@ -1,4 +1,5 @@
 context("gdistsamp fitting function")
+skip_on_cran()
 
 test_that("unmarkedFrameGDS subset works",{
     y <- matrix(1:27, 3)

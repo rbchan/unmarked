@@ -1,4 +1,5 @@
 context("gmultmix fitting function")
+skip_on_cran()
 
 test_that("unmarkedFrameGMM construction works",{
 

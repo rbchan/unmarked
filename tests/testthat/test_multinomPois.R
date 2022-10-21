@@ -1,4 +1,5 @@
 context("multinomPois fitting function")
+skip_on_cran()
 
 test_that("unmarkedFrameMPois can be constructed",{
     y <- matrix(c(
@@ -235,6 +236,12 @@ test_that("multinomPois can fit models with random effects",{
   pr2 <- predict(fm, "state", newdata=umf2@siteCovs[1:5,])
   expect_equivalent(dim(pr), c(100, 4))
   expect_equivalent(dim(pr2), c(5,4))
+
+  # Make sure simulate accounts for random effects
+  s <- simulate(fm, nsim=30)
+  avg <- apply(sapply(s, function(x) x[,1]),1, mean)
+  # average first count and predicted abundance should be highly correlated
+  expect_true(cor(avg, pr$Predicted) > 0.7)
 
   umf2@y[1,1] <- NA
   umf2@y[2,] <- NA

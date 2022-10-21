@@ -46,6 +46,7 @@ Sillett, S. and Chandler, R.B. and Royle, J.A. and Kery, M. and
   endemic. \emph{Ecological Applications}
 }
 \examples{
+\dontrun{
 library(lattice)
 data(cruz)
 str(cruz)
@@ -58,6 +59,7 @@ elev <- rasterFromXYZ(cruz[,1:3],
      crs="+proj=utm +zone=11 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
 elev
 plot(elev)
+}
 }
 
 

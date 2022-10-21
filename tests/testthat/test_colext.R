@@ -1,4 +1,5 @@
 context("colext fitting function")
+skip_on_cran()
 
 # Simulate data
 set.seed(123)

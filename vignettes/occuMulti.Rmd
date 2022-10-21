@@ -1,243 +1,209 @@
-<<echo=false>>=
-options(width=70)
-options(continue=" ")
-@
+---
+title: Multispecies occupancy models with occuMulti
+author: Ken Kellner
+date: November 15, 2021
+bibliography: unmarked.bib
+csl: ecology.csl
+output: 
+  rmarkdown::html_vignette:
+    fig_width: 5
+    fig_height: 3.5
+    number_sections: true
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Multispecies occupancy models with occuMulti}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 
-\documentclass[a4paper]{article}
-\usepackage[OT1]{fontenc}
-\usepackage{Sweave}
-\usepackage{natbib}
-\usepackage{amsmath}
-%\usepackage{fullpage}
-\usepackage[vmargin=1in,hmargin=1in]{geometry}
-\bibliographystyle{ecology}
+---
 
-\usepackage{hyperref}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,     
-    urlcolor=cyan,
-    citecolor=black
-}
+```{r,echo=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
 
-\DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em}
-\DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=2em}
-\DefineVerbatimEnvironment{Scode}{Verbatim}{xleftmargin=2em}
-\fvset{listparameters={\setlength{\topsep}{0pt}}}
-\renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
+# Introduction
 
-%%\VignetteIndexEntry{Multispecies occupancy models with occuMulti}
-
-\title{Multispecies occupancy models with occuMulti}
-\author{Ken Kellner}
-\date{November 15, 2021}
-
-
-\begin{document}
-
-\newcommand{\code}[1]{\texttt{\small{#1}}}
-\newcommand{\package}[1]{\textsf{\small{#1}}}
-
-\maketitle
-
-\section*{Outline}
-
-\begin{enumerate}
-  \item Introduction
-  \item Simple multispecies analysis
-  \item Analysis with covariates
-  \item Model selection
-  \item Model fitting challenges
-  \item Penalized likelihood
-\end{enumerate}
-
-
-\section{Introduction}
-
-The Rota et al. (\citeyear{Rota2016}) occupancy model is designed for presence/absence datasets with two or more (potentially) interacting species.
+The @Rota2016 occupancy model is designed for presence/absence datasets with two or more (potentially) interacting species.
 The model allows for estimation of occupancy probabilities and the strength of interactions between species, as well as covariate effects on these parameters.
-The model generalizes the standard single-species occupancy model from MacKenzie et al. (\citeyear{mackenzie_estimating_2002}).
+The model generalizes the standard single-species occupancy model from @mackenzie_estimating_2002.
 
 The model assumes the latent occupancy state at site $i$ for a set of $s$ potentially interacting species is a vector $Z_i$ of length $s$ containing a sequence of the values 0 or 1. 
 For example, when $s = 2$, the possible states are [11], [10], [01], or [00], corresponding to both species present, only species 1 or species 2 present, or both species absent, respectively.
 The latent state modeled as a multivariate Bernoulli random variable:
-\begin{equation}
+$$
   Z_i \sim \mathrm{MVB}(\psi_i)
-\end{equation}
+$$
 where $\psi_i$ is a vector of length $2^s$ containing the probability of each possible combination of 0s and 1s, such that $\sum \psi_i = 1$.
 
 For $s = 2$, the corresponding natural parameters, $f$, are
 
-\begin{equation}
+$$
 \begin{split}
   f_1 &= \mathrm{log}(\psi_{10}/\psi_{00}) \\                      
   f_2 &= \mathrm{log}(\psi_{01}/\psi_{00}) \\                      
   f_{12} &= \mathrm{log}((\psi_{11} * \psi_{00})/(\psi_{10} * \psi_{01}))
 \end{split}
-\end{equation}
+$$
 
 The natural parameters can then be modeled as linear functions of covariates.
 
 The observation process is similar to the standard single-species occupancy model, except that the observations $y_{ij}$ at site $i$ on occasion $j$ are vectors of length $s$ and there are independent values of detection probability $p$ for each species $s$:
-\begin{equation}
+$$
   y_{ij} | Z_i \sim \mathrm{Bernoulli}(Z_i * p_{sij})
-\end{equation}
-See \citet{Rota2016} for more details on model structure.
-In \code{unmarked}, the model can be fit with the \code{occuMulti} function.
+$$
+See @Rota2016 for more details on model structure.
+In `unmarked`, the model can be fit with the `occuMulti` function.
 
-\section{Simple multispecies analysis}
+# Simple multispecies analysis
 
 We will start with a simple analysis using presence/absence data from camera traps for three species: coyote, red fox, and bobcat.
-The data are a simplified version of the data used in \citet{Rota2016}, with the data collapsed three into three-week long time periods.
+The data are a simplified version of the data used in @Rota2016, with the data collapsed three into three-week long time periods.
 
-\subsection{Formatting the data}
+## Formatting the data
 
-The dataset is called \code{MesoCarnivores} and is provided by the \code{AHMbook} package.
+The dataset is included with `unmarked` and is called `MesoCarnivores`.
 First, we need to load in the dataset, which is a list with several components.
 
-<<>>=
+```{r, eval=FALSE}
 library(unmarked)
-library(AHMbook)
 data(MesoCarnivores)
 names(MesoCarnivores)
-@
+```
 
-Presence/absence matrices for the three species are in list elements \code{bobcat}, \code{coyote}, and \code{redfox}, and \code{sitecovs} contains the site-level covariate data.
+Presence/absence matrices for the three species are in list elements `bobcat`, `coyote`, and `redfox`, and `sitecovs` contains the site-level covariate data.
 
-Using this information, we will create an \code{unmarkedFrameOccuMulti} object. 
-You can get more information by looking at the help file for \code{unmarkedFrameOccuMulti}:
+Using this information, we will create an `unmarkedFrameOccuMulti` object. 
+You can get more information by looking at the help file for `unmarkedFrameOccuMulti`:
 
-<<eval=FALSE>>=
+```{r, eval=FALSE}
 ?unmarkedFrameOccuMulti
-@
+```
 
 First we combine the detection data for the 3 species into one named list.
 These names will be used throughout the multispecies analysis, so pick useful ones.
 
-<<>>=
+```{r}
 ylist <- list(bobcat=MesoCarnivores$bobcat, coyote=MesoCarnivores$coyote, 
               redfox=MesoCarnivores$redfox)
 lapply(ylist, head)
-@
+```
 
 The site covariates are contained in a data frame:
 
-<<>>=
+```{r}
 head(MesoCarnivores$sitecovs)
-@
+```
 
-The site covariates include a metric of disturbance in a 5 km radius (\code{Dist\_5km}), housing density in a 5 km radius (\code{HDens\_5km}), latitude, longitude, a metric of how many people use the site (\code{People\_site}) and whether the camera site is on (or off) a trail.
-Using our \code{ylist}, site covariates, and observation covariates, we can construct an \code{unmarkedFrameOccuMulti} object.
+The site covariates include a metric of disturbance in a 5 km radius (`Dist_5km`), housing density in a 5 km radius (`HDens_5km`), latitude, longitude, a metric of how many people use the site (`People_site`) and whether the camera site is on (or off) a trail.
+Using our `ylist`, site covariates, and observation covariates, we can construct an `unmarkedFrameOccuMulti` object.
 
-<<>>=
+```{r}
 umf <- unmarkedFrameOccuMulti(y=ylist, siteCovs=MesoCarnivores$sitecovs)
-@
+```
 
-\subsection{Occupancy formulas}
+## Occupancy formulas
 
-While most \code{unmarked} models have only one or two formulas (and a single formula for occupancy or abundance), \code{occuMulti} requires one formula per natural parameter $f$.
+While most `unmarked` models have only one or two formulas (and a single formula for occupancy or abundance), `occuMulti` requires one formula per natural parameter $f$.
 Thus, there will be multiple formulas associated with occupancy.
 These formulas are organized into an ordered character vector.
 It can be hard to keep track of how many natural parameters there are and what each one represents.
-It can be helpful to look at the $f$-design matrix, which is generated by \code{unmarkedFrameOccuMulti}.
+It can be helpful to look at the $f$-design matrix, which is generated by `unmarkedFrameOccuMulti`.
 
-<<>>=
+```{r}
 umf@fDesign
-@
+```
 
 The number and order of the formulas in the vector should match the column names of this matrix.
 There are 7 columns in the matrix: thus, we'll need 7 formulas total, and they should be provided in the following order:
 
-<<>>=
+```{r}
 colnames(umf@fDesign)
-@
+```
 
 For this model we'll set the 1st and 2nd-order $f$ parameters to be intercept-only, and fix the 3rd order parameter at 0.
-We will combine our formulas into a vector called \code{stateformulas}, like this:
+We will combine our formulas into a vector called `stateformulas`, like this:
 
-<<>>=
+```{r}
 stateformulas <- c("~1","~1","~1","~1","~1","~1","0")
-@
+```
 
-Notice that the formulas are character strings (each wrapped in \code{""}). This is required.
+Notice that the formulas are character strings (each wrapped in `""`). This is required.
 
-\subsection{Detection formulas}
+## Detection formulas
 
 Each species has its own detection probability formula.
-Thus, there should be 3 total formulas combined in a \code{detformulas} vector.
-The order of the formulas should match the order of species in \code{ylist}.
+Thus, there should be 3 total formulas combined in a `detformulas` vector.
+The order of the formulas should match the order of species in `ylist`.
 For this model, all three species will have intercept-only detection formulas.
 
-<<>>=
+```{r}
 detformulas <- c("~1","~1","~1")
-@
+```
 
-\subsection{Fit the model}
+## Fit the model
 
-First, look at the help file for \code{occuMulti} to check what the required arguments are:
+First, look at the help file for `occuMulti` to check what the required arguments are:
 
-<<eval=FALSE>>=
+```{r, eval=FALSE}
 ?occuMulti
-@
+```
 
-We now have all the pieces we need (\code{unmarkedFrameOccuMulti}, \code{stateformulas}, \code{detformulas}) needed to run a basic model which we will call \code{mod\_null}.
+We now have all the pieces we need (`unmarkedFrameOccuMulti`, `stateformulas`, `detformulas`) needed to run a basic model which we will call `mod_null`.
 
-<<>>=
+```{r}
 mod_null <- occuMulti(detformulas=detformulas, stateformulas=stateformulas, data=umf)
 summary(mod_null)
-@
+```
 
 The regression parameters associated with each $f$ are identified by the species name (or combination of species names) in brackets.
 
 A few things to notice:
 
-\begin{itemize}
-  \item Coyote occupancy is the highest of the three species.
-  \item Negative relationship between bobcat and red fox
-  \item Positive relationships between coyote and the other two species
-  \item There is no three-species interaction term in the summary, because we fixed it at 0.
-\end{itemize}
+* Coyote occupancy is the highest of the three species.
+* Negative relationship between bobcat and red fox
+* Positive relationships between coyote and the other two species
+* There is no three-species interaction term in the summary, because we fixed it at 0.
 
-\subsection{Occupancy probabilities}
+## Occupancy probabilities
 
-To get the expected probability for each occupancy state ([11], [10] and so on) at each site, use the \code{predict} function.
+To get the expected probability for each occupancy state ([11], [10] and so on) at each site, use the `predict` function.
 This gives you the probabilities along with standard errors and a 95% CI.
 
-<<>>=
+```{r}
 occ_prob <- predict(mod_null, type="state")
 head(occ_prob$Predicted)
-@
+```
 
 The rows of this matrix should sum to 1.
 All rows are the same because estimated occupancies at all sites are the same - we didn't include any covariates.
 
-\subsection{Marginal occupancy}
+## Marginal occupancy
 
 It's often more interesting to look at occupancy for species individually.
 For example, you might want to know the marginal occupancy of one species at each site (across all possible occupancy states).
 
-You can do this by specifying the \code{species} argument in \code{predict}, which will automatically sum up the appropriate occupancy states.
+You can do this by specifying the `species` argument in `predict`, which will automatically sum up the appropriate occupancy states.
 
-<<>>=
+```{r}
 redfox_marginal <- predict(mod_null, type="state", species="redfox")
 head(redfox_marginal)
-@
+```
 
-\subsection{Plotting marginal occupancy}
+## Plotting marginal occupancy
 
-Outputs from \code{predict} can be used to compare marginal occupancy across species with a plot.
+Outputs from `predict` can be used to compare marginal occupancy across species with a plot.
 First, we'll need to get marginal occupancy for the other two species, and combine the three estimates into a single data frame.
 
-<<>>=
+```{r}
 coy_marginal <- predict(mod_null, type="state", species="coyote")
 bob_marginal <- predict(mod_null, type="state", species="bobcat")
 all_marginal <- rbind(redfox_marginal[1,], coy_marginal[1,], bob_marginal[1,])
 all_marginal$Species <- c("Red fox", "Coyote", "Bobcat")
-@
+```
 
 Now we can plot the estimated marginal occupancy for each species, along with 95\% CIs.
 
-<<fig=TRUE>>=
+```{r, fig.height=5}
 plot(1:3, all_marginal$Predicted, ylim=c(0.1,0.4), 
      xlim=c(0.5,3.5), pch=19, cex=1.5, xaxt='n', 
      xlab="", ylab="Marginal occupancy and 95% CI")
@@ -250,31 +216,31 @@ for (i in 1:3){
   segments(i-top, all_marginal$lower[i], i+top)
   segments(i-top, all_marginal$upper[i], i+top)
 }
-@
+```
 
-\subsection{Conditional occupancy}
+## Conditional occupancy
 
-Alternatively, you might want to know the probability of occupancy of one species, conditional on the presence of another. Use the \code{species} and \code{cond} arguments together for this.
+Alternatively, you might want to know the probability of occupancy of one species, conditional on the presence of another. Use the `species` and `cond` arguments together for this.
 For example, the probability of red fox occupancy, conditional on coyote presence:
 
-<<>>=
+```{r}
 redfox_coy <- predict(mod_null, type="state", species="redfox", cond="coyote")
 head(redfox_coy)
-@
+```
 
 What about conditional on coyote *absence*?
-Simply add a \code{"-"} before the species name.
+Simply add a `"-"` before the species name.
 
-<<>>=
+```{r}
 redfox_nocoy <- predict(mod_null, type="state", species="redfox", cond="-coyote")
 head(redfox_nocoy)
-@
+```
 
-\subsection{Plotting conditional occupancy}
+## Plotting conditional occupancy
 
-You can use this output from \code{predict} to generate comparison plots.
+You can use this output from `predict` to generate comparison plots.
 
-<<fig=TRUE>>=
+```{r, fig.height=5}
 cond_data <- rbind(redfox_coy[1,], redfox_nocoy[1,])
 cond_data$Coyote_status <- c("Present","Absent")
 
@@ -290,179 +256,217 @@ for (i in 1:2){
   segments(i-top, cond_data$lower[i], i+top)
   segments(i-top, cond_data$upper[i], i+top)
 }
-@
+```
 
 Note that red fox occupancy is higher at sites where coyotes were present, which corresponds with the positive interaction term between the two species we saw in the model output summary. 
 
-\section{Multispecies model with covariates}
+# Multispecies model with covariates
 
 Now we'll fit a model with covariates on some natural parameters.
 It might be helpful to look at the order for our $f$ parameters again:
 
-<<>>=
+```{r}
 colnames(umf@fDesign)
-@
+```
 
 And our available site covariates:
 
-<<>>=
+```{r}
 head(siteCovs(umf))
-@
+```
 
-\subsection{Add housing density as a covariate}
+## Add housing density as a covariate
 
-We'll fit a model with an effect of housing density (\code{HDens\_5km}) on the first-order parameters for all three species.
+We'll fit a model with an effect of housing density (`HDens_5km`) on the first-order parameters for all three species.
 The two-way interactions will remain intercept-only, and the three-way interaction will remain fixed at 0.
 Here's the vector of $f$ formulas:
 
-<<>>=
+```{r}
 sf <- c("~HDens_5km","~HDens_5km","~HDens_5km","~1","~1","~1","0")
-@
+```
 
 Inside your formula, you can wrap the variable name in \code{scale()} to standardize it, which we should do, because the housing density variable is not scaled.
 
-<<>>=
+```{r}
 sf <- c("~scale(HDens_5km)","~scale(HDens_5km)","~scale(HDens_5km)","~1","~1","~1","0")
-@
+```
 
-Detection formulas will remain the same, so we're now ready to fit a new model, \code{mod\_hdens}.
+Detection formulas will remain the same, so we're now ready to fit a new model, `mod_hdens`.
 
-<<>>=
+```{r}
 mod_hdens <- occuMulti(stateformulas=sf, detformulas=detformulas, umf)
 summary(mod_hdens)
-@
+```
 
 A few things to note from the results:
 
-\begin{itemize}
-  \item Housing density has a significant negative effect on occupancy of bobcat
-  \item Housing density has a significant positive effect on red fox
-  \item No effect of housing density on coyote.
-\end{itemize}
+* Housing density has a significant negative effect on occupancy of bobcat
+* Housing density has a significant positive effect on red fox
+* No effect of housing density on coyote.
 
-\subsection{Plotting covariate effects}
+## Plotting covariate effects
 
-To plot the effect of housing density on marginal occupancy, we again use \code{predict}.
-First, we need to generate sequence of possible \code{Hdens\_5km} values for the X-axis of our plot.
+To plot the effect of housing density on marginal occupancy, we again use `predict`.
+First, we need to generate sequence of possible `Hdens_5km` values for the X-axis of our plot.
 We'll generate a sequence of 100 values, starting at the minimum observed housing density and ending at the maximum observed value.
 
-<<>>=
+```{r}
 hdens_range <- range(siteCovs(umf)$HDens_5km)
 hdens_seq <- seq(hdens_range[1], hdens_range[2], length.out=100)
-@
+```
 
-Next, we'll \code{predict} marginal coyote occupancy at each value of \code{Hdens\_5km} along our sequence.
-Our custom housing density values should be in a data frame and provided to the \code{newdata} argument.
-Because we used \code{scale()} in our formulas above, there is no need to manually scale these new housing density values - \code{unmarked} will do it for us.
+Next, we'll `predict` marginal coyote occupancy at each value of `Hdens_5km` along our sequence.
+Our custom housing density values should be in a data frame and provided to the `newdata` argument.
+Because we used `scale()` in our formulas above, there is no need to manually scale these new housing density values - `unmarked` will do it for us.
 
-<<>>=
+```{r}
 nd <- data.frame(HDens_5km = hdens_seq)
 occ_hdens_coy <- predict(mod_hdens, type="state", species="coyote", newdata=nd)
 occ_hdens_coy$Species <- "Coyote"
 occ_hdens_coy$Hdens <- hdens_seq
 head(occ_hdens_coy)
-@
+```
 
 We'll do the same thing for the other two species.
 
-<<>>=
+```{r}
 occ_hdens_bob <- predict(mod_hdens, type="state", species="bobcat", newdata=nd)
 occ_hdens_fox <- predict(mod_hdens, type="state", species="redfox", newdata=nd)
 occ_hdens_bob$Species <- "Bobcat"
 occ_hdens_fox$Species <- "Red fox"
 occ_hdens_bob$Hdens <- hdens_seq
 occ_hdens_fox$Hdens <- hdens_seq
-@
+```
 
 Finally, we'll build our plot.
 Housing density will be on the x-axis, marginal occupancy on the y-axis, and species will be identified by colors.
 
-<<fig=TRUE>>=
+```{r, fig.height=5}
 plot(occ_hdens_coy$Hdens, occ_hdens_coy$Predicted, type='l', ylim=c(0,0.6),
      col='red', lwd=2, xlab="Housing density", ylab="Marginal occupancy")
 lines(occ_hdens_bob$Hdens, occ_hdens_bob$Predicted, col='blue', lwd=2)
 lines(occ_hdens_fox$Hdens, occ_hdens_fox$Predicted, col='green', lwd=2)
 legend('topleft', col=c('red', 'blue', 'green'), lty=1,
        legend=c("Coyote", "Bobcat", "Red fox"))
-@
+```
 
-\section{Model selection}
+# Model selection
 
-\code{unmarked} can calculate AIC, $\Delta$AIC, and weights for a list of models automatically.
-Start by creating a \code{fitList} object containing our two models:
+`unmarked` can calculate AIC, $\Delta$AIC, and weights for a list of models automatically.
+Start by creating a `fitList` object containing our two models:
 
-<<>>=
+```{r}
 mods <- fitList(mod_null, mod_hdens)
-@
+```
 
-Then call the function \code{modSel} on our list of models to generate a model selection table:
+Then call the function `modSel` on our list of models to generate a model selection table:
 
-<<>>=
+```{r}
 modSel(mods)
-@
+```
 
 Looks like the model with housing density is better.
 
-\section{Model fitting challenges}
+# Model fitting challenges
 
 Multispecies occupancy models often have many parameters, and can be difficult to fit in some situations.
 You might get poor estimates (i.e., very large absolute values and/or large SEs) under certain conditions:
 
-\begin{itemize}
-  \item Sparse data (many 0s)
-  \item Boundary estimates (occupancy close to 0 or 1)
-  \item Few observations where multiple species are detected
-  \item Separation (perfect correlation with covariate)
-\end{itemize}
+* Sparse data (many 0s)
+* Boundary estimates (occupancy close to 0 or 1)
+* Few observations where multiple species are detected
+* Separation (perfect correlation with covariate)
 
 Here's an example of a complex model with many covariates that results in poor estimates.
 
-<<>>=
+```{r, eval=FALSE}
 state_complex <- c(rep("~scale(Dist_5km)+scale(HDens_5km)", 6), 0)
 det_complex <- rep("~Trail",3)
 
 mod_complex <- occuMulti(stateformulas=state_complex, detformulas=det_complex, umf)
 summary(mod_complex)
-@
+```
+
+```
+##
+## Call:
+## occuMulti(detformulas = det_complex, stateformulas = state_complex,
+##     data = umf, maxOrder = 3L)
+##
+## Occupancy (logit-scale):
+##                                  Estimate     SE      z  P(>|z|)
+## [bobcat] (Intercept)             -23.0171  5.784 -3.980 6.90e-05
+## [bobcat] scale(Dist_5km)          -2.4249  0.689 -3.519 4.34e-04
+## [bobcat] scale(HDens_5km)        -82.3836 19.788 -4.163 3.14e-05
+## [coyote] (Intercept)              -0.6789  0.225 -3.017 2.55e-03
+## [coyote] scale(Dist_5km)          -0.0176  0.139 -0.127 8.99e-01
+## [coyote] scale(HDens_5km)         -0.5534  0.748 -0.740 4.59e-01
+## [redfox] (Intercept)              -1.3946  0.257 -5.425 5.78e-08
+## [redfox] scale(Dist_5km)          -0.5293  0.250 -2.115 3.45e-02
+## [redfox] scale(HDens_5km)          0.2108  0.261  0.808 4.19e-01
+## [bobcat:coyote] (Intercept)        6.7598  6.384  1.059 2.90e-01
+## [bobcat:coyote] scale(Dist_5km)    1.6979  0.695  2.445 1.45e-02
+## [bobcat:coyote] scale(HDens_5km)  17.9202 21.442  0.836 4.03e-01
+## [bobcat:redfox] (Intercept)       15.3983  3.462  4.448 8.67e-06
+## [bobcat:redfox] scale(Dist_5km)    0.8836  0.439  2.014 4.40e-02
+## [bobcat:redfox] scale(HDens_5km)  64.1330 12.377  5.182 2.20e-07
+## [coyote:redfox] (Intercept)        1.1084  0.363  3.050 2.29e-03
+## [coyote:redfox] scale(Dist_5km)    0.1149  0.340  0.338 7.35e-01
+## [coyote:redfox] scale(HDens_5km)   0.9046  0.781  1.159 2.47e-01
+## 
+## Detection (logit-scale):
+##                      Estimate     SE      z  P(>|z|)
+## [bobcat] (Intercept)    -2.83 0.1419 -19.91 3.10e-88
+## [bobcat] Trail           1.74 0.1542  11.26 2.10e-29
+## [coyote] (Intercept)    -1.96 0.0984 -19.88 5.89e-88
+## [coyote] Trail           2.17 0.1220  17.75 1.63e-70
+## [redfox] (Intercept)    -1.59 0.1601  -9.93 2.97e-23
+## [redfox] Trail           1.78 0.1997   8.93 4.12e-19
+## 
+## AIC: 5958.196
+## Number of sites: 1437
+## optim convergence code: 0
+## optim iterations: 196
+## Bootstrap iterations: 0
+```
+
 
 Note that several estimates are very large (>10) and also have large SEs.
 You should be very skeptical about using a model with poor estimates, like this one, for inference.
 Potential solutions when you get poor estimates include:
 
-\begin{itemize}
-  \item Fit simpler models with fewer covariates
-  \item If possible, fit the model with fewer species
-  \item Adjust observation period length if possible (e.g. collapse from one-week periods to three-week periods)
-  \item Use penalized likelihood to fit the model
-\end{itemize}
+* Fit simpler models with fewer covariates
+* If possible, fit the model with fewer species
+* Adjust observation period length if possible (e.g. collapse from one-week periods to three-week periods)
+* Use penalized likelihood to fit the model
 
-\section{Penalized likelihood}
+# Penalized likelihood
 
-\code{occuMulti} uses maximum likelihood to estimate parameters.
+`occuMulti` uses maximum likelihood to estimate parameters.
 We can add a "penalty" to the calculated likelihood to keep parameter estimates from getting stuck at huge values
-Use of penalized likelihiood has been shown to help with separation/boundary issues, eliminate unreasonably large estimates, and reduce error,
+Use of penalized likelihood has been shown to help with separation/boundary issues, eliminate unreasonably large estimates, and reduce error,
 However, note that the penalty term introduces a small amount of bias in the parameter estimates: thus, we are making a tradeoff between bias and variance
 With huge SEs as with the previous model, this may be a good tradeoff to make.
 
 One type of penalty is the "Bayes" penalty:
-\begin{equation}
+$$
 -\lambda\frac{1}{2}\sum_i{}\theta_i^2
-\end{equation}
+$$
 In the formula above, $\lambda$ is the penalty value, and $\theta$ is the vector of estimated parameters.
 As the parameter values get bigger, the total penalty increases.
 
-\subsection{Penalized likelihood with occuMulti}
+## Penalized likelihood with occuMulti
 
-\code{occuMulti} can use penalized likelihood to fit models.
-You can provide a value to the \code{penalty} argument directly, or use the \code{optimizePenalty} function on a fitted model to choose the best value of $\lambda$ using K-fold cross-validation, and re-fit the model using the optimal penalty term value.
+`occuMulti` can use penalized likelihood to fit models.
+You can provide a value to the `penalty` argument directly, or use the `optimizePenalty` function on a fitted model to choose the best value of $\lambda$ using K-fold cross-validation, and re-fit the model using the optimal penalty term value.
 
-<<eval=FALSE>>=
+```{r,eval=FALSE}
 set.seed(123)
 mod_penalty <- optimizePenalty(mod_complex, penalties=c(0.5,1))
 summary(mod_penalty)
-@
+```
 
-<<eval=FALSE>>=
+```
 ## Optimal penalty is 1
 ## Bootstraping covariance matrix
 
@@ -508,11 +512,10 @@ summary(mod_penalty)
 ## optim convergence code: 0
 ## optim iterations: 100
 ## Bootstrap iterations: 30
-@
+```
 
 Notice that parameter estimates and SEs for the model using penalized likelihood are no longer gigantic.
-For more info on the use of penalized likelihood with multispecies occupancy models, see \citet{Clipp_2021}.
+For more info on the use of penalized likelihood with multispecies occupancy models, see @Clipp_2021.
 
-\bibliography{unmarked}
 
-\end{document}
+# References

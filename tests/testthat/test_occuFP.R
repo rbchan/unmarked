@@ -1,4 +1,5 @@
 context("occuFP fitting function")
+skip_on_cran()
 
 test_that("occuFP model can be fit",{
   n = 100

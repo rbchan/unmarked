@@ -1,4 +1,5 @@
 context("vif method")
+skip_on_cran()
 
 test_that("vif works with occu models",{
 

@@ -1,4 +1,5 @@
 context("occuRN fitting function")
+skip_on_cran()
 
 test_that("occuRN can fit models",{
 

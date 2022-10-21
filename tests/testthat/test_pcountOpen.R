@@ -1,4 +1,5 @@
 context("pcountOpen fitting function")
+skip_on_cran()
 
 test_that("unmarkedFramePCO subset works",{
     y <- matrix(1:27, 3)

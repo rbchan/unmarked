@@ -1,4 +1,5 @@
 context("occuPEN fitting function")
+skip_on_cran()
 
 test_that("occuPEN can fit simple models",{
 

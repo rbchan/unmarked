@@ -1,4 +1,5 @@
 context("pcount.spHDS fitting function")
+skip_on_cran()
 
 test_that("pcount.spHDS can fit models",{
 # Unit test here

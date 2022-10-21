@@ -1,4 +1,5 @@
 context("powerAnalysis method")
+skip_on_cran()
 
 test_that("powerAnalysis method works",{
   forms <- list(state=~elev, det=~1)
@@ -60,6 +61,17 @@ test_that("powerAnalysis method works",{
   pl <- unmarkedPowerList(template_model, effect_sizes, design=scenarios, nsim=10)
   expect_is(pl, "unmarkedPowerList")
 
+  # With random effect
+  set.seed(123)
+  rguide <- list(group=factor(levels=letters[1:20]))
+  rform <- list(state=~x+(1|group), det=~1)
+  rcf <- list(state=c(intercept=0, x=0.5, group=0.7), det=c(intercept=0))
+  umfr <- simulate("occu", formulas=rform, design=design, coefs=rcf, guide=rguide)
+  fm <- occu(~1~x+(1|group), umfr)
+  pa5 <- powerAnalysis(fm, rcf, nsim=10)
+  s <- summary(pa5)
+  expect_equal(nrow(s), 3)
+  expect_equal(s$Power[2], 1)
   })
 })
 

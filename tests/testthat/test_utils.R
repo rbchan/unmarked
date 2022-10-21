@@ -10,11 +10,11 @@ test_that("invertHessian function works",{
   fake_opt <- list(hessian=mat)
 
   #Successful inversion
-  expect_equivalent(unmarked:::invertHessian(fake_opt, nrow(mat), TRUE),
+  expect_equivalent(invertHessian(fake_opt, nrow(mat), TRUE),
                      inv_mat)
 
   #When se=F
-  expect_equivalent(unmarked:::invertHessian(fake_opt, nrow(mat), FALSE),
+  expect_equivalent(invertHessian(fake_opt, nrow(mat), FALSE),
                      matrix(rep(NA,4), nrow=2))
 
   #When matrix is not invertible
@@ -22,11 +22,11 @@ test_that("invertHessian function works",{
   expect_error(solve(bad_opt$hessian))
 
   #Should generate warning
-  expect_warning(unmarked:::invertHessian(bad_opt, nrow(bad_opt$hessian), TRUE))
+  expect_warning(invertHessian(bad_opt, nrow(bad_opt$hessian), TRUE))
 
 
   #Should result in matrix of NAs
-  expect_equivalent(unmarked:::invertHessian(bad_opt, nrow(bad_opt$hessian), FALSE),
+  expect_equivalent(invertHessian(bad_opt, nrow(bad_opt$hessian), FALSE),
                      matrix(rep(NA,4), nrow=2))
 })
 

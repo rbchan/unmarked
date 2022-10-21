@@ -30,81 +30,66 @@ setMethod("replaceY", "unmarkedFrameOccuMulti",
       object
 })
 
-setMethod("parboot", "unmarkedFit",
-    function(object, statistic=SSE, nsim=10, report, seed = NULL, parallel = TRUE, ncores, ...)
-{
-    dots <- list(...)
-    statistic <- match.fun(statistic)
-    call <- match.call(call = sys.call(-1))
-    formula <- object@formula
-    umf <- getData(object)
-    y <- getY(object)
-    ests <- as.numeric(coef(object))
-    starts <- ests
-    if(methods::.hasSlot(object, "TMB") && !is.null(object@TMB)) starts <- NULL
-    t0 <- statistic(object, ...)
-    lt0 <- length(t0)
-    t.star <- matrix(NA, nsim, lt0)
-    if(!missing(report))
-        cat("t0 =", t0, "\n")
-    simdata <- umf
-    if (!is.null(seed)) set.seed(seed)
-    simList <- simulate(object, nsim = nsim, na.rm = FALSE)
-    availcores <- detectCores()
-    if(missing(ncores)) ncores <- availcores - 1
-    if(ncores > availcores) ncores <- availcores
 
-    no_par <- ncores < 2 || nsim < 100 || !parallel
+setMethod("parboot", "unmarkedFit",  function(object, statistic=SSE, nsim=10,
+          report, seed = NULL, parallel = FALSE, ncores, ...){
 
-    if (no_par) {
-      if (!missing(report)) {
-        for(i in 1:nsim) {
-          simdata <- replaceY(simdata, simList[[i]])
-          fit <- update(object, data=simdata, starts=starts, se=FALSE)
-          t.star[i,] <- statistic(fit, ...)
-          if(!missing(report)) {
-            if (nsim > report && i %in% seq(report, nsim, by=report))
-              cat("iter", i, ": ", t.star[i, ], "\n")
-          }
-        }
-      } else {
-        t.star <- pbsapply(1:nsim, function(i) {
-          simdata <- replaceY(simdata, simList[[i]])
-          fit <- update(object, data=simdata, starts=starts, se=FALSE)
-          t.star.tmp <- statistic(fit, ...)
-        })
-        if (lt0 > 1)
-          t.star <- t(t.star)
-        else
-          t.star <- matrix(t.star, ncol = lt0)
-      }
-    } else {
-      message("Running parametric bootstrap in parallel on ", ncores, " cores.")
-      if (!missing(report)) message("Bootstrapped statistics not reported during parallel processing.")
-      cl <- makeCluster(ncores)
-      if (!is.null(seed)) parallel::clusterSetRNGStream(cl, iseed = seed)
-      on.exit(stopCluster(cl))
-      varList <- c("simList", "y", "object", "simdata", "starts", "statistic", "dots")
-      # If call formula is an object, include it too
-      fm.nms <- all.names(object@call)
-      if (!any(grepl("~", fm.nms))) varList <- c(varList, fm.nms[2])
-      ## Hack to get piFun for unmarkedFitGMM and unmarkedFitMPois
-      if(.hasSlot(umf, "piFun")) varList <- c(varList, umf@piFun)
-      clusterExport(cl, varList, envir = environment())
-      clusterEvalQ(cl, library(unmarked))
-      clusterEvalQ(cl, list2env(dots))
-      t.star.parallel <- pblapply(1:nsim, function(i) {
-        simdata <- replaceY(simdata, simList[[i]])
-        fit <- update(object, data = simdata, starts = starts, se = FALSE)
-        t.star <- statistic(fit, ...)
-      }, cl = cl)
-      t.star <- matrix(unlist(t.star.parallel), nrow = length(t.star.parallel), byrow = TRUE)
-    }
-    if (!is.null(names(t0)))
-      colnames(t.star) <- names(t0)
-    else colnames(t.star) <- paste("t*", 1:lt0, sep="")
-    out <- new("parboot", call = call, t0 = t0, t.star = t.star)
-    return(out)
+  if(!missing(report)){
+    warning("report argument is non-functional and will be deprecated in the next version", call.=FALSE)
+  }
+
+  dots <- list(...)
+  call <- match.call(call = sys.call(-1))
+  stopifnot(is.function(statistic))
+  starts <- as.numeric(coef(object))
+  # Get rid of starting values if model was fit with TMB
+  if(methods::.hasSlot(object, "TMB") && !is.null(object@TMB)) starts <- NULL
+
+  t0 <- statistic(object, ...)
+
+  simList <- simulate(object, nsim = nsim, na.rm = FALSE)
+
+  availcores <- parallel::detectCores() - 1
+  if(missing(ncores) || ncores > availcores) ncores <- availcores
+
+  cl <- NULL
+  if(parallel){
+    cl <- parallel::makeCluster(ncores)
+    on.exit(parallel::stopCluster(cl))
+    parallel::clusterEvalQ(cl, library(unmarked))
+    env_vars <- c("dots", "replaceY")
+    fm.nms <- all.names(object@call)
+    if (!any(grepl("~", fm.nms))) env_vars <- c(env_vars, fm.nms[2])
+    if(.hasSlot(object@data, "piFun")) env_vars <- c(env_vars, object@data@piFun)
+    parallel::clusterExport(cl, env_vars, envir = environment())
+    parallel::clusterEvalQ(cl, list2env(dots))
+  }
+
+  run_sim <- function(x, object, statistic, starts, t0, ...){
+    simdata <- replaceY(object@data, x)
+    tryCatch({
+      #if(runif(1,0,1) < 0.5) stop("fail") # for testing error trapping
+      fit <- update(object, data=simdata, starts=starts, se=FALSE)
+      statistic(fit, ...)
+    }, error=function(e){
+      t0[] <- NA
+      t0
+    })
+  }
+
+  t.star <- t(pbapply::pbsapply(simList, run_sim, object=object,
+                              statistic=statistic, starts=starts, t0=t0,
+                              cl=cl, ...))
+  if(length(t0) == 1) t.star <- matrix(t.star, ncol=1)
+
+  failed <- apply(t.star, 1, function(x) any(is.na(x)))
+  if(sum(failed) > 0){
+    warning(paste0("Model fitting failed in ",sum(failed), " sims."), call.=FALSE)
+    t.star <- t.star[!failed,,drop=FALSE]
+  }
+
+  new("parboot", call = call, t0 = t0, t.star = t.star)
+
 })
 
 
@@ -194,9 +179,7 @@ setMethod("nonparboot", "unmarkedFit",
         data.b <- data[sites,]
         y <- getY(data.b)
         if (bsType == "both") {
-            obs.per.site <- alply(y, 1, function(row) {
-                which(!is.na(row))
-            })
+            obs.per.site <- lapply(1:nrow(y), function(i) which(!is.na(y[i,])))
             obs <- lapply(obs.per.site,
                           function(obs) sample(obs, replace = TRUE))
             data.b <- data.b[obs]
@@ -281,7 +264,7 @@ setMethod("nonparboot", "unmarkedFitGDS",
 
 
 
-setMethod("nonparboot", "unmarkedFitPCO",
+setMethod("nonparboot", "unmarkedFitDailMadsen",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
     callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
@@ -382,9 +365,7 @@ setMethod("nonparboot", "unmarkedFitOccuPEN",
         data.b <- data[sites,]
         y <- getY(data.b)
         if (bsType == "both") {
-            obs.per.site <- alply(y, 1, function(row) {
-                which(!is.na(row))
-            })
+            obs.per.site <- lapply(1:nrow(y), function(i) which(!is.na(y[i,])))
             obs <- lapply(obs.per.site,
                           function(obs) sample(obs, replace = TRUE))
             data.b <- data.b[obs]
@@ -440,9 +421,7 @@ setMethod("nonparboot", "unmarkedFitOccuPEN_CV",
         data.b <- data[sites,]
         y <- getY(data.b)
         if (bsType == "both") {
-            obs.per.site <- alply(y, 1, function(row) {
-                which(!is.na(row))
-            })
+            obs.per.site <- lapply(1:nrow(y), function(i) which(!is.na(y[i,])))
             obs <- lapply(obs.per.site,
                           function(obs) sample(obs, replace = TRUE))
             data.b <- data.b[obs]

@@ -1,4 +1,5 @@
 context("simulate method")
+skip_on_cran()
 
 test_that("simulate can generate new datasets from scratch",{
 
@@ -32,6 +33,15 @@ test_that("simulate can generate new datasets from scratch",{
   expect_equal(names(umf2@siteCovs), c("elev","landcover"))
   expect_true(is.factor(umf2@siteCovs$landcover))
   expect_equivalent(mean(umf2@siteCovs$elev), 2.01722, tol=1e-5)
+
+  # With random effect
+  set.seed(123)
+  rguide <- list(group=factor(levels=letters[1:20]))
+  rform <- list(state=~(1|group), det=~1)
+  rcf <- list(state=c(intercept=0, group=0.7), det=c(intercept=0))
+  umfr <- simulate("occu", formulas=rform, design=design, coefs=rcf, guide=rguide)
+  fm <- occu(~1~(1|group), umfr)
+  expect_equal(sigma(fm)$sigma, 0.6903913, tol=1e-5)
 
   # pcount
   set.seed(123)
@@ -172,7 +182,7 @@ test_that("simulate can generate new datasets from scratch",{
   cf <- list(state=bstate, det=bdet)
   expect_warning(umf15 <- simulate("occuMS", formulas=forms, coefs=cf, design=list(M=500, J=5, T=1)))
   fm <- occuMS(forms$det, forms$state, data=umf15, parameterization="multinomial")
-  expect_equivalent(coef(fm, 'state'), c(-0.437,0.767,-0.671,-0.595), tol=1e-3)
+  expect_equivalent(coef(fm, 'state'), c(-0.657,1.033,-0.633,-0.582), tol=1e-3)
 
   # gdistremoval
   set.seed(123)

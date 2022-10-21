@@ -1,4 +1,5 @@
 context("crossVal method")
+skip_on_cran()
 
 set.seed(123)
 data(frogs)

@@ -1,4 +1,5 @@
 context("nmixTTD fitting function")
+skip_on_cran()
 
 #Setup common vars
 M = 100 # Number of sites

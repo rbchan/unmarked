@@ -1,5 +1,7 @@
 context("fitList and modSel methods")
 
+skip_on_cran()
+
 test_that("fitLists can be constructed",{
   y <- matrix(rep(1, 10), 5, 2)
   umf <- unmarkedFrameOccu(y = y, siteCovs=data.frame(x=-2:2),

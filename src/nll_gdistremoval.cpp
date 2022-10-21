@@ -83,7 +83,7 @@ double nll_gdistremoval(arma::vec beta, arma::uvec n_param, arma::vec yDistance,
       uvec nmd = find_finite(yd_sub);
       uvec nmr = find_finite(yr_sub);
 
-      if((nmd.size() == Jdist) & (nmr.size() == Jrem)){
+      if((nmd.size() == Jdist) && (nmr.size() == Jrem)){
 
         cpd = distprob(keyfun, dist_param(t_ind), scale, "point",
                            db, w, a.row(i)) % u.col(i);

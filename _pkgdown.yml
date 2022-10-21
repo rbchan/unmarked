@@ -1,0 +1,61 @@
+authors:
+  Richard Chandler:
+    href: https://chandlerlab.uga.edu/richard-chandler-phd/
+  Ken Kellner:
+    href: https://kenkellner.com
+
+home:
+  links:
+  - text: Get help from the community
+    href: https://groups.google.com/g/unmarked
+
+reference:
+  - title: Occupancy models
+    contents:
+      - occu
+      - colext
+      - occuFP
+      - occuMS
+      - occuMulti
+      - occuPEN
+      - occuTTD
+  - title: Abundance models
+    contents:
+      - occuRN
+      - pcount
+      - distsamp
+      - multinomPois
+      - pcount.spHDS
+      - gpcount
+      - gmultmix
+      - gdistsamp
+      - gdistremoval
+      - pcountOpen
+      - distsampOpen
+      - multmixOpen
+      - nmixTTD
+  - title: Model diagnostics
+    contents:
+      - fitted,unmarkedFit-method
+      - parboot
+      - nonparboot,unmarkedFit-method
+      - residuals
+      - powerAnalysis
+      - simulate
+      - vif
+  - title: Model selection
+    contents:
+      - fitList
+      - modSel
+      - crossVal,unmarkedFit-method
+  - title: Model results
+    contents:
+      - coef,unmarkedFit-method
+      - predict,unmarkedFit-method
+      - linearComb
+      - backTransform
+      - ranef
+      - bup
+      - posteriorSamples,unmarkedRanef-method
+      - projected
+      - turnover

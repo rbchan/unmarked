@@ -57,11 +57,4 @@ gdistremoval(lambdaformula=~1, phiformula=~1, removalformula=~1,
 
 \seealso{\code{\link{unmarkedFrameGDR}}, \code{\link{gdistsamp}}, \code{\link{gmultmix}}}
 
-\examples{
-
-\dontrun{
-# More here later
-}
-}
-
 \keyword{models}

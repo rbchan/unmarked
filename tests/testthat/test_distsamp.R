@@ -1,5 +1,5 @@
 context("distsamp fitting function")
-
+skip_on_cran()
 
 y <- matrix(rep(4:1, 10)[1:10], 5, 2, byrow=TRUE)
 siteCovs <- data.frame(x = c(0, 2, 3, 4, 1))
@@ -265,6 +265,7 @@ test_that("getP works with distsamp",{
 
 test_that("distsamp works with random effects",{
 
+  set.seed(123)
   data(linetran)
   umf <- unmarkedFrameDS(y=as.matrix(linetran[,1:4]), siteCovs=linetran[,6:7],
                          survey="line", tlength=linetran$Length, unitsIn='m',
@@ -301,4 +302,10 @@ test_that("distsamp works with random effects",{
   pr <- lapply(mods,  function(x) predict(x, "state"))
   expect_true(all(sapply(pr, inherits, "data.frame")))
 
+  # Make sure simulate accounts for random effects
+  s <- simulate(hn, nsim=30)
+  avg <- apply(sapply(s, function(x) apply(x,1,sum)),1, mean)
+  # average first count and predicted abundance should be highly correlated
+  pr <- predict(hn, 'state')
+  expect_true(cor(avg, pr$Predicted) > 0.7)
 })

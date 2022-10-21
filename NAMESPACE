@@ -9,13 +9,12 @@ importFrom(stats, confint, fitted, coef, vcov, predict, update, profile,
            update.formula, sigma)
 importFrom(graphics, plot, hist, abline)
 importFrom(utils, head, read.csv)
-importFrom(plyr, ldply, alply, ddply)
 importFrom(grDevices, devAskNewPage, dev.interactive, palette.colors)
 importFrom(MASS, mvrnorm)
 importFrom(parallel, detectCores, makeCluster, stopCluster, clusterExport,
            clusterEvalQ)
 importFrom(methods, is, as, new, show, slot, .hasSlot, callGeneric, 
-           callNextMethod)
+           callNextMethod, setMethod)
 importFrom(lattice, xyplot, levelplot)
 importFrom(Rcpp, evalCpp)
 importFrom(pbapply, pbsapply, pblapply)

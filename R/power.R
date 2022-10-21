@@ -13,6 +13,7 @@ powerAnalysis <- function(object, coefs=NULL, design=NULL, alpha=0.05, nulls=lis
 
   submodels <- names(object@estimates@estimates)
   coefs <- check_coefs(coefs, object)
+  coefs <- generate_random_effects(coefs, object)
   fit_temp <- replace_estimates(object, coefs)
 
   T <- 1
@@ -155,12 +156,36 @@ check_coefs <- function(coefs, fit, template=FALSE){
   required_subs <- names(fit@estimates@estimates)
   required_coefs <- lapply(fit@estimates@estimates, function(x) names(x@estimates))
   required_lens <- lapply(required_coefs, length)
+
+  formulas <- sapply(names(fit), function(x) get_formula(fit, x))
+
+  # If there are random effects, adjust the expected coefficient names
+  # to remove the b vector and add the grouping covariate name
+  rand <- lapply(formulas, lme4::findbars)
+  if(!all(sapply(rand, is.null))){
+    stopifnot(all(required_subs %in% names(formulas)))
+    rvar <- lapply(rand, function(x) unlist(lapply(x, all.vars)))
+    if(!all(sapply(rvar, length)<2)){
+      stop("Only 1 random effect per parameter is supported", call.=FALSE)
+    }
+    for (i in required_subs){
+      if(!is.null(rand[[i]][[1]])){
+        signame <- rvar[[i]]
+        old_coefs <- required_coefs[[i]]
+        new_coefs <- old_coefs[!grepl("b_", old_coefs, fixed=TRUE)]
+        new_coefs <- c(new_coefs, signame)
+        required_coefs[[i]] <- new_coefs
+      }
+    }
+  }
+
   dummy_coefs <- lapply(required_coefs, function(x){
                     out <- rep(0, length(x))
                     x <- gsub("(Intercept)", "intercept", x, fixed=TRUE)
                     names(out) <- x
                     out
                   })
+
   if(template) return(dummy_coefs)
 
   if(is.null(coefs)){
@@ -226,6 +251,7 @@ check_coefs <- function(coefs, fit, template=FALSE){
   }
   coefs[required_subs]
 }
+
 wald <- function(est, se, null_hyp=NULL){
   if(is.null(null_hyp) || is.na(null_hyp)) null_hyp <- 0
   Z <- (est-null_hyp)/se
@@ -251,13 +277,15 @@ setMethod("summary", "unmarkedPower", function(object, ...){
     x
   })
 
+  coefs_no_rand <- unlist(object@coefs)[!grepl("b_", names(unlist(object@coefs)))]
+
   pow <- sapply(1:npar, function(ind){
     submod <- sum_dfs[[1]]$submodel[ind]
     param <- sum_dfs[[1]]$param[ind]
     ni <- nulls[[submod]][param]
 
     pcrit <- sapply(sum_dfs, function(x) wald(x$Estimate[ind], x$SE[ind], ni)) < object@alpha
-    direct <- sapply(sum_dfs, function(x) diff_dir(x$Estimate[ind], unlist(object@coefs)[ind], ni))
+    direct <- sapply(sum_dfs, function(x) diff_dir(x$Estimate[ind], coefs_no_rand[ind], ni))
     mean(pcrit & direct, na.rm=T)
   })
 
@@ -269,11 +297,14 @@ setMethod("summary", "unmarkedPower", function(object, ...){
     ni
   })
 
-  out <- cbind(sum_dfs[[1]][,1:2], effect=unlist(object@coefs), null=all_nulls,  power=pow)
+  effect_no_random <- unlist(object@coefs)[!grepl("b_",names(unlist(object@coefs)))]
+
+  out <- cbind(sum_dfs[[1]][,1:2], effect=effect_no_random, null=all_nulls,  power=pow)
   rownames(out) <- NULL
   names(out) <- c("Submodel", "Parameter", "Effect", "Null", "Power")
   out
 })
+
 setMethod("show", "unmarkedPower", function(object){
   cat("\nModel:\n")
   print(object@call)

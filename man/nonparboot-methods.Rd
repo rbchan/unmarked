@@ -13,12 +13,13 @@
 \alias{nonparboot,unmarkedFitPCount-method}
 \alias{nonparboot,unmarkedFitGDS-method}
 \alias{nonparboot,unmarkedFitGMM-method}
-\alias{nonparboot,unmarkedFitPCO-method}
 \alias{nonparboot,unmarkedFitOccuTTD-method}
 \alias{nonparboot,unmarkedFitOccuMulti-method}
 \alias{nonparboot,unmarkedFitNmixTTD-method}
 \alias{nonparboot,unmarkedFitGDR-method}
 \alias{nonparboot,unmarkedFitIDS-method}
+\alias{nonparboot,unmarkedFitDailMadsen-method}
+
 
 \title{ Nonparametric bootstrapping in unmarked }
 \description{

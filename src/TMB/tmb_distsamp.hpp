@@ -40,8 +40,7 @@ Type tmb_distsamp(objective_function<Type>* obj) {
   Type scale = 0; // If not hazard  this is ignored later 
   if(keyfun_type == 3) scale = exp(beta_scale(0)); // If hazard
 
-  //Define the log likelihood so that it can be calculated in parallel over sites
-  parallel_accumulator<Type> loglik(obj);
+  Type loglik = 0.0;
 
   int M = y.rows(); // # of sites
   int J = y.cols(); // # of distance categories per site

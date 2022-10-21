@@ -121,6 +121,7 @@ setMethod("ranef", "unmarkedFitOccuMS", function(object, ...)
       g <- rep(1, S)
       p_raw <- sapply(p_all, function(x) x[i,])
       for (j in 1:nrow(p_raw)){
+        if(any(is.na(p_raw[j,])) | is.na(y[i,j])) next
         sdp <- matrix(0, nrow=S, ncol=S)
         sdp[guide] <- p_raw[j,]
         sdp[,1] <- 1 - rowSums(sdp)
@@ -142,6 +143,7 @@ setMethod("ranef", "unmarkedFitOccuMS", function(object, ...)
       p_raw <- sapply(p_all, function(x) x[i,])
       for (j in 1:nrow(p_raw)){
         probs <- p_raw[j,]
+        if(any(is.na(probs)) | is.na(y[i,j])) next
         sdp <- matrix(0, nrow=S, ncol=S)
         sdp[1,1] <- 1
         sdp[2,1:2] <- c(1-probs[1], probs[1])
@@ -828,9 +830,10 @@ setMethod("ranef", "unmarkedFitOccuTTD",
 })
 
 
-#Common function for DSO and MMO
-postMultinomOpen <- function(object){
-
+# DSO and MMO
+setMethod("ranef", "unmarkedFitDailMadsen",
+    function(object, ...)
+{
     dyn <- object@dynamics
     formlist <- object@formlist
     formula <- as.formula(paste(unlist(formlist), collapse=" "))
@@ -984,23 +987,6 @@ postMultinomOpen <- function(object){
             }
           }
     }
-    post
-
-}
-
-
-setMethod("ranef", "unmarkedFitDSO",
-    function(object, ...)
-{
-    post <- postMultinomOpen(object)
-    new("unmarkedRanef", post=post)
-})
-
-
-setMethod("ranef", "unmarkedFitMMO",
-    function(object, ...)
-{
-    post <- postMultinomOpen(object)
     new("unmarkedRanef", post=post)
 })
 

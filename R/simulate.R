@@ -59,6 +59,89 @@ blank_umFit <- function(fit_function){
 }
 
 
+setMethod("simulate", "character",
+  function(object, nsim=1, seed=NULL, formulas, coefs=NULL, design, guide=NULL, ...){
+  model <- blank_umFit(object)
+  fit <- suppressWarnings(simulate_fit(model, formulas, guide, design, ...))
+  coefs <- check_coefs(coefs, fit)
+  #fit <- replace_sigma(coefs, fit)
+  coefs <- generate_random_effects(coefs, fit)
+  fit <- replace_estimates(fit, coefs)
+  ysims <- suppressWarnings(simulate(fit, nsim))
+  umf <- fit@data
+  # fix this
+  umfs <- lapply(ysims, function(x){
+    if(object=="occuMulti"){
+      umf@ylist <- x
+    } else if(object=="gdistremoval"){
+      umf@yDistance=x$yDistance
+      umf@yRemoval=x$yRemoval
+    } else {
+      umf@y <- x
+    }
+    umf
+  })
+  if(length(umfs)==1) umfs <- umfs[[1]]
+  umfs
+})
+
+# Insert specified random effects SD into proper S4 slot in model object
+# This is mostly needed by GDR which uses the SD to calculate
+# N with E_loglam (this is currently disabled so the function is not needed)
+#replace_sigma <- function(coefs, fit){
+#  required_subs <- names(fit@estimates@estimates)
+#  formulas <- sapply(names(fit), function(x) get_formula(fit, x))
+#  rand <- lapply(formulas, lme4::findbars)
+#  if(!all(sapply(rand, is.null))){
+#    rvar <- lapply(rand, function(x) unlist(lapply(x, all.vars)))
+#    for (i in required_subs){
+#      if(!is.null(rand[[i]][[1]])){
+#        signame <- rvar[[i]]
+#        old_coefs <- coefs[[i]]
+#        fit@estimates@estimates[[i]]@randomVarInfo$estimates <- coefs[[i]][[signame]]
+#      }
+#    }
+#  }
+#  fit
+#}
+
+generate_random_effects <- function(coefs, fit){
+  required_subs <- names(fit@estimates@estimates)
+  formulas <- sapply(names(fit), function(x) get_formula(fit, x))
+  rand <- lapply(formulas, lme4::findbars)
+  if(!all(sapply(rand, is.null))){
+    rvar <- lapply(rand, function(x) unlist(lapply(x, all.vars)))
+    for (i in required_subs){
+      if(!is.null(rand[[i]][[1]])){
+        signame <- rvar[[i]]
+        old_coefs <- coefs[[i]]
+        new_coefs <- old_coefs[names(old_coefs)!=signame]
+
+        # Find levels of factor variable
+        if(signame %in% names(siteCovs(fit@data))){
+          lvldata <- siteCovs(fit@data)[[signame]]
+        } else if(signame %in% names(obsCovs(fit@data))){
+          lvldata <- obsCovs(fit@data)[[signame]]
+        } else if(methods::.hasSlot(fit@data, "yearlySiteCovs") && signame %in% names(yearlySiteCovs(fit@data))){
+          lvldata <- yearlySiteCovs(fit@data)[[signame]]
+        } else {
+          stop("Random effect covariate missing from data", call.=FALSE)
+        }
+
+        if(!is.factor(lvldata)){
+          stop("Random effect covariates must be specified as factors with guide argument", call.=FALSE)
+        }
+        b <- stats::rnorm(length(levels(lvldata)), 0, old_coefs[signame])
+        names(b) <- rep(paste0("b_",i), length(b))
+        new_coefs <- c(new_coefs, b)
+        coefs[[i]] <- new_coefs
+      }
+    }
+  }
+  coefs
+}
+
+
 setGeneric("get_umf_components", function(object, ...) standardGeneric("get_umf_components"))
 
 setMethod("get_umf_components", "unmarkedFit",
@@ -100,44 +183,6 @@ setMethod("simulate_fit", "unmarkedFitOccuRN",
                            obsCovs=parts$obsCovs)
   occuRN(as.formula(paste(deparse(formulas$det), deparse(formulas$state))),
        data=umf, se=FALSE, control=list(maxit=1))
-})
-
-
-setMethod("simulate", "character",
-  function(object, nsim=1, seed=NULL, formulas, coefs=NULL, design, guide=NULL, ...){
-  model <- blank_umFit(object)
-  fit <- suppressWarnings(simulate_fit(model, formulas, guide, design, ...))
-  coefs <- check_coefs(coefs, fit)
-  fit <- replace_estimates(fit, coefs)
-  ysims <- simulate(fit, nsim)
-  umf <- fit@data
-  # fix this
-  umfs <- lapply(ysims, function(x){
-    if(object=="occuMulti"){
-      umf@ylist <- x
-    } else if(object=="gdistremoval"){
-      umf@yDistance=x$yDistance
-      umf@yRemoval=x$yRemoval
-    } else if(object == "IDS"){
-      out <- list()
-      out$ds <- fit@data
-      out$ds@y <- x$ds
-      if("pc" %in% names(fit)){
-        out$pc <- fit@dataPC
-        out$pc@y <- x$pc
-      }
-      if("oc" %in% names(fit)){
-        out$oc <- fit@dataOC
-        out$oc@y <- x$oc
-      }
-      umf <- out
-    } else {
-      umf@y <- x
-    }
-    umf
-  })
-  if(length(umfs)==1) umfs <- umfs[[1]]
-  umfs
 })
 
 setMethod("get_umf_components", "unmarkedFitMPois",
@@ -314,10 +359,8 @@ setMethod("simulate_fit", "unmarkedFitGMM",
            se=FALSE, control=list(maxit=1))
 })
 
-setClassUnion("unmarkedFitOpenPop",
-              c("unmarkedFitPCO","unmarkedFitMMO"))
 
-setMethod("get_umf_components", "unmarkedFitOpenPop",
+setMethod("get_umf_components", "unmarkedFitDailMadsen",
           function(object, formulas, guide, design, ...){
   sc <- generate_data(formulas$lambda, guide, design$M)
   ysc <- generate_data(list(formulas$gamma, formulas$omega), guide, design$M*design$T)
@@ -510,5 +553,5 @@ setMethod("simulate_fit", "unmarkedFitGDR",
   gdistremoval(lambdaformula=formulas$lambda, phiformula=formulas$phi,
                removalformula=formulas$rem, distanceformula=formulas$dist,
                data=umf, keyfun=keyfun, output=output, unitsOut=unitsOut,
-               mixture=mixture, K=K, se=FALSE, control=list(maxit=1))
+               mixture=mixture, K=K, se=FALSE, control=list(maxit=1), method='L-BFGS-B')
 })
