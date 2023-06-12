@@ -249,24 +249,35 @@ setMethod("ranef", "unmarkedFitMPois",
     lam <- predict(object, type="state")[,1]
     R <- length(lam)
     cp <- getP(object)
-    cp <- cbind(cp, 1-rowSums(cp))
+    cp <- cbind(cp, 1-rowSums(cp, na.rm=TRUE))
     N <- 0:K
-    post <- array(0, c(R, K+1, 1))
+    post <- array(NA, c(R, K+1, 1))
     colnames(post) <- N
     for(i in 1:R) {
         f <- dpois(N, lam[i])
         g <- rep(1, K+1)
-        if(any(is.na(y[i,])) | any(is.na(cp[i,])))
+        yi <- y[i,]
+        cpi <- cp[i,]
+        if(any(is.na(y[i,])) | any(is.na(cp[i,]))){
+          # This only handles cases when all NAs are at the end of the count vector
+          # Not when they are interspersed. I don't know how to handle that situation
+          if(object@data@piFun == "removalPiFun"){
+            warning("NAs in counts and/or covariates for site ",i, ". Keeping only counts before the first NA", call.=FALSE)
+            notNA <- min(which(is.na(y[i,]))[1], which(is.na(cp[i,]))[1], na.rm=TRUE) - 1
+            yi <- yi[c(1:notNA)]
+            cpi <- cpi[c(1:notNA, length(cpi))]
+          } else {
             next
+          }
+        }
         for(k in 1:(K+1)) {
-            yi <- y[i,]
             ydot <- N[k] - sum(yi)
             if(ydot<0) {
                 g[k] <- 0
                 next
             }
-            yi <- c(yi, ydot)
-            g[k] <- g[k] * dmultinom(yi, size=N[k], prob=cp[i,])
+            yik <- c(yi, ydot)
+            g[k] <- g[k] * dmultinom(yik, size=N[k], prob=cpi)
         }
         fudge <- f*g
         post[i,,1] <- fudge / sum(fudge)

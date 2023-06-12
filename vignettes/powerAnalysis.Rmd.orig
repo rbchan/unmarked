@@ -16,7 +16,9 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-
+```{r,echo=FALSE}
+knitr::opts_chunk$set(fig.path="figures/")
+```
 
 # Hypothesis Testing
 
@@ -31,8 +33,7 @@ In order to test these hypotheses, we must collected appropriate data, perhaps b
 We can then fit a model in `unmarked`, specifying in the formula that we are interested in estimating the effect of elevation on occupancy.
 For example, here is a simple model fit to the `crossbill` presence-absence dataset included with `unmarked`:
 
-
-```r
+```{r, warning=FALSE}
 set.seed(123)
 library(unmarked)
 data(crossbill)
@@ -40,23 +41,6 @@ data(crossbill)
 umf <- unmarkedFrameOccu(y=crossbill[,11:13], 
                          siteCovs=data.frame(elev=scale(crossbill$ele)))
 (mod <- occu(~1~elev, umf))
-```
-
-```
-## 
-## Call:
-## occu(formula = ~1 ~ elev, data = umf)
-## 
-## Occupancy:
-##             Estimate    SE     z  P(>|z|)
-## (Intercept)   -1.223 0.168 -7.27 3.61e-13
-## elev           0.594 0.166  3.59 3.35e-04
-## 
-## Detection:
-##  Estimate    SE    z P(>|z|)
-##     0.326 0.186 1.75  0.0798
-## 
-## AIC: 480.8533
 ```
 
 ## Wald tests
@@ -77,15 +61,9 @@ It turns out that the square root of the Wald statistic, $\sqrt{W}$, follows a s
 Thus, we can calculate the probability that our observed statistic, $\sqrt{W} = 3.59$, occurred by chance assuming that the null hypothesis $\theta = 0$ is true.
 In R, for a two-tailed test, this can be calculated as:
 
-
-```r
+```{r}
 z = sqrt_w = coef(mod)[2] / SE(mod)[2]
 2*pnorm(abs(z), lower.tail=FALSE)
-```
-
-```
-##    psi(elev) 
-## 0.0003350055
 ```
 
 This is the p-value. These values we calculated manually match the results that `unmarked` gave us in the summary output.
@@ -156,8 +134,7 @@ To get the required names for a given model, fit an example of that model (the d
 A single-season occupancy model requires a list with two named components: `state` and `det`.
 We supply a formula for each including an effect of elevation on occupancy (note we could name this whatever we want, here we call it `elev`).
 
-
-```r
+```{r}
 forms <- list(state=~elev, det=~1)
 ```
 
@@ -167,8 +144,7 @@ Within each element we need a named vector with names that match the covariates 
 Note also that each must include a value for the intercept term (this can be named `intercept` or `Intercept`).
 If we are not sure exactly how to structure this list, just skip it for now: `unmarked` can generate a template for us to fill in later.
 
-
-```r
+```{r}
 coefs <- list(state=c(intercept=0, elev=-0.4), det=c(intercept=0))
 ```
 
@@ -176,8 +152,7 @@ Finally, we need to give `unmarked` information about the study design.
 This is pretty simple: we just need a list containing values for `M`, the number of sites, and `J` the number of surveys per site.
 For models with multiple primary periods, we'd also need a value of `T`, the number of primary periods.
 
-
-```r
+```{r}
 design <- list(M=300, J=8) # 300 sites, 8 occasions per site
 ```
 
@@ -185,48 +160,19 @@ We're now ready to simulate a dataset.
 To do this we use the `simulate` function, providing as arguments the name of the model `"occu"` and the three lists we constructed above.
 Actually, first, let's not supply the `coefs` list, to show how `unmarked` will generate a template for us to use:
 
-
-```r
+```{r, eval=FALSE}
 simulate("occu", formulas=forms, design=design)
 ```
 
-
-```
-## coefs argument should be a named list of named vectors, with the following structure
-##         (replacing 0s with your desired coefficient values):
-## 
-## $state
-## intercept      elev 
-##         0         0 
-## 
-## $det
-## intercept 
-##         0 
-## 
-## Error : Supply coefs argument as specified above
+```{r, echo=FALSE}
+try(simulate("occu", formulas=forms, design=design))
 ```
 
 Once we have our covariates set up properly, add them to the function call:
 
-
-```r
+```{r}
 occu_umf <- simulate("occu", formulas=forms, coefs=coefs, design=design)
 head(occu_umf)
-```
-
-```
-## Data frame representation of unmarkedFrame object.
-##    y.1 y.2 y.3 y.4 y.5 y.6 y.7 y.8       elev
-## 1    0   0   0   0   0   0   0   0 -0.7152422
-## 2    0   0   0   0   0   0   0   0 -0.7526890
-## 3    0   0   0   0   1   0   1   0 -0.9385387
-## 4    0   0   0   0   0   0   0   0 -1.0525133
-## 5    1   0   0   0   0   0   1   0 -0.4371595
-## 6    0   1   0   1   1   0   0   0  0.3311792
-## 7    1   1   1   0   0   0   0   0 -2.0142105
-## 8    0   0   0   0   0   0   0   0  0.2119804
-## 9    1   0   0   1   0   1   0   0  1.2366750
-## 10   0   0   0   0   0   0   0   0  2.0375740
 ```
 
 `unmarked` has generated a presence-absence dataset as well as values for covariate `elev`.
@@ -238,8 +184,7 @@ However, we can control this using the `guide` argument.
 For example, suppose we want elevation to have a mean of 2 and a standard deviation of 0.5, and we also want a categorical covariate called `landcover`.
 The corresponding formulas and list to supply to `guide` would look like this:
 
-
-```r
+```{r}
 forms2 <- list(state=~elev+landcover, det=~1)
 guide <- list(landcover=factor(levels=c("forest","grass")), # landcover is factor 
               elev=list(dist=rnorm, mean=2, sd=0.5)) # custom distribution
@@ -247,29 +192,12 @@ guide <- list(landcover=factor(levels=c("forest","grass")), # landcover is facto
 
 We'd also need an updated `coefs`:
 
-
-```r
+```{r}
 coefs2 <- list(state=c(intercept=0, elev=-0.4, landcovergrass=0.2), det=c(intercept=0))
 ```
 
-
-```r
+```{r}
 head(simulate("occu", formulas=forms2, coefs=coefs2, design=design, guide=guide))
-```
-
-```
-## Data frame representation of unmarkedFrame object.
-##    y.1 y.2 y.3 y.4 y.5 y.6 y.7 y.8     elev landcover
-## 1    0   0   0   0   0   0   0   0 2.063074    forest
-## 2    0   0   0   0   0   0   0   0 2.236400    forest
-## 3    0   0   0   0   0   0   0   0 1.829623     grass
-## 4    0   0   0   0   0   0   0   0 1.879105    forest
-## 5    0   0   0   0   0   0   0   0 2.689377     grass
-## 6    0   0   0   0   0   0   0   0 1.830558    forest
-## 7    0   0   0   0   0   0   0   0 2.010068    forest
-## 8    0   0   0   0   0   0   0   0 2.188481     grass
-## 9    1   0   1   1   1   0   0   0 1.784138    forest
-## 10   0   0   0   0   0   0   0   0 2.979532     grass
 ```
 
 Our output dataset now includes a new categorical covariate, and the elevation values are adjusted.
@@ -281,25 +209,9 @@ This information is simply added as additional arguments to `simulate`.
 For example, we can simulate a `pcount` dataset using the negative binomial (`"NB"`) distribution.
 The negative binomial has an additional parameter to estimate (`alpha`) so we must also add an element to `coefs`.
 
-
-```r
+```{r}
 coefs$alpha <- c(alpha=0.5)
 head(simulate("pcount", formulas=forms, coefs=coefs, design=design, mixture="NB"))
-```
-
-```
-## Data frame representation of unmarkedFrame object.
-##    y.1 y.2 y.3 y.4 y.5 y.6 y.7 y.8        elev
-## 1    0   0   0   0   0   0   0   0 -1.42329439
-## 2    0   0   0   0   0   0   0   0  1.02230366
-## 3    0   1   1   0   1   0   0   0  0.68781508
-## 4    0   0   0   0   0   0   0   0 -0.30745489
-## 5    0   0   1   0   0   1   0   1 -0.01974906
-## 6    0   1   1   1   0   0   1   0  0.48839839
-## 7    0   0   0   0   0   0   0   0  0.66050081
-## 8    0   1   0   1   1   1   0   1 -1.71404333
-## 9    0   0   0   0   0   0   0   0  1.45885698
-## 10   0   0   0   0   0   0   0   0 -1.40789548
 ```
 
 ## Conducting a power analysis
@@ -313,38 +225,23 @@ Thus, there are two required arguments to `powerAnalysis`: a fitted model templa
 
 The first step is to fit a model:
 
-
-```r
+```{r}
 template_model <- occu(~1~elev, occu_umf)
 ```
 
 If we run `powerAnalysis` on `template_model` with no other arguments, `unmarked` will again give us a template for the list of effect sizes, which looks exactly like the one for simulation above.
 
-
-```r
+```{r, eval=FALSE}
 powerAnalysis(template_model)
 ```
 
-
-```
-## coefs argument should be a named list of named vectors, with the following structure
-##         (replacing 0s with your desired coefficient values):
-## 
-## $state
-## intercept      elev 
-##         0         0 
-## 
-## $det
-## intercept 
-##         0 
-## 
-## Error : Supply coefs argument as specified above
+```{r, echo=FALSE}
+try(powerAnalysis(template_model))
 ```
 
 We will set our desired effect sizes to match what we used for simulation:
 
-
-```r
+```{r}
 effect_sizes <- list(state=c(intercept=0, elev=-0.4), det=c(intercept=0))
 ```
 
@@ -353,21 +250,8 @@ We now have all the required information to conduct the power analysis.
 Remember, `unmarked` does this by simulation, so you will see a progress bar as `unmarked` conducts simulations.
 You can control how many with the `nsim` argument; we'll set `nsim=20` just to speed things up, but normally you should use more.
 
-
-```r
+```{r}
 (pa <- powerAnalysis(template_model, coefs=effect_sizes, alpha=0.05, nsim=20))
-```
-
-```
-## 
-## Model:
-## occu(formula = ~1 ~ elev, data = occu_umf)
-## 
-## Power Statistics:
-##  Submodel   Parameter Effect Null Power
-##     state (Intercept)    0.0    0  0.00
-##     state        elev   -0.4    0  0.95
-##       det (Intercept)    0.0    0  0.00
 ```
 
 The result is an object `pa` of class `unmarkedPower`.
@@ -379,8 +263,7 @@ We have power = 0.95 for the effect of elevation on occupancy probability.
 This power is calculated by simulating a bunch of datasets based on the template model and supplied effect sizes, fitting a model to each simulated dataset, and then calculating the proportion of these models for which an effect of the covariate would have been detected at the given value of `alpha`.
 You can see the raw results from each simulated model with
 
-
-```r
+```{r, eval=FALSE}
 pa@estimates
 ```
 
@@ -392,43 +275,17 @@ However `powerAnalysis` also has a argument `design` which can help do this auto
 The `design` argument will subsample within the original data to generate datasets which are smaller or larger than the original, and conduct power analyses for each scenario.
 For example, to test power for a dataset with only 50 sites and 3 sample occasions at each:
 
-
-```r
+```{r}
 # 50 sites and 3 obs per site
 (pa2 <- powerAnalysis(template_model, effect_sizes, design=list(M=50, J=3), nsim=20))
-```
-
-```
-## 
-## Model:
-## occu(formula = ~1 ~ elev, data = occu_umf)
-## 
-## Power Statistics:
-##  Submodel   Parameter Effect Null Power
-##     state (Intercept)    0.0    0   0.0
-##     state        elev   -0.4    0   0.1
-##       det (Intercept)    0.0    0   0.0
 ```
 
 With fewer sites and sampling occasions, our power to detect the elevation effect is reduced.
 
 You can also get a larger number of sites via sampling the original sites with replacement:
 
-
-```r
+```{r}
 (pa3 <- powerAnalysis(template_model, effect_sizes, design=list(M=400, J=4), nsim=20))
-```
-
-```
-## 
-## Model:
-## occu(formula = ~1 ~ elev, data = occu_umf)
-## 
-## Power Statistics:
-##  Submodel   Parameter Effect Null Power
-##     state (Intercept)    0.0    0  0.00
-##     state        elev   -0.4    0  0.95
-##       det (Intercept)    0.0    0  0.00
 ```
 
 ### Combining unmarkedPower objects
@@ -436,84 +293,28 @@ You can also get a larger number of sites via sampling the original sites with r
 The `unmarkedPowerList` function creates a `unmarkedPowerList` object for holding multiple `unmarkedPower` objects so they can be easily compared.
 The summary of an `unmarkedPowerList` is a `data.frame` with all the outputs shown together, including relevant sample sizes.
 
-
-```r
+```{r}
 unmarkedPowerList(list(pa, pa2, pa3))
-```
-
-```
-##     M T J Submodel   Parameter Effect Null Power
-## 1 300 1 8    state (Intercept)    0.0    0  0.00
-## 2 300 1 8    state        elev   -0.4    0  0.95
-## 3 300 1 8      det (Intercept)    0.0    0  0.00
-## 4  50 1 3    state (Intercept)    0.0    0  0.00
-## 5  50 1 3    state        elev   -0.4    0  0.10
-## 6  50 1 3      det (Intercept)    0.0    0  0.00
-## 7 400 1 4    state (Intercept)    0.0    0  0.00
-## 8 400 1 4    state        elev   -0.4    0  0.95
-## 9 400 1 4      det (Intercept)    0.0    0  0.00
 ```
 
 We can also create an `unmarkedPowerList` by providing a template model and a range of design scenarios in the `design` argument.
 A power analysis will be run for each scenario (sampling the original dataset as shown above) and the results combined.
 
-
-```r
+```{r}
 scenarios <- expand.grid(M=c(50,200,400),
                          J=c(3,5,8))
 pl <- unmarkedPowerList(template_model, effect_sizes, design=scenarios, nsim=20)
-```
-
-```
-## M = 50, J = 3
-## M = 200, J = 3
-## M = 400, J = 3
-## M = 50, J = 5
-## M = 200, J = 5
-## M = 400, J = 5
-## M = 50, J = 8
-## M = 200, J = 8
-## M = 400, J = 8
-```
-
-```r
 head(summary(pl))
-```
-
-```
-##     M T J Submodel   Parameter Effect Null Power
-## 1  50 1 3    state (Intercept)    0.0    0  0.00
-## 2  50 1 3    state        elev   -0.4    0  0.05
-## 3  50 1 3      det (Intercept)    0.0    0  0.00
-## 4 200 1 3    state (Intercept)    0.0    0  0.00
-## 5 200 1 3    state        elev   -0.4    0  0.70
-## 6 200 1 3      det (Intercept)    0.0    0  0.00
-```
-
-```r
 tail(summary(pl))
-```
-
-```
-##      M T J Submodel   Parameter Effect Null Power
-## 22 200 1 8    state (Intercept)    0.0    0   0.0
-## 23 200 1 8    state        elev   -0.4    0   0.7
-## 24 200 1 8      det (Intercept)    0.0    0   0.0
-## 25 400 1 8    state (Intercept)    0.0    0   0.0
-## 26 400 1 8    state        elev   -0.4    0   1.0
-## 27 400 1 8      det (Intercept)    0.0    0   0.0
 ```
 
 There is a built-in `plot` method for `unmarkedPowerList`.
 You can specify a target power on the plot to the `power` argument.
 You also need to specify the parameter of interest (`"elev"`).
 
-
-```r
+```{r poweranalysis-list, fig.height=5}
 plot(pl, power=0.8, param="elev")
 ```
-
-![plot of chunk poweranalysis-list](figures/poweranalysis-list-1.png)
 
 # A more realistic example: Acadian Flycatchers
 
@@ -537,8 +338,7 @@ The covariates named in the formulas will become the covariates included in the 
 We need three covariates associated with abundance (lambda): habitat type, year, and point ID (so that we can include point as a random effect).
 For the other submodels we're not including covariates so they are just intercept-only formulas.
 
-
-```r
+```{r}
 forms <- list(lambda = ~Habitat+Year+(1|Point), dist=~1, rem=~1)
 ```
 
@@ -554,8 +354,7 @@ If we have 10 points and we sample each point for 15 years, we'll need 150 total
 The first 15 rows will correspond to point 1, 16-30 for point 2, and so on.
 The following function takes the total number of rows `n` as input, figures out how many points that corresponds to (`n/15`), creates a unique ID for each site, and repeats each ID 15 times. 
 
-
-```r
+```{r}
 point_function <- function(n){
   stopifnot(n %% 15 == 0)
   sites <- n/15
@@ -564,17 +363,11 @@ point_function <- function(n){
 point_function(30) # example
 ```
 
-```
-##  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
-## Levels: 1 2
-```
-
 Next, `Habitat`.
 Since each point's `Habitat` value should stay same the same for all 15 years, we need to (1) sample a random `Habitat` value for each point out of two possible habitats, and (2) repeat this value 15 times for each point.
 Given a dataset with a number of total rows `n`, the following function figures out how many unique points there should be (`n`/15), samples a habitat for each point, and repeats the value 15 times per point.
 
-
-```r
+```{r}
 hab_function <- function(n){
   stopifnot(n %% 15 == 0)
   sites <- n/15
@@ -584,16 +377,10 @@ hab_function <- function(n){
 hab_function(30) # example
 ```
 
-```
-##  [1] B B B B B B B B B B B B B B B A A A A A A A A A A A A A A A
-## Levels: A B
-```
-
 Finally, `Year`.
 This function works similarly to the two above, except that for each unique point, it assigns year values from 0-14.
 
-
-```r
+```{r}
 yr_function <- function(n){
   stopifnot(n %% 15 == 0)
   sites <- n/15
@@ -602,15 +389,9 @@ yr_function <- function(n){
 yr_function(30) # example
 ```
 
-```
-##  [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14  0  1  2  3  4  5  6  7  8  9
-## [26] 10 11 12 13 14
-```
-
 These functions are combined together in a named list of lists to supply to `guide`.
 
-
-```r
+```{r}
 guide <- list(Point = list(dist=point_function),
               Year = list(dist=yr_function),
               Habitat = list(dist=hab_function))
@@ -620,16 +401,14 @@ Next, the sample sizes with `design`.
 We'll first simulate a dataset with 25 unique points, so we'll need 25*15 site-years since each point is sampled 15 times.
 To match the real dataset we'll specify 2 distance bins and 3 removal periods.
 
-
-```r
+```{r}
 design <- list(M = 25*15, Jdist=2, Jrem=3)
 ```
 
 Since this dataset will have distance bin data in it, we also want to specify how the distance bins will look.
 We want two bins, with breaks at 0, 25 m, and 50 m.
 
-
-```r
+```{r}
 db <- c(0,25,50)
 ```
 
@@ -640,8 +419,7 @@ We just want to simulate a dataset with the correct structure and covariate valu
 Therefore, we'll just set most parameter values to 0.
 However we need to set the distance function intercept to something slightly more realistic - e.g. the log of the median value of the distance breaks.
 
-
-```r
+```{r}
 coefs_temp <- list(lambda = c(intercept=0, HabitatB=0, Year=0, Point=0),
                    dist = c(intercept=log(median(db))), rem=c(intercept=0))
 ```
@@ -649,40 +427,19 @@ coefs_temp <- list(lambda = c(intercept=0, HabitatB=0, Year=0, Point=0),
 We're finally ready to simulate the template dataset with all the pieces created above.
 We also need to add a bit more information - our units should be in meters, and we want the output on the abundance scale.
 
-
-```r
+```{r}
 set.seed(1)
 umf25 <- simulate("gdistremoval", formulas=forms, design=design, coefs=coefs_temp,
                     guide=guide, unitsIn='m', dist.breaks=db, output='abund')
 head(umf25)
 ```
 
-```
-## Data frame representation of unmarkedFrame object.
-##    yDist.1 yDist.2 yRem.1 yRem.2 yRem.3 Habitat Year Point
-## 1        1       0      1      0      0       A    0     1
-## 2        0       0      0      0      0       A    1     1
-## 3        1       0      0      0      1       A    2     1
-## 4        0       0      0      0      0       A    3     1
-## 5        0       0      0      0      0       A    4     1
-## 6        1       0      1      0      0       A    5     1
-## 7        1       0      1      0      0       A    6     1
-## 8        0       1      0      1      0       A    7     1
-## 9        0       0      0      0      0       A    8     1
-## 10       1       0      1      0      0       A    9     1
-```
-
 In the output you can see we have covariates for Habitat, Year, and Point which seem to be structured the way we want.
 Remember we don't care what's actually *in* the `y` matrix, we just want it to be the right size.
 We can double check that the number of rows in the dataset is correct - it should be 25*15 = 375.
 
-
-```r
+```{r}
 numSites(umf25)
-```
-
-```
-## [1] 375
 ```
 
 ## Creating the template model
@@ -690,8 +447,7 @@ numSites(umf25)
 The final step is to fit the correct model to the dataset.
 Again, we don't care at all about the *results* of this model, we just want to make sure all the relevant information and arguments are included so that `powerAnalysis` is working with the right information about our proposed study.
 
-
-```r
+```{r}
 mod25 <- gdistremoval(lambdaformula=~Habitat+Year+(1|Point), distanceformula=~1,
                       removalformula=~1, data=umf25, output='abund')
 ```
@@ -707,8 +463,7 @@ Below are coefficients which describe a system where abundance in Habitat A is r
 Furthermore, the value of the detection function parameter $\sigma$ is equal to the median of the distance breaks (25), and the removal probability of detection is about 0.27.
 These are roughly based on our knowledge of the real study system.
 
-
-```r
+```{r}
 coefs <- list(lambda = c(intercept=log(5), HabitatB=0.18,
                          # 2% decline in abundance per year
                          Year=log(0.98),
@@ -726,24 +481,8 @@ We are also testing our power to detect a significant declining trend in abundan
 Now, run the analysis. 
 We're using 50 simulations for speed but you should typically use more.
 
-
-```r
+```{r}
 (pa25 <- powerAnalysis(mod25, coefs=coefs, nsim=100))
-```
-
-```
-## 
-## Model:
-## gdistremoval(lambdaformula = ~Habitat + Year + (1 | Point), removalformula = ~1, 
-##     distanceformula = ~1, data = umf25, output = "abund")
-## 
-## Power Statistics:
-##  Submodel   Parameter      Effect Null Power
-##    lambda (Intercept)  1.60943791    0  1.00
-##    lambda    HabitatB  0.18000000    0  0.45
-##    lambda        Year -0.02020271    0  0.47
-##      dist (Intercept)  3.21887582    0  1.00
-##       rem (Intercept) -1.00000000    0  1.00
 ```
 
 In this case we only care about the `HabitatB` and `Year` rows in the output table, we're ignoring the intercepts.
@@ -752,8 +491,7 @@ We found we have weak power (<0.5) to detect both effects with this sample size.
 To test the other two sample sizes (50 and 100 sites x 15 years), we just simulate new datasets and repeat the process.
 We only need to change the `design` argument to simulate.
 
-
-```r
+```{r}
 umf50 <- simulate("gdistremoval", formulas=forms, 
                   design=list(M = 50*15, Jdist=2, Jrem=3), # change here
                   coefs=coefs_temp,
@@ -775,45 +513,17 @@ pa100 <- powerAnalysis(mod100, coefs=coefs, nsim=100)
 
 In addition to looking at the summary table outputs of `pa25`, `pa50`, and `pa100`, they can also be combined into an `unmarkedPowerList` for easier comparison.
 
-
-```r
+```{r}
 (pl <- unmarkedPowerList(list(pa25, pa50, pa100)))
-```
-
-```
-##       M T J Submodel   Parameter      Effect Null Power
-## 1   375 1 3   lambda (Intercept)  1.60943791    0  1.00
-## 2   375 1 3   lambda    HabitatB  0.18000000    0  0.45
-## 3   375 1 3   lambda        Year -0.02020271    0  0.47
-## 4   375 1 3     dist (Intercept)  3.21887582    0  1.00
-## 5   375 1 3      rem (Intercept) -1.00000000    0  1.00
-## 6   750 1 3   lambda (Intercept)  1.60943791    0  1.00
-## 7   750 1 3   lambda    HabitatB  0.18000000    0  0.58
-## 8   750 1 3   lambda        Year -0.02020271    0  0.80
-## 9   750 1 3     dist (Intercept)  3.21887582    0  1.00
-## 10  750 1 3      rem (Intercept) -1.00000000    0  1.00
-## 11 1500 1 3   lambda (Intercept)  1.60943791    0  1.00
-## 12 1500 1 3   lambda    HabitatB  0.18000000    0  0.97
-## 13 1500 1 3   lambda        Year -0.02020271    0  0.96
-## 14 1500 1 3     dist (Intercept)  3.21887582    0  1.00
-## 15 1500 1 3      rem (Intercept) -1.00000000    0  1.00
 ```
 
 There's a default plotting method for `unmarkedPowerLists`.
 You need to specify the parameter of interest, and you can optionally define a target power level to add to the plot:
 
-
-```r
+```{r poweranalysis-acfl}
 plot(pl, par="HabitatB", power=0.8)
-```
-
-![plot of chunk poweranalysis-acfl](figures/poweranalysis-acfl-1.png)
-
-```r
 plot(pl, par="Year", power=0.8)
 ```
-
-![plot of chunk poweranalysis-acfl](figures/poweranalysis-acfl-2.png)
 
 Note that the x-axis shows sites as the number of site-years (e.g., sites x years).
 It looks like only the largest tested sample size (100 sites) has power > 0.8 to detect a significant effect of habitat type and year in the correct direction.
@@ -830,8 +540,7 @@ Once the application is loaded, you can experiment with different settings and g
 First, we simulate a template model for a single-species occupancy analysis, using the `simulate` function as described above.
 We have one covariate of interest on occupancy (`elev`) and one on detection (`wind`).
 
-
-```r
+```{r}
 umf <- simulate("occu", formulas=list(state=~elev, det=~wind),
                 coefs=list(state=c(intercept=0, elev=0.3),
                            det=c(intercept=0.4, wind=-0.2)),
@@ -840,28 +549,9 @@ umf <- simulate("occu", formulas=list(state=~elev, det=~wind),
 (mod <- occu(~wind~elev, umf))
 ```
 
-```
-## 
-## Call:
-## occu(formula = ~wind ~ elev, data = umf)
-## 
-## Occupancy:
-##             Estimate    SE      z P(>|z|)
-## (Intercept)  -0.0624 0.203 -0.308   0.758
-## elev          0.1965 0.232  0.849   0.396
-## 
-## Detection:
-##             Estimate    SE      z  P(>|z|)
-## (Intercept)   0.4736 0.137  3.457 0.000546
-## wind         -0.0599 0.125 -0.479 0.632033
-## 
-## AIC: 463.2808
-```
-
 Next call the `shinyPower` function on our template model, which starts the Shiny app in your web browser.
 
-
-```r
+```{r,eval=FALSE}
 shinyPower(mod)
 ```
 

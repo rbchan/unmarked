@@ -138,3 +138,41 @@ test_that("predicting from raster works",{
   nd_2 <- nd_raster[[1]]
   expect_error(predict(mod, 'state', newdata=nd_2))
 })
+
+test_that("predicting from terra::rast works",{
+
+  skip_if(!require(terra), "terra package unavailable")
+
+  set.seed(123)
+  # Create rasters
+  # Elevation
+  r_elev <- data.frame(x=rep(1:10, 10), y=rep(1:10, each=10), z=rnorm(100))
+  r_elev <- terra::rast(r_elev, type="xyz")
+
+  #Group
+  r_group <- data.frame(x=rep(1:10, 10), y=rep(1:10, each=10),
+                      z=sample(1:length(levels(umf@siteCovs$group)), 100, replace=T))
+  # Convert to 'factor' raster
+  r_group <- terra::as.factor(terra::rast(r_group, type="xyz"))
+  levels(r_group) <- data.frame(ID=terra::levels(r_group)[[1]]$ID, group=levels(umf@siteCovs$group))
+
+  # Stack
+  nd_raster <- c(r_elev, r_group)
+  names(nd_raster) <- c("elev", "group")
+  terra::crs(nd_raster) <- "epsg:32616"
+
+  pr <- predict(mod, 'state', newdata=nd_raster)
+  expect_is(pr, 'SpatRaster')
+  expect_equal(names(pr), c("Predicted","SE","lower","upper"))
+  expect_equivalent(pr[1,1][1], 0.3675313, tol=1e-5)
+  expect_equal(crs(pr), crs(nd_raster))
+
+  #append data
+  pr <- predict(mod, 'state', newdata=nd_raster, appendData=TRUE)
+  expect_is(pr, 'SpatRaster')
+  expect_equal(names(pr)[5:6], c("elev","group"))
+
+  # Missing levels are handled
+  nd_2 <- nd_raster[[1]]
+  expect_error(predict(mod, 'state', newdata=nd_2))
+})

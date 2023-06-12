@@ -37,5 +37,9 @@ test_that("fitList operations work",{
 
   se <- SE(mt)
   expect_equal(dim(se), c(2,5))
-
+  
+  fl <- expect_message(fitList(fm, fm2, autoNames='formula'))
+  expect_equal(names(fl@fits), c("~o1+o2~x", "~1~x"))
+  fl <- expect_message(fitList(fits=list(fm, fm2), autoNames='formula'))
+  expect_equal(names(fl@fits), c("~o1+o2~x", "~1~x"))
 })

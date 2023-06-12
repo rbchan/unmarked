@@ -25,8 +25,7 @@ setMethod("predict", "unmarkedFit",
     orig_formula <- get_formula(object, type)
 
     # 2. If newdata is raster, get newdata from raster as data.frame
-    if(inherits(newdata, c("RasterLayer","RasterStack"))){
-      if(!require(raster)) stop("raster package required", call.=FALSE)
+    if(inherits(newdata, c("RasterLayer","RasterStack","SpatRaster"))){
       is_raster <- TRUE
       orig_raster <- newdata
       newdata <- newdata_from_raster(newdata, all.vars(orig_formula))
@@ -95,8 +94,8 @@ setMethod("check_predict_arguments", "unmarkedFit",
   check_type(object, type)
 
   # Check newdata class
-  if(!inherits(newdata, c("unmarkedFrame", "data.frame", "RasterLayer", "RasterStack"))){
-    stop("newdata must be unmarkedFrame, data.frame, RasterLayer, or RasterStack", call.=FALSE)
+  if(!inherits(newdata, c("unmarkedFrame", "data.frame", "RasterLayer", "RasterStack", "SpatRaster"))){
+    stop("newdata must be unmarkedFrame, data.frame, RasterLayer, RasterStack, or SpatRaster", call.=FALSE)
   }
   invisible(TRUE)
 })
@@ -261,27 +260,39 @@ setMethod("predict_by_chunk", "unmarkedFit",
 # Raster handling functions----------------------------------------------------
 
 # Convert a raster into a data frame to use as newdata
-newdata_from_raster <- function(rst, vars){
-  nd <- raster::as.data.frame(rst)
-  # Handle factor rasters
-  is_fac <- raster::is.factor(rst)
-  rem_string <- paste(paste0("^",names(rst),"_"), collapse="|")
-  names(nd)[is_fac] <- gsub(rem_string, "", names(nd)[is_fac])
+newdata_from_raster <- function(object, vars){
+  if(inherits(object, "Raster")){
+    if(!requireNamespace("raster", quietly=TRUE)) stop("raster package required", call.=FALSE)
+    nd <- raster::as.data.frame(object)
+    # Handle factor rasters
+    is_fac <- raster::is.factor(object)
+    rem_string <- paste(paste0("^",names(object),"_"), collapse="|")
+    names(nd)[is_fac] <- gsub(rem_string, "", names(nd)[is_fac])
+  } else if(inherits(object, "SpatRaster")){
+    if(!requireNamespace("terra", quietly=TRUE)) stop("terra package required", call.=FALSE)
+    nd <- terra::as.data.frame(object)
+  }
   # Check if variables are missing
   no_match <- vars[! vars %in% names(nd)]
   if(length(no_match) > 0){
-    stop(paste0("Variable(s) ",paste(no_match, collapse=", "), " not found in raster stack"),
+    stop(paste0("Variable(s) ",paste(no_match, collapse=", "), " not found in raster(s)"),
          call.=FALSE)
   }
   return(nd)
 }
 
-# Convert predict output into a raster
-raster_from_predict <- function(pr, orig_rst, appendData){
-  new_rast <- data.frame(raster::coordinates(orig_rst), pr)
-  new_rast <- raster::stack(raster::rasterFromXYZ(new_rast))
-  raster::crs(new_rast) <- raster::crs(orig_rst)
-  if(appendData) new_rast <- raster::stack(new_rast, orig_rst)
+raster_from_predict <- function(pr, object, appendData){
+  if(inherits(object, "Raster")){
+    new_rast <- data.frame(raster::coordinates(object), pr)
+    new_rast <- raster::stack(raster::rasterFromXYZ(new_rast))
+    raster::crs(new_rast) <- raster::crs(object)
+    if(appendData) new_rast <- raster::stack(new_rast, object)
+  } else if(inherits(object, "SpatRaster")){
+    new_rast <- data.frame(terra::crds(object), pr)
+    new_rast <- terra::rast(new_rast, type="xyz")
+    terra::crs(new_rast) <- terra::crs(object)
+    if(appendData) new_rast <- c(new_rast, object)
+  }
   new_rast
 }
 

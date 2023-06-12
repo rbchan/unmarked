@@ -7,7 +7,7 @@ importFrom(stats, confint, fitted, coef, vcov, predict, update, profile,
            pnorm, qchisq, qnorm, quantile, rbinom,
            reshape, rmultinom, rnbinom, rpois, runif, sd, uniroot,
            update.formula, sigma)
-importFrom(graphics, plot, hist, abline)
+importFrom(graphics, plot, hist, abline, axis, lines, points, polygon, segments)
 importFrom(utils, head, read.csv)
 importFrom(grDevices, devAskNewPage, dev.interactive, palette.colors)
 importFrom(MASS, mvrnorm)
@@ -51,7 +51,7 @@ exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
               "siteCovs<-", summary, update, vcov, yearlySiteCovs,
               "yearlySiteCovs<-", "[", smoothed, projected, nonparboot, logLik,
               LRT, ranef, bup, crossVal, posteriorSamples, sigma, randomTerms, 
-              optimizePenalty, unmarkedPowerList)
+              optimizePenalty, unmarkedPowerList, plotEffectsData, plotEffects)
 
 S3method("print", "unmarkedPostSamples")
 
@@ -68,7 +68,8 @@ export(csvToUMF, formatLong, formatWide, formatMult, formatDistData)
 
 # Misc
 export(imputeMissing, gxhn, gxexp, gxhaz, dxhn, dxexp, dxhaz, drhn, drexp,
-    drhaz, grhn, grexp, grhaz, sight2perpdist, lambda2psi, SSE, vif, powerAnalysis)
+    drhaz, grhn, grexp, grhaz, sight2perpdist, lambda2psi, SSE, vif, powerAnalysis,
+    shinyPower)
 
 useDynLib("unmarked", .registration=TRUE)
 useDynLib(unmarked_TMBExports)

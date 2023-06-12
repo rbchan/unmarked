@@ -23,6 +23,11 @@ setMethod("getDesign", "unmarkedFrame",
     } else {
         siteCovs <- siteCovs(umf)
     }
+    miss_vars <-all.vars(stateformula)[!all.vars(stateformula) %in% names(siteCovs)]
+    if(length(miss_vars) > 0){
+      stop(paste("Variable(s)", paste(miss_vars, collapse=", "), 
+                 "not found in siteCovs"), call.=FALSE)
+    }
     X.mf <- model.frame(stateformula, siteCovs, na.action = NULL)
     X <- model.matrix(stateformula, X.mf)
     X.offset <- as.vector(model.offset(X.mf))
@@ -49,6 +54,11 @@ setMethod("getDesign", "unmarkedFrame",
         obsCovs <- cbind(obsCovs, obsNum = as.factor(rep(1:R, M)))
     }
 
+    miss_vars <-all.vars(detformula)[!all.vars(detformula) %in% names(obsCovs)]
+    if(length(miss_vars) > 0){
+      stop(paste("Variable(s)", paste(miss_vars, collapse=", "), 
+                 "not found in obsCovs"), call.=FALSE)
+    }
     V.mf <- model.frame(detformula, obsCovs, na.action = NULL)
     V <- model.matrix(detformula, V.mf)
     V.offset <- as.vector(model.offset(V.mf))

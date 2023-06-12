@@ -1,6 +1,6 @@
 Package: unmarked
-Version: 1.2.5.9007
-Date: 2022-10-12
+Version: 1.2.5.9014
+Date: 2023-04-27
 Type: Package
 Title: Models for Data from Unmarked Animals
 Authors@R: c(
@@ -18,20 +18,21 @@ Authors@R: c(
     person("Ariel", "Muldoon", role="ctb"),
     person("Chris", "Baker", role="ctb")
     )
-Depends: R (>= 2.12.0), methods
+Depends: R (>= 2.12.0)
 Imports: 
     graphics,
     lattice,
     lme4,
     MASS,
     Matrix,
+    methods,
     parallel,
     pbapply,
     Rcpp (>= 0.8.0),
     stats,
     TMB (>= 1.7.18),
     utils
-Suggests: knitr, rmarkdown, pkgdown, raster, testthat
+Suggests: knitr, rmarkdown, pkgdown, raster, shiny, terra, testthat
 Description: Fits hierarchical models of animal abundance and occurrence to data collected using survey methods such as point counts, site occupancy sampling, distance sampling, removal sampling, and double observer sampling. Parameters governing the state and observation processes can be modeled as functions of covariates. Reference: Fiske and Chandler (2011) <doi:10.18637/jss.v043.i10>.
 License: GPL (>=3)
 LazyLoad: yes
@@ -43,14 +44,16 @@ Collate: 'classes.R' 'unmarkedEstimate.R' 'mapInfo.R' 'unmarkedFrame.R'
     'ranef.R' 'boot.R' 'occuFP.R' 'gpcount.R' 'occuPEN.R' 'pcount.spHDS.R'
     'occuMS.R' 'occuTTD.R' 'distsampOpen.R' 'multmixOpen.R' 
     'unmarkedCrossVal.R' 'piFun.R' 'vif.R' 'makePiFun.R' 'posteriorSamples.R'
+    'nmixTTD.R'
+    'gdistremoval.R'
+    'IDS.R'
+    'plotEffects.R'
     'mixedModelTools.R'
     'power.R' 
-    'gdistremoval.R'
-    'nmixTTD.R'
-    'IDS.R'
     'simulate.R'
     'predict.R'
     'RcppExports.R'
+    'zzz.R'
 LinkingTo: 
     Rcpp,
     RcppArmadillo,

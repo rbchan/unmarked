@@ -214,4 +214,45 @@ test_that("yearlySiteCovs processing works",{
   expect_equivalent(dim(as_df2),c(50,25))
 })
 
+test_that("lists provided to obsCovs or yearlySiteCovs must be named", {
+    y <- matrix(1:27, 3)
+    sc <- data.frame(x1 = 1:3)
+    ysc <- list(x2 = matrix(1:9, 3))
+    oc <- list(x3 = matrix(1:27, 3))
 
+    umf1 <- unmarkedMultFrame(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        obsCovs = oc,
+        numPrimary = 3)
+    expect_is(umf1, "unmarkedMultFrame")
+
+
+    oc <- list(matrix(1:27, 3))
+    umf1 <- expect_error(unmarkedMultFrame(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        obsCovs = oc,
+        numPrimary = 3))
+
+    oc <- list(x3 = matrix(1:27, 3))
+    ysc <- list(matrix(1:9, 3))
+    umf1 <- expect_error(unmarkedMultFrame(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        obsCovs = oc,
+        numPrimary = 3))
+
+    ysc <- list(x2 = matrix(1:9, 3))
+    oc <- list(x3 = matrix(1:27, 3), matrix(1:27, 3))
+
+    umf1 <- expect_error(unmarkedMultFrame(
+        y = y,
+        siteCovs = sc,
+        yearlySiteCovs = ysc,
+        obsCovs = oc,
+        numPrimary = 3))
+})

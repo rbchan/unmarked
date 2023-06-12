@@ -149,6 +149,14 @@ setMethod("summary", signature(object = "unmarkedEstimate"),
                    logistic = "logit",
                    cloglog = "cloglog")
     cat(object@name, " (", link, "-scale)", ":\n", sep="")
+
+    has_random <- methods::.hasSlot(object, "randomVarInfo") && 
+      length(object@randomVarInfo) > 0
+    if(has_random){
+      print_randvar_info(object@randomVarInfo)
+      cat("\nFixed effects:\n")
+    }
+
     outDF <- data.frame(Estimate = ests, SE = SEs, z = Z, "P(>|z|)" = p,
                         check.names = FALSE)
     print(outDF, row.names = printRowNames, digits = 3)

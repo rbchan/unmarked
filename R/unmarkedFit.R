@@ -2011,7 +2011,7 @@ setMethod("getP", "unmarkedFitGMM",
     p <- aperm(p, c(1,3,2))
 
     cp <- array(as.numeric(NA), c(M, T, R))
-    for(t in 1:T) cp[,t,] <- do.call(piFun, list(p[,t,]))
+    for(t in 1:T) cp[,t,] <- do.call(piFun, list(matrix(p[,t,], M, J)))
     cp <- aperm(cp, c(1,3,2))
     cp <- matrix(cp, nrow=M, ncol=numY(object@data))
 

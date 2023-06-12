@@ -12,11 +12,11 @@ test_that("fitLists can be constructed",{
 
   fits1.1 <- fitList(m1=fm1, m2=fm2)
   expect_equal(names(fits1.1@fits), c("m1","m2"))
-  expect_warning(fits1.2 <- fitList(fm1, fm2))
+  expect_message(fits1.2 <- fitList(fm1, fm2))
   expect_equal(names(fits1.2@fits), c("fm1","fm2"))
   fits2.1 <- fitList(fits = list(m1=fm1, m2=fm2))
   expect_equal(names(fits2.1@fits), c("m1","m2"))
-  expect_warning(fits2.2 <- fitList(fits = list(fm1, fm2)))
+  expect_message(fits2.2 <- fitList(fits = list(fm1, fm2)))
   expect_equal(names(fits2.2@fits), c("1","2"))
 
   expect_equal(fits1.1, fits2.1)

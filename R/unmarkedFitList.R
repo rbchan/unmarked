@@ -42,32 +42,52 @@ setClass("unmarkedFitList",
 
 
 # constructor of unmarkedFitList objects
-fitList <- function(..., fits) {
-    if(length(list(...)) > 0 & !missing(fits))
-        stop("Do not use both the '...' and 'fits' arguments")
-    if(missing(fits)) {
-        fits <- list(...)
-        isList <- sapply(fits, function(x) is.list(x))
-        if(sum(isList) > 1)
-            stop("Specify models as common-seperated objects, or use fits = 'mylist'")
-        if(isList[1L]) {
-            warning("If supplying a list of fits, use fits = 'mylist'")
-            fits <- fits[[1L]] 	# This is allowed for back-compatability.
-            }
-        if(is.null(names(fits))) {
-            c <- match.call(expand.dots = FALSE)
-            names(fits) <- as.character(c[[2]])
-            warning("Your list was unnamed, so model names were added as object names")
-            }
-        }
-    if(is.null(names(fits))) {
-        names(fits) <- as.character(1:(length(fits)))
-        warning("Your list was unnamed, so model names were added as c('1','2',...)")
-        }
-    umfl <- new("unmarkedFitList", fits=fits)
-    return(umfl)
+fitList <- function(..., fits, autoNames=c("object","formula")) {
+  autoNames <- match.arg(autoNames)
+  if(length(list(...)) > 0 & !missing(fits))
+    stop("Do not use both the '...' and 'fits' arguments")
+  if(missing(fits)) {
+    fits <- list(...)
+    isList <- sapply(fits, function(x) is.list(x))
+    if(sum(isList) > 1)
+      stop("Specify models as common-seperated objects, or use fits = 'mylist'")
+    if(isList[1L]) {
+      warning("If supplying a list of fits, use fits = 'mylist'")
+      fits <- fits[[1L]] 	# This is allowed for back-compatability.
     }
-
+    if(is.null(names(fits))) {
+      message("Your list was unnamed, so model names were added automatically")
+      if(autoNames=="formula"){
+        if(inherits(fits[[1]], c("unmarkedFitOccuMulti", "unmarkedFitOccuMS"))){
+          warning("simple formula not available, naming based on object instead", call.=FALSE)
+          autoNames <- "object"
+        } else {
+          names(fits) <- lapply(fits, function(x) gsub(" ", "", as.character(deparse(x@formula))))
+        }
+      }
+      if(autoNames=="object"){
+        c <- match.call(expand.dots = FALSE)
+        names(fits) <- as.character(c[[2]])
+      }
+    }
+  }
+  if(is.null(names(fits))) {
+    message("Your list was unnamed, so model names were added automatically")
+    if(autoNames=="formula"){
+        if(inherits(fits[[1]], c("unmarkedFitOccuMulti", "unmarkedFitOccuMS"))){
+        warning("simple formula not available, naming as numbers instead", call.=FALSE)
+        autoNames <- "object"
+      } else {
+        names(fits) <- lapply(fits, function(x) gsub(" ", "", as.character(deparse(x@formula))))
+      }
+    }
+    if(autoNames=="object"){
+      names(fits) <- as.character(1:(length(fits)))
+    }
+  }
+  umfl <- new("unmarkedFitList", fits=fits)
+  return(umfl)
+}
 
 setMethod("summary", "unmarkedFitList", function(object) {
     fits <- object@fits

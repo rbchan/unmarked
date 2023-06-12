@@ -79,24 +79,23 @@ powerAnalysis <- function(object, coefs=NULL, design=NULL, alpha=0.05, nulls=lis
     parallel::clusterEvalQ(cl, library(unmarked))
   }
 
-  # Enable this later
   if(!is.null(options()$unmarked_shiny)&&options()$unmarked_shiny){
-    #ses <- options()$unmarked_shiny_session
-    #ses <- shiny::getDefaultReactiveDomain()
-    #pb <- shiny::Progress$new(ses, min=0, max=1)
-    #pb$set(message="Running simulations")
-    #fits <- pbapply::pblapply(1:nsim, function(i, sims, fit, bdata=NULL){
-    #  if(!is.null(design)) fit@data <- bdata[[i]]
-    #  if(inherits(fit, "unmarkedFitOccuMulti")){
-    #    fit@data@ylist <- sims[[i]]
-    #  } else{
-    #    fit@data@y <- sims[[i]]
-    #  }
-    #  out <- update(fit, data=fit@data, se=TRUE)
-    #  pb$set(value=i/nsim, message=NULL, detail=NULL)
-    #  out
-    #}, sims=sims, fit=object, bdata=bdata, cl=NULL)
-    #pb$close()
+    ses <- options()$unmarked_shiny_session
+    ses <- shiny::getDefaultReactiveDomain()
+    pb <- shiny::Progress$new(ses, min=0, max=1)
+    pb$set(message="Running simulations")
+    fits <- pbapply::pblapply(1:nsim, function(i, sims, fit, bdata=NULL){
+      if(!is.null(design)) fit@data <- bdata[[i]]
+      if(inherits(fit, "unmarkedFitOccuMulti")){
+        fit@data@ylist <- sims[[i]]
+      } else{
+        fit@data@y <- sims[[i]]
+      }
+      out <- update(fit, data=fit@data, se=TRUE)
+      pb$set(value=i/nsim, message=NULL, detail=NULL)
+      out
+    }, sims=sims, fit=object, bdata=bdata, cl=NULL)
+    pb$close()
 
   } else {
 
@@ -348,13 +347,14 @@ setMethod("unmarkedPowerList", "list", function(object, ...){
 })
 
 setMethod("unmarkedPowerList", "unmarkedFit",
-  function(object, coefs, design, alpha=0.05, nsim=100, parallel=FALSE, ...){
+  function(object, coefs, design, alpha=0.05, nulls=list(),
+           nsim=100, parallel=FALSE, ...){
 
   ndesigns <- nrow(design)
   out <- lapply(1:ndesigns, function(i){
     cat(paste0("M = ",design$M[i],", J = ",design$J[i],"\n"))
     powerAnalysis(object, coefs, as.list(design[i,]), alpha=alpha, nsim=nsim,
-                  parallel=FALSE)
+                  nulls=nulls, parallel=FALSE)
   })
   unmarkedPowerList(out)
 })
@@ -420,3 +420,19 @@ setMethod("update", "unmarkedPower", function(object, ...){
   if(!is.null(args$nulls)) object@nulls <- args$nulls
   object
 })
+
+shinyPower <- function(object, ...){
+
+  if(!inherits(object, "unmarkedFit")){
+    stop("Requires unmarkedFit object", call.=FALSE)
+  }
+  if(!requireNamespace("shiny")){
+    stop("Install the shiny library to use this function", call.=FALSE)
+  }
+  options(unmarked_shiny=TRUE)
+  on.exit(options(unmarked_shiny=FALSE))
+  .shiny_env$.SHINY_MODEL <- object
+
+  shiny::runApp(system.file("shinyPower", package="unmarked"))
+
+}

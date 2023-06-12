@@ -42,7 +42,9 @@ test_that("occuMulti can fit simple models",{
   expect_equivalent(det, rep(1,length(detlist)), tolerance= 1e-4)
 
   #Check fitList
-  expect_warning(fl <- fitList(fm, fm))
+  expect_message(fl <- fitList(fm, fm))
+  expect_message(expect_warning(fl <- fitList(fm, fm, autoNames='formula')))
+  expect_message(expect_warning(fl <- fitList(fits=list(fm, fm), autoNames='formula')))
   expect_is(fl,"unmarkedFitList")
   expect_equivalent(length(fl@fits), 2)
 
@@ -335,7 +337,7 @@ test_that("occuMulti predict method works",{
 
   #fitList with maxOrder set
   fm2 <- occuMulti(c("~1","~1"), c("~1","~1"), umf, maxOrder=1)
-  expect_warning(fl2 <- fitList(fm, fm2))
+  expect_message(fl2 <- fitList(fm, fm2))
   expect_is(fl2, "unmarkedFitList")
   ms <- modSel(fl2)
   expect_is(ms, "unmarkedModSel")

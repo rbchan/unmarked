@@ -161,7 +161,10 @@ setClass("unmarkedFrameDSO",
 #Convert covs provided as list of matrices/dfs to data frame
 covsToDF <- function(covs, name, obsNum, numSites){
   if(!inherits(covs, "list")) return(covs)
-
+  
+  if(is.null(names(covs)) | any(is.na(names(covs))) | any(names(covs)=="")){
+    stop("All elements of list provided to ", name, " argument must be named", call.=FALSE)
+  }
   lapply(covs, function(x){
     if(!inherits(x, c("matrix", "data.frame")))
       stop(paste("At least one element of", name, "is not a matrix or data frame."))

@@ -18,6 +18,17 @@ fitstats <- function(fm) {
     return(out)
 }
 
+fitstats2 <- function(fm, na.rm=TRUE) {
+    observed <- getY(fm@data)
+    expected <- fitted(fm)
+    resids <- residuals(fm)
+    sse <- sum(resids^2, na.rm=na.rm)
+    chisq <- sum((observed - expected)^2 / expected, na.rm=na.rm)
+    freeTuke <- sum((sqrt(observed) - sqrt(expected))^2, na.rm=na.rm)
+    out <- c(SSE=sse, Chisq=chisq, freemanTukey=freeTuke)
+    return(out)
+}
+
 test_that("parboot works", {
   pb <- parboot(fm, fitstats, nsim=3)
   expect_equal(dim(pb@t.star), c(3,3))
@@ -77,4 +88,15 @@ test_that("parboot handles statistic functions with additional arguments", {
   pb <- parboot(fm, nsim=10, statistic=opt_func, y=0.1, parallel=TRUE)
   expect_equal(colnames(pb@t.star), c("res", "y"))
   expect_true(all(pb@t.star[,"y"]==0.1))
+})
+
+# To show the fitstats function in parboot example works when there are NAs
+test_that("fitstats2 function handles NAs", {
+  umf2 <- umf
+  umf2@y[1,1] <- NA
+  fm2 <- occu(~ o1 + o2 ~ x, data = umf2)
+  expect_error(expect_warning(show(parboot(fm2, nsim=3, statistic=fitstats2, na.rm=FALSE))))
+  pb <- parboot(fm2, nsim=3, statistic=fitstats2, na.rm=TRUE)
+  expect_is(pb, "parboot")
+  expect_equal(nrow(pb@t.star), 3)
 })

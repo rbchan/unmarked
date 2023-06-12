@@ -64,7 +64,7 @@ The data are a simplified version of the data used in @Rota2016, with the data c
 The dataset is included with `unmarked` and is called `MesoCarnivores`.
 First, we need to load in the dataset, which is a list with several components.
 
-```{r, eval=FALSE}
+```{r}
 library(unmarked)
 data(MesoCarnivores)
 names(MesoCarnivores)

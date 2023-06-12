@@ -22,7 +22,7 @@ test_that("occuFP model can be fit",{
   m1 <- occuFP(detformula = ~ METH, FPformula = ~1,
                stateformula = ~ habitat, data = umf1)
   expect_equal(names(m1), c("state","det","fp"))
-  expect_warning(fl <- fitList(m1,m1))
+  expect_message(fl <- fitList(m1,m1))
   expect_is(fl,"unmarkedFitList")
   expect_equal(length(fl@fits), 2)
 

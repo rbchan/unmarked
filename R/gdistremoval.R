@@ -219,9 +219,33 @@ setMethod("getDesign", "unmarkedFrameGDR",
   Zphi <- get_Z(formula$phiformula, ysc)
   Zdist <- get_Z(formula$distanceformula, ysc)
   Zrem <- get_Z(formula$removalformula, oc)
+ 
+  # Check if there are missing yearlySiteCovs
+  ydist_mat <- apply(matrix(yDist, nrow=M*T, byrow=TRUE), 1, function(x) any(is.na(x)))
+  yrem_mat <- apply(matrix(yRem, nrow=M*T, byrow=TRUE), 1, function(x) any(is.na(x)))
+  ok_missing_phi_covs <- ydist_mat | yrem_mat
+  missing_phi_covs <- apply(Xphi, 1, function(x) any(is.na(x)))  
+  if(!all(which(missing_phi_covs) %in% which(ok_missing_phi_covs))){
+    stop("Missing yearlySiteCovs values for some observations that are not missing", call.=FALSE)
+  }
 
-  if(any(is.na(Xlam)) | any(is.na(Xphi)) | any(is.na(Xdist)) | any(is.na(Xrem))){
-    stop("gdistremoval does not currently handle missing values in covariates", call.=FALSE)
+  # Check if there are missing dist covs
+  missing_dist_covs <- apply(Xdist, 1, function(x) any(is.na(x)))
+  ok_missing_dist_covs <- ydist_mat
+  if(!all(which(missing_dist_covs) %in% which(ok_missing_dist_covs))){
+    stop("Missing yearlySiteCovs values for some distance observations that are not missing", call.=FALSE)
+  }
+
+  # Check if there are missing rem covs
+  missing_obs_covs <- apply(Xrem, 1, function(x) any(is.na(x)))
+  missing_obs_covs <- apply(matrix(missing_obs_covs, nrow=M*T, byrow=TRUE), 1, function(x) any(x))
+  ok_missing_obs_covs <- yrem_mat
+  if(!all(which(missing_obs_covs) %in% which(ok_missing_obs_covs))){
+    stop("Missing obsCovs values for some removal observations that are not missing", call.=FALSE)
+  }
+    
+  if(any(is.na(Xlam))){
+    stop("gdistremoval does not currently handle missing values in siteCovs", call.=FALSE)
   }
 
   list(yDist=yDist, yRem=yRem, Xlam=Xlam, Xphi=Xphi, Xdist=Xdist, Xrem=Xrem,
@@ -541,14 +565,14 @@ setMethod("fitted", "unmarkedFitGDR", function(object){
     dist[,,t] <- dist[,,t] * p_rem[,rep(t,ncol(dist[,,t]))]
     if(T > 1){
       rem[,,t] <- rem[,,t] * phi[,rep(t, ncol(rem[,,t]))]
-      det[,,t] <- dist[,,t] * phi[,rep(t, ncol(dist[,,t]))]
+      dist[,,t] <- dist[,,t] * phi[,rep(t, ncol(dist[,,t]))]
     }
   }
 
   if(T > 1){
-    rem_final <- rem[,,t]
-    dist_final <- det[,,t]
-    for (t in 1:T){
+    rem_final <- rem[,,1]
+    dist_final <- dist[,,1]
+    for (t in 2:T){
       rem_final <- cbind(rem_final, rem[,,t])
       dist_final <- cbind(dist_final, dist[,,t])
     }
@@ -615,7 +639,7 @@ setMethod("ranef", "unmarkedFitGDR", function(object){
   pr <- apply(cp, c(1,3), sum)
   prRem <- apply(pif, c(1,3), sum)
 
-  post <- array(0, c(M, K+1, T))
+  post <- array(0, c(M, K+1, 1))
   colnames(post) <- 0:K
   for (i in 1:M){
     if(mixture=="P"){
@@ -625,19 +649,26 @@ setMethod("ranef", "unmarkedFitGDR", function(object){
     } else if(mixture=="ZIP"){
       f <- dzip(0:K, lam[i], alpha)
     }
-    g <- rep(1, K+1)
-    for (t in 1:T){
-      if(has_na[i,t]){
-        g <- rep(NA,K+1)
-        next
-      }
-      for (k in 1:(K+1)){
-        g[k] <- g[k] * dbinom(ysum[i,t], k-1, prob=pr[i,t]*prRem[i,t]*phi[i,t],
-                              log=FALSE)
+
+    # All sampling periods at site i have at least one missing value
+    if(all(has_na[i,])){
+      g <- rep(NA,K+1)
+      next
+    } else {
+      # At least one sampling period wasn't missing
+      g <- rep(1, K+1)
+      for (t in 1:T){
+        if(has_na[i,t]){
+          next
+        }
+        for (k in 1:(K+1)){
+          g[k] <- g[k] * dbinom(ysum[i,t], k-1, prob=pr[i,t]*prRem[i,t]*phi[i,t],
+                                log=FALSE)
+        }
       }
     }
     fg <- f*g
-    post[i,,t] <- fg/sum(fg)
+    post[i,,1] <- fg/sum(fg)
   }
 
   new("unmarkedRanef", post=post)
@@ -702,17 +733,22 @@ setMethod("simulate", "unmarkedFitGDR", function(object, nsim, seed=NULL, na.rm=
     yrem <- matrix(NA, M, T*Jrem)
 
     for (m in 1:M){
-      ysum <- rbinom(T, N[m], p_total[m,])
+      ysum <- suppressWarnings(rbinom(T, N[m], p_total[m,]))
 
       ydist_m <- yrem_m <- c()
 
       for (t in 1:T){
-        rem_class <- sample(1:Jrem, ysum[t], replace=TRUE, prob=rem_scaled[m,,t])
-        rem_class <- factor(rem_class, levels=1:Jrem)
-        yrem_m <- c(yrem_m, as.numeric(table(rem_class)))
-        dist_class <- sample(1:Jdist, ysum[t], replace=TRUE, prob=dist_scaled[m,,t])
-        dist_class <- factor(dist_class, levels=1:Jdist)
-        ydist_m <- c(ydist_m, as.numeric(table(dist_class)))
+        if(is.na(ysum[t])){
+          yrem_m <- c(yrem_m, rep(NA, Jrem))
+          ydist_m <- c(ydist_m, rep(NA, Jdist))
+        } else {
+          rem_class <- sample(1:Jrem, ysum[t], replace=TRUE, prob=rem_scaled[m,,t])
+          rem_class <- factor(rem_class, levels=1:Jrem)
+          yrem_m <- c(yrem_m, as.numeric(table(rem_class)))
+          dist_class <- sample(1:Jdist, ysum[t], replace=TRUE, prob=dist_scaled[m,,t])
+          dist_class <- factor(dist_class, levels=1:Jdist)
+          ydist_m <- c(ydist_m, as.numeric(table(dist_class)))
+        }
       }
       stopifnot(length(ydist_m)==ncol(ydist))
       stopifnot(length(yrem_m)==ncol(yrem))

@@ -270,3 +270,20 @@ test_that("R and C++ engines give identical results",{
 
 
 })
+
+test_that("getP works when there is only 1 site", {
+  y <- matrix(0:3, 5, 4)
+  siteCovs <- data.frame(x = c(0,2,3,4,1))
+  siteCovs[3,1] <- NA
+  obsCovs <- data.frame(o1 = 1:20, o2 = exp(-5:4)/20)
+  yrSiteCovs <- data.frame(yr=factor(rep(1:2, 5)))
+
+  umf <- unmarkedFrameGMM(y = y, siteCovs = siteCovs, obsCovs = obsCovs,
+        yearlySiteCovs = yrSiteCovs, type="removal", numPrimary=2)[1,]
+
+  fm <- expect_warning(gmultmix(~x, ~yr, ~o1 + o2, data = umf, K=7, engine="C"))
+
+  gp <- getP(fm)
+  expect_equal(dim(gp), c(1,4))
+
+})

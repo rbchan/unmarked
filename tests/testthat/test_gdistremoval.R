@@ -343,6 +343,12 @@ test_that("gdistremoval can fit models",{
   expect_is(fl, "unmarkedFitList")
   ms <- modSel(fl)
   expect_is(ms, "unmarkedModSel")
+
+  #plotEffects
+  pdf(NULL)
+  plotEffects(fit, 'lambda', "sc1")
+  plotEffects(fit, 'rem', 'oc1')
+  dev.off()
 })
 
 test_that("gdistremoval predict method works",{
@@ -405,9 +411,21 @@ test_that("gdistremoval handles NAs",{
   fit <- gdistremoval(~1,removalformula=~1,distanceformula=~1, data=umf)
   expect_equivalent(coef(fit), c(2.0675,3.908,-2.1433), tol=1e-3)
 
+  # Can't have missing site covs
   umf2 <- umf
   umf2@siteCovs$sc1[1] <- NA
   expect_error(gdistremoval(~sc1,removalformula=~1,distanceformula=~1, data=umf2))
+  
+  # This errors because missing obs cov does not match missing removal data
+  umf2 <- umf
+  umf2@obsCovs$oc1[1] <- NA
+  expect_error(gdistremoval(~1,removalformula=~oc1,distanceformula=~1, data=umf2))
+
+  # This does not error because missing obs cov matches missing removal data
+  umf2 <- umf
+  umf2@obsCovs$oc1[6] <- NA
+  fit <- gdistremoval(~1,removalformula=~oc1,distanceformula=~1, data=umf2)
+  expect_true(is.na(predict(fit, 'rem')$Predicted[6]))
 })
 
 test_that("multi-period data works with gdistremoval",{
@@ -438,8 +456,40 @@ test_that("multi-period data works with gdistremoval",{
 
   # ranef
   r <- ranef(fit)
-  expect_equal(dim(bup(r)), c(30,5))
+  expect_equal(dim(r@post), c(30, 44, 1))
+  expect_equal(length(bup(r)), 30)
 
+  # fitted
+  ft <- fitted(fit)
+  expect_equal(dim(ft$dist), dim(fit@data@yDistance))
+
+  # Entire missing secondary period
+  umf2 <- umf
+  # remove 2nd period at first site
+  umf2@yDistance[1,5:8] <- NA
+  umf2@yRemoval[1, 6:10] <- NA
+  umf2@obsCovs$oc1[6:10] <- NA
+  umf2@yearlySiteCovs$ysc1[2] <- NA
+  
+
+  fit2 <- gdistremoval(~sc1,phiformula=~ysc1, removalformula=~oc1,distanceformula=~1, data=umf2)
+
+  gp <- getP(fit2)
+  expect_true(is.na(gp$phi[1,2]))
+
+  pr <- predict(fit2, 'rem', level=NULL)
+  expect_true(all(is.na(pr$Predicted[6:10])))
+
+  r2 <- ranef(fit2)
+  expect_true(!any(is.na(r2@post)))
+
+  s <- simulate(fit2)
+  expect_true(all(is.na(s[[1]]$yDistance[1,5:8])))
+  
+  res <- residuals(fit2)
+  expect_true(all(is.na(res$rem[1,6:10])))
+  pb <- parboot(fit2, nsim=2)
+  expect_is(pb, "parboot")
 })
 
 test_that("gdistremoval works with random effects",{

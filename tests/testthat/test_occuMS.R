@@ -227,7 +227,9 @@ test_that("occuMS can fit the multinomial model",{
   expect_equivalent(r@post[1,,1], c(0,0.5222,0.4778), tol=1e-4)
 
   #Check fitList
-  expect_warning(fl <- fitList(fit_C, fit_C))
+  expect_message(fl <- fitList(fit_C, fit_C))
+  expect_message(expect_warning(fl <- fitList(fit_C, fit_C, autoNames='formula')))
+  expect_message(expect_warning(fl <- fitList(fits=list(fit_C, fit_C), autoNames='formula')))
   expect_is(fl,"unmarkedFitList")
   expect_equivalent(length(fl@fits), 2)
 
