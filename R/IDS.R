@@ -88,6 +88,10 @@ IDS <- function(lambdaformula = ~1,
     if(!is.null(dataOC)) stopifnot(!is.null(durationOC))
   }
 
+  if(has_avail & !is.null(dataOC)){
+    stop("Availability estimation doesn't work with detection-nondetection data", call.=FALSE)
+  }
+
   stopifnot(is.null(durationDS) || (length(durationDS) == numSites(dataDS)))
   stopifnot(is.null(durationPC) || (length(durationPC) == numSites(dataPC)))
   stopifnot(is.null(durationOC) || (length(durationOC) == numSites(dataOC)))
