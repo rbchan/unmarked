@@ -24,7 +24,7 @@ importFrom(pbapply, pbsapply, pblapply)
 export(occu, occuFP, occuRN, pcount, pcountOpen, multinomPois, distsamp,
        colext, gmultmix, gdistsamp, gpcount, occuPEN, occuPEN_CV, occuMulti,
        occuMS, computeMPLElambda, pcount.spHDS, occuTTD, distsampOpen,
-       multmixOpen, nmixTTD, gdistremoval)
+       multmixOpen, nmixTTD, gdistremoval, IDS)
 export(removalPiFun, doublePiFun)
 export(makeRemPiFun, makeCrPiFun, makeCrPiFunMb, makeCrPiFunMh)
 
@@ -33,7 +33,7 @@ exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitOccuFP, unmarkedFitDS,
               unmarkedFitPCount, unmarkedFitMPois, unmarkedFitPCO,
               unmarkedFrameDSO, unmarkedFitDSO,
               unmarkedFrameMMO, unmarkedFitMMO,
-              unmarkedFitOccuMulti,
+              unmarkedFitOccuMulti, unmarkedFitIDS,
               unmarkedFrame, unmarkedFrameOccu, unmarkedFramePCount,
               unmarkedFrameMPois, unmarkedFrameDS, unmarkedMultFrame,
               unmarkedFrameGMM, unmarkedFrameGDS, unmarkedFramePCO,

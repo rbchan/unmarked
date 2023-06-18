@@ -76,6 +76,19 @@ setMethod("simulate", "character",
     } else if(object=="gdistremoval"){
       umf@yDistance=x$yDistance
       umf@yRemoval=x$yRemoval
+    } else if(object == "IDS"){
+       out <- list()
+       out$ds <- fit@data
+       out$ds@y <- x$ds
+       if("pc" %in% names(fit)){
+         out$pc <- fit@dataPC
+         out$pc@y <- x$pc
+       }
+       if("oc" %in% names(fit)){
+         out$oc <- fit@dataOC
+         out$oc@y <- x$oc
+       }
+       umf <- out
     } else {
       umf@y <- x
     }
@@ -184,7 +197,6 @@ setMethod("simulate_fit", "unmarkedFitOccuRN",
   occuRN(as.formula(paste(deparse(formulas$det), deparse(formulas$state))),
        data=umf, se=FALSE, control=list(maxit=1))
 })
-
 
 setMethod("get_umf_components", "unmarkedFitMPois",
           function(object, formulas, guide, design, ...){
@@ -556,3 +568,103 @@ setMethod("simulate_fit", "unmarkedFitGDR",
                data=umf, keyfun=keyfun, output=output, unitsOut=unitsOut,
                mixture=mixture, K=K, se=FALSE, control=list(maxit=1), method='L-BFGS-B')
 })
+
+# For simulating entirely new datasets
+setMethod("get_umf_components", "unmarkedFitIDS",
+          function(object, formulas, guide, design, ...){
+
+  # Distance sampling dataset
+  sc_ds_lam <- generate_data(formulas$lam, guide, design$Mds)
+  sc_ds_det <- generate_data(formulas$ds, guide, design$Mds)
+  dat_ds <- list(sc_ds_lam, sc_ds_det)
+  if(!is.null(formulas$phi)){
+    sc_ds_phi <- generate_data(formulas$phi, guide, design$Mds)
+    dat_ds <- c(dat_ds, list(sc_ds_phi))
+  }
+  keep <- sapply(dat_ds, function(x) !is.null(x))
+  dat_ds <- dat_ds[keep]
+  sc_ds <- do.call(cbind, dat_ds)
+  yblank_ds <- matrix(1, design$Mds, design$J)
+
+  # Point count dataset
+  sc_pc <- yblank_pc <- NULL
+  if(!is.null(design$Mpc) && design$Mpc > 0){
+    if(is.null(formulas$pc)) form_pc <- formulas$ds
+    sc_pc_lam <- generate_data(formulas$lam, guide, design$Mpc)
+    sc_pc_det <- generate_data(form_pc, guide, design$Mpc)
+    sc_pc <- list(sc_pc_lam, sc_pc_det)
+    if(!is.null(formulas$phi)){
+      sc_pc_phi <- generate_data(formulas$phi, guide, design$Mpc)
+      sc_pc <- c(sc_pc, list(sc_pc_phi))
+    }
+    keep <- sapply(sc_pc, function(x) !is.null(x))
+    sc_pc <- sc_pc[keep]
+    sc_pc <- do.call(cbind, sc_pc)
+    yblank_pc <- matrix(1, design$Mpc, 1)
+  }
+
+  # Presence/absence dataset
+  sc_oc <- yblank_oc <- NULL
+  if(!is.null(design$Moc) && design$Moc > 0){
+    if(is.null(formulas$oc)) form_oc <- formulas$ds
+    sc_oc_lam <- generate_data(formulas$lam, guide, design$Moc)
+    sc_oc_det <- generate_data(form_oc, guide, design$Moc)
+    sc_oc <- list(sc_oc_lam, sc_oc_det)
+    if(!is.null(formulas$phi)){
+      sc_oc_phi <- generate_data(formulas$phi, guide, design$Moc)
+      sc_oc <- c(sc_oc, list(sc_oc_phi))
+    }
+    keep <- sapply(sc_oc, function(x) !is.null(x))
+    sc_oc <- sc_oc[keep]
+    sc_oc <- do.call(cbind, sc_oc)
+    yblank_oc <- matrix(1, design$Moc, 1)
+  }
+
+  mget(c("yblank_ds", "sc_ds", "yblank_pc", "sc_pc", "yblank_oc", "sc_oc"))
+})
+
+
+setMethod("simulate_fit", "unmarkedFitIDS",
+  function(object, formulas, guide, design, ...){
+  parts <- get_umf_components(object, formulas, guide, design, ...)
+  args <- list(...)
+
+  args$tlength <- 0
+  args$survey <- "point"
+
+  # Distance sampling dataset
+  umf_ds <- unmarkedFrameDS(y=parts$yblank_ds, siteCovs=parts$sc_ds,
+                            tlength=args$tlength, survey=args$survey,
+                            unitsIn=args$unitsIn,
+                            dist.breaks=args$dist.breaks)
+  # Point count dataset
+  umf_pc <- NULL
+  if(!is.null(design$Mpc) && design$Mpc > 0){
+    umf_pc <- unmarkedFramePCount(y=parts$yblank_pc, siteCovs=parts$sc_pc)
+  }
+
+  # Occupancy dataset
+  umf_oc <- NULL
+  if(!is.null(design$Moc) && design$Moc > 0){
+    umf_oc <- unmarkedFrameOccu(y=parts$yblank_oc, siteCovs=parts$sc_oc)
+  }
+
+  keyfun <- ifelse(is.null(args$keyfun), "halfnorm", args$keyfun)
+  unitsOut <- ifelse(is.null(args$unitsOut), "ha", args$unitsOut)
+  K <- ifelse(is.null(args$K), 300, args$K)
+  if(is.null(args$maxDistPC)) args$maxDistPC <- max(args$dist.breaks)
+  if(is.null(args$maxDistOC)) args$maxDistOC <- max(args$dist.breaks)
+
+  IDS(lambdaformula = formulas$lam,
+      detformulaDS = formulas$ds,
+      detformulaPC = formulas$pc, detformulaOC = formulas$oc,
+      dataDS = umf_ds, dataPC = umf_pc, dataOC = umf_oc,
+      availformula = formulas$phi,
+      durationDS = args$durationDS, durationPC = args$durationPC,
+      durationOC = args$durationOC,
+      maxDistPC = args$maxDistPC, maxDistOC = args$maxDistOC,
+      keyfun=keyfun, unitsOut=unitsOut, K=K ,control=list(maxit=1))
+})
+
+
+

@@ -1,5 +1,6 @@
 \name{parboot}
 \alias{parboot}
+\alias{parboot,unmarkedFitIDS-method}
 \alias{plot,parboot,missing-method}
 \alias{show,parboot-method}
 \title{Parametric bootstrap method for fitted models inheriting class.}

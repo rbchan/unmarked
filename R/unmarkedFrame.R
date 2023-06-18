@@ -1124,10 +1124,7 @@ setMethod("[", c("unmarkedFrame", "numeric", "missing", "missing"),
     if(all(i < 0)) { # if i is negative, then convert to positive
         i <- (1:M)[i]
         }
-    y <- getY(x)[i,]
-    if (length(i) == 1) {
-        y <- t(y)
-        }
+    y <- getY(x)[i,,drop=FALSE]
     siteCovs <- siteCovs(x)
     obsCovs <- obsCovs(x)
     if (!is.null(siteCovs)) {
