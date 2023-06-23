@@ -65,9 +65,7 @@ Type tmb_pcount(objective_function<Type>* obj) {
   Type scale = 0;
   if(mixture > 1) scale = beta_scale(0);
 
-  //Define the log likelihood so that it can be calculated in parallel over sites
-  parallel_accumulator<Type> loglik(obj);
-
+  Type loglik = 0.0;
   int M = y.rows(); //# of sites
   int J = y.cols(); //# of observations per site
 

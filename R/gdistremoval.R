@@ -219,9 +219,33 @@ setMethod("getDesign", "unmarkedFrameGDR",
   Zphi <- get_Z(formula$phiformula, ysc)
   Zdist <- get_Z(formula$distanceformula, ysc)
   Zrem <- get_Z(formula$removalformula, oc)
+ 
+  # Check if there are missing yearlySiteCovs
+  ydist_mat <- apply(matrix(yDist, nrow=M*T, byrow=TRUE), 1, function(x) any(is.na(x)))
+  yrem_mat <- apply(matrix(yRem, nrow=M*T, byrow=TRUE), 1, function(x) any(is.na(x)))
+  ok_missing_phi_covs <- ydist_mat | yrem_mat
+  missing_phi_covs <- apply(Xphi, 1, function(x) any(is.na(x)))  
+  if(!all(which(missing_phi_covs) %in% which(ok_missing_phi_covs))){
+    stop("Missing yearlySiteCovs values for some observations that are not missing", call.=FALSE)
+  }
 
-  if(any(is.na(Xlam)) | any(is.na(Xphi)) | any(is.na(Xdist)) | any(is.na(Xrem))){
-    stop("gdistremoval does not currently handle missing values in covariates", call.=FALSE)
+  # Check if there are missing dist covs
+  missing_dist_covs <- apply(Xdist, 1, function(x) any(is.na(x)))
+  ok_missing_dist_covs <- ydist_mat
+  if(!all(which(missing_dist_covs) %in% which(ok_missing_dist_covs))){
+    stop("Missing yearlySiteCovs values for some distance observations that are not missing", call.=FALSE)
+  }
+
+  # Check if there are missing rem covs
+  missing_obs_covs <- apply(Xrem, 1, function(x) any(is.na(x)))
+  missing_obs_covs <- apply(matrix(missing_obs_covs, nrow=M*T, byrow=TRUE), 1, function(x) any(x))
+  ok_missing_obs_covs <- yrem_mat
+  if(!all(which(missing_obs_covs) %in% which(ok_missing_obs_covs))){
+    stop("Missing obsCovs values for some removal observations that are not missing", call.=FALSE)
+  }
+    
+  if(any(is.na(Xlam))){
+    stop("gdistremoval does not currently handle missing values in siteCovs", call.=FALSE)
   }
 
   list(yDist=yDist, yRem=yRem, Xlam=Xlam, Xphi=Xphi, Xdist=Xdist, Xrem=Xrem,
@@ -449,44 +473,6 @@ gdistremoval <- function(lambdaformula=~1, phiformula=~1, removalformula=~1,
 
 # Methods
 
-setMethod("predict", "unmarkedFitGDR", function(object, type, newdata,
-                                                level=0.95, re.form=NULL, ...){
-
-  type <- match.arg(type, c("lambda", "phi", "rem", "dist"))
-  nm <- switch(type, lambda="lam", phi="phi", rem="rem", dist="dist")
-  est <- object[ifelse(nm=="lam","lambda",nm)]
-
-  if(missing(newdata)){
-    gd <- getDesign(object@data, object@formlist)
-    X <- gd[[paste0("X",nm)]]
-    Z <- gd[[paste0("Z",nm)]]
-    if(is.null(re.form)) X <- cbind(X, Z)
-  } else{
-    if(!inherits(newdata, "data.frame")){
-      stop("newdata must be a data frame")
-    }
-    gd <- getDesign(object@data, object@formlist, return.frames=TRUE)
-    fname <- switch(type, lambda="lambda", phi="phi", rem="removal", dist="distance")
-    covs <- switch(type, lambda="sc", phi="ysc", rem="oc", dist="ysc")
-    X <- make_mod_matrix(object@formlist[[paste0(fname,"formula")]],
-                         gd[[covs]], newdata=newdata, re.form)$X
-  }
-  X <- as.matrix(X)
-
-  if(is.null(level)){
-    pred <- do.call(est@invlink, list(drop(X %*% est@estimates)))
-    names(pred) <- NULL
-    return(data.frame(Predicted=pred, SE=NA, lower=NA, upper=NA))
-  }
-
-  stats <- t(sapply(1:nrow(X), function(i){
-              bt <- backTransform(linearComb(est, X[i,], re.form=re.form))
-              ci <- confint(bt, level=level)
-              c(Predicted=coef(bt), SE=SE(bt), lower=ci[1], upper=ci[2])
-            }))
-  as.data.frame(stats)
-})
-
 setMethod("getP", "unmarkedFitGDR", function(object){
 
   M <- numSites(object@data)
@@ -555,9 +541,10 @@ setMethod("fitted", "unmarkedFitGDR", function(object){
   T <- object@data@numPrimary
 
   # Adjust log lambda when there is a random intercept
-  loglam <- log(predict(object, "lambda", level=NULL)$Predicted)
-  loglam <- E_loglam(loglam, object, "lambda")
-  lam <- exp(loglam)
+  #loglam <- log(predict(object, "lambda", level=NULL)$Predicted)
+  #loglam <- E_loglam(loglam, object, "lambda")
+  #lam <- exp(loglam)
+  lam <- predict(object, "lambda", level=NULL)$Predicted
   if(object@output == "density"){
     ua <- getUA(object@data)
     A <- rowSums(ua$a)
@@ -578,14 +565,14 @@ setMethod("fitted", "unmarkedFitGDR", function(object){
     dist[,,t] <- dist[,,t] * p_rem[,rep(t,ncol(dist[,,t]))]
     if(T > 1){
       rem[,,t] <- rem[,,t] * phi[,rep(t, ncol(rem[,,t]))]
-      det[,,t] <- dist[,,t] * phi[,rep(t, ncol(dist[,,t]))]
+      dist[,,t] <- dist[,,t] * phi[,rep(t, ncol(dist[,,t]))]
     }
   }
 
   if(T > 1){
-    rem_final <- rem[,,t]
-    dist_final <- det[,,t]
-    for (t in 1:T){
+    rem_final <- rem[,,1]
+    dist_final <- dist[,,1]
+    for (t in 2:T){
       rem_final <- cbind(rem_final, rem[,,t])
       dist_final <- cbind(dist_final, dist[,,t])
     }
@@ -625,9 +612,10 @@ setMethod("ranef", "unmarkedFitGDR", function(object){
 
   Kmin = apply(ysum, 1, max, na.rm=T)
 
-  loglam <- log(predict(object, "lambda", level=NULL)$Predicted)
-  loglam <- E_loglam(loglam, object, "lambda")
-  lam <- exp(loglam)
+  #loglam <- log(predict(object, "lambda", level=NULL)$Predicted)
+  #loglam <- E_loglam(loglam, object, "lambda")
+  #lam <- exp(loglam)
+  lam <- predict(object, "lambda", level=NULL)$Predicted
   if(object@output == "density"){
     ua <- getUA(object@data)
     A <- rowSums(ua$a)
@@ -651,7 +639,7 @@ setMethod("ranef", "unmarkedFitGDR", function(object){
   pr <- apply(cp, c(1,3), sum)
   prRem <- apply(pif, c(1,3), sum)
 
-  post <- array(0, c(M, K+1, T))
+  post <- array(0, c(M, K+1, 1))
   colnames(post) <- 0:K
   for (i in 1:M){
     if(mixture=="P"){
@@ -661,19 +649,26 @@ setMethod("ranef", "unmarkedFitGDR", function(object){
     } else if(mixture=="ZIP"){
       f <- dzip(0:K, lam[i], alpha)
     }
-    g <- rep(1, K+1)
-    for (t in 1:T){
-      if(has_na[i,t]){
-        g <- rep(NA,K+1)
-        next
-      }
-      for (k in 1:(K+1)){
-        g[k] <- g[k] * dbinom(ysum[i,t], k-1, prob=pr[i,t]*prRem[i,t]*phi[i,t],
-                              log=FALSE)
+
+    # All sampling periods at site i have at least one missing value
+    if(all(has_na[i,])){
+      g <- rep(NA,K+1)
+      next
+    } else {
+      # At least one sampling period wasn't missing
+      g <- rep(1, K+1)
+      for (t in 1:T){
+        if(has_na[i,t]){
+          next
+        }
+        for (k in 1:(K+1)){
+          g[k] <- g[k] * dbinom(ysum[i,t], k-1, prob=pr[i,t]*prRem[i,t]*phi[i,t],
+                                log=FALSE)
+        }
       }
     }
     fg <- f*g
-    post[i,,t] <- fg/sum(fg)
+    post[i,,1] <- fg/sum(fg)
   }
 
   new("unmarkedRanef", post=post)
@@ -682,9 +677,10 @@ setMethod("ranef", "unmarkedFitGDR", function(object){
 setMethod("simulate", "unmarkedFitGDR", function(object, nsim, seed=NULL, na.rm=FALSE){
 
   # Adjust log lambda when there is a random intercept
-  loglam <- log(predict(object, "lambda", level=NULL)$Predicted)
-  loglam <- E_loglam(loglam, object, "lambda")
-  lam <- exp(loglam)
+  #loglam <- log(predict(object, "lambda", level=NULL)$Predicted)
+  #loglam <- E_loglam(loglam, object, "lambda")
+  #lam <- exp(loglam)
+  lam <- predict(object, "lambda", level=NULL)$Predicted
   if(object@output == "density"){
     ua <- getUA(object@data)
     A <- rowSums(ua$a)
@@ -737,17 +733,22 @@ setMethod("simulate", "unmarkedFitGDR", function(object, nsim, seed=NULL, na.rm=
     yrem <- matrix(NA, M, T*Jrem)
 
     for (m in 1:M){
-      ysum <- rbinom(T, N[m], p_total[m,])
+      ysum <- suppressWarnings(rbinom(T, N[m], p_total[m,]))
 
       ydist_m <- yrem_m <- c()
 
       for (t in 1:T){
-        rem_class <- sample(1:Jrem, ysum[t], replace=TRUE, prob=rem_scaled[m,,t])
-        rem_class <- factor(rem_class, levels=1:Jrem)
-        yrem_m <- c(yrem_m, as.numeric(table(rem_class)))
-        dist_class <- sample(1:Jdist, ysum[t], replace=TRUE, prob=dist_scaled[m,,t])
-        dist_class <- factor(dist_class, levels=1:Jdist)
-        ydist_m <- c(ydist_m, as.numeric(table(dist_class)))
+        if(is.na(ysum[t])){
+          yrem_m <- c(yrem_m, rep(NA, Jrem))
+          ydist_m <- c(ydist_m, rep(NA, Jdist))
+        } else {
+          rem_class <- sample(1:Jrem, ysum[t], replace=TRUE, prob=rem_scaled[m,,t])
+          rem_class <- factor(rem_class, levels=1:Jrem)
+          yrem_m <- c(yrem_m, as.numeric(table(rem_class)))
+          dist_class <- sample(1:Jdist, ysum[t], replace=TRUE, prob=dist_scaled[m,,t])
+          dist_class <- factor(dist_class, levels=1:Jdist)
+          ydist_m <- c(ydist_m, as.numeric(table(dist_class)))
+        }
       }
       stopifnot(length(ydist_m)==ncol(ydist))
       stopifnot(length(yrem_m)==ncol(yrem))
@@ -849,4 +850,9 @@ setMethod("plot", c(x = "unmarkedFitGDR", y = "missing"), function(x, y, ...)
     plot(e[[2]], r[[2]], ylab="Residuals", xlab="Predicted values",
          main="Removal")
     abline(h = 0, lty = 3, col = "gray")
+})
+
+# Used with fitList
+setMethod("fl_getY", "unmarkedFitGDR", function(fit, ...){
+  getDesign(getData(fit), fit@formlist)$yDist
 })

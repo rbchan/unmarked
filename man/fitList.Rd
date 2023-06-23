@@ -1,11 +1,12 @@
 \name{fitList}
 \alias{fitList}
 \title{constructor of unmarkedFitList objects}
-\usage{fitList(..., fits)}
+\usage{fitList(..., fits, autoNames=c("object", "formula"))}
 \description{Organize models for model selection or model-averaged prediction.}
 \arguments{
 \item{...}{Fitted models. Preferrably named.}
 \item{fits}{An alternative way of providing the models. A (preferrably named) list of fitted models.}
+\item{autoNames}{Option to change the names \code{unmarked} assigns to models if you don't name them yourself. If \code{autoNames="object"}, models in the \code{fitList} will be named based on their R object names.  If \code{autoNames="formula"}, the models will instead be named based on their formulas. This is not possible for some model types.}
 }
 \note{Two requirements exist to conduct AIC-based model-selection and model-averaging in unmarked. First, the data objects (ie, unmarkedFrames) must be identical among fitted models. Second, the response matrix must be identical among fitted models after missing values have been removed. This means that if a response value was removed in one model due to missingness, it needs to be removed from all models.
 } 

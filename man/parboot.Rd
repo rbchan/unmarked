@@ -54,16 +54,16 @@ ltUMF <- with(linetran, {
 (fm <- distsamp(~area ~habitat, ltUMF))
 
 # Function returning three fit-statistics.
-fitstats <- function(fm) {
+fitstats <- function(fm, na.rm=TRUE) {
     observed <- getY(fm@data)
     expected <- fitted(fm)
     resids <- residuals(fm)
-    sse <- sum(resids^2)
-    chisq <- sum((observed - expected)^2 / expected)
-    freeTuke <- sum((sqrt(observed) - sqrt(expected))^2)
+    sse <- sum(resids^2, na.rm=na.rm)
+    chisq <- sum((observed - expected)^2 / expected, na.rm=na.rm)
+    freeTuke <- sum((sqrt(observed) - sqrt(expected))^2, na.rm=na.rm)
     out <- c(SSE=sse, Chisq=chisq, freemanTukey=freeTuke)
     return(out)
-    }
+}
 
 (pb <- parboot(fm, fitstats, nsim=25, report=1))
 plot(pb, main="")

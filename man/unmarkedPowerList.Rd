@@ -23,7 +23,7 @@
 \usage{
 \S4method{unmarkedPowerList}{list}(object, ...)
 \S4method{unmarkedPowerList}{unmarkedFit}(object, coefs, design, alpha=0.05,
-                                          nsim=100, parallel=FALSE, ...)
+                                          nulls=list(), nsim=100, parallel=FALSE, ...)
 \S4method{show}{unmarkedPowerList}(object)
 \S4method{summary}{unmarkedPowerList}(object, ...)
 \S4method{plot}{unmarkedPowerList,ANY}(x, power=NULL, param=NULL, ...)
@@ -41,6 +41,10 @@
     number of observations. If you have >1 primary period a \code{T} column
     must also be provided}
   \item{alpha}{Type I error rate}
+  \item{nulls}{If provided, a list matching the structure of \code{coefs} which
+    defines the null hypothesis value for each parameter. By default the null
+    is 0 for all parameters.
+  }
   \item{nsim}{The number of simulations to run for each scenario/study design}
   \item{parallel}{If \code{TRUE}, run simulations in parallel}
   \item{power}{When plotting, the target power. Draws a horizontal line

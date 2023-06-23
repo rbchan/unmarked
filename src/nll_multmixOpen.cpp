@@ -10,7 +10,7 @@ SEXP nll_multmixOpen( SEXP y_, SEXP yt_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_,
     SEXP Xgam_offset_, SEXP Xom_offset_, SEXP Xp_offset_, SEXP Xiota_offset_,
     SEXP ytna_, SEXP yna_, SEXP lk_, SEXP mixture_,
     SEXP first_, SEXP last_, SEXP first1_,
-    SEXP M_, SEXP T_, SEXP J_, SEXP delta_, SEXP dynamics_,
+    SEXP M_, SEXP T_, SEXP J_, SEXP R_, SEXP delta_, SEXP dynamics_,
     SEXP fix_, SEXP go_dims_, SEXP immigration_,
     SEXP I_, SEXP I1_, SEXP Ib_, SEXP Ip_, SEXP pi_fun_,
     SEXP lfac_k_, SEXP kmyt_, SEXP lfac_kmyt_, SEXP fin_) {
@@ -21,6 +21,7 @@ SEXP nll_multmixOpen( SEXP y_, SEXP yt_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_,
   int M = as<int>(M_);
   int T = as<int>(T_);
   int J = as<int>(J_);
+  int R = as<int>(R_);
   ucube y = as<ucube>(y_);
   imat yt = as<imat>(yt_);
   Rcpp::IntegerVector first(first_);
@@ -110,7 +111,7 @@ SEXP nll_multmixOpen( SEXP y_, SEXP yt_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_,
   vec beta_p = beta.subvec(bi(3,0), bi(3,1));
   vec pv = inv_logit(Xp * beta_p + Xp_offset);
   //Transform into cube (J x M x T)
-  cube p((const double*) pv.begin(), J, M, T);
+  cube p((const double*) pv.begin(), R, M, T);
 
   //Immigration
   mat iota = zeros(M,T-1);

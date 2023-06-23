@@ -12,10 +12,9 @@
 \alias{fitted,unmarkedFitNmixTTD-method}
 \alias{fitted,unmarkedFitPCount-method}
 \alias{fitted,unmarkedFitDS-method}
-\alias{fitted,unmarkedFitPCO-method}
 \alias{fitted,unmarkedFitGMM-method}
-\alias{fitted,unmarkedFitDSO-method}
 \alias{fitted,unmarkedFitGDR-method}
+\alias{fitted,unmarkedFitDailMadsen-method}
 \title{Methods for Function fitted in Package `unmarked'}
 \description{Extracted fitted values from a fitted model.
 }

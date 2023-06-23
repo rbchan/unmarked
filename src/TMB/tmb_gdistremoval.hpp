@@ -67,9 +67,7 @@ Type tmb_gdistremoval(objective_function<Type>* obj) {
   PARAMETER_VECTOR(b_rem);
   PARAMETER_VECTOR(lsigma_rem);
   
-  //Define the log likelihood so that it can be calculated in parallel over sites
-  parallel_accumulator<Type> loglik(obj);
-
+  Type loglik = 0.0;
   int M = X_lambda.rows(); // # of sites
   int Rdist = y_dist.size() / M;
   int Jdist = Rdist / T;

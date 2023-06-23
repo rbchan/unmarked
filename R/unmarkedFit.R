@@ -43,30 +43,27 @@ setClass("unmarkedFitPCount",
         mixture = "character"),
     contains = "unmarkedFit")
 
-
-
-setClass("unmarkedFitPCO",
+# This class is not used directly, just used as a base for for PCO, MMO, DSO
+setClass("unmarkedFitDailMadsen",
         representation(
+            K = "numeric",
+            mixture = "character",
             formlist = "list",
             dynamics = "character",
             immigration = "logical",
             fix = "character"),
-        contains = "unmarkedFitPCount")
+         contains = "unmarkedFit")
+
+setClass("unmarkedFitPCO", contains = "unmarkedFitDailMadsen")
+
+setClass("unmarkedFitMMO", contains = "unmarkedFitDailMadsen")
 
 setClass("unmarkedFitDSO",
         representation(
-            formlist = "list",
-            dynamics = "character",
-            immigration = "logical",
-            fix = "character",
-            K="numeric",
-            mixture="character"),
-        contains = "unmarkedFitDS")
-
-setClassUnion("unmarkedFitPCOorDSO",
-              c("unmarkedFitPCO", "unmarkedFitDSO"))
-
-setClass("unmarkedFitMMO", contains = "unmarkedFitPCO")
+            keyfun = "character",
+            unitsOut = "character",
+            output = "character"),
+        contains = "unmarkedFitDailMadsen")
 
 setClass("unmarkedFitOccu",
     representation(knownOcc = "logical"),
@@ -264,6 +261,7 @@ setMethod("names", "unmarkedFit",
 
 
 
+<<<<<<< HEAD
 # ----------------------------- Prediction -----------------------------
 
 #Utility function to make model matrix and offset from newdata
@@ -2243,9 +2241,9 @@ setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
     return(fitted)
 })
 
-#Get fitted N from Dail-Madsen type models
-#This part is the same across different detection models
-fittedOpenN <- function(object, K, na.rm=FALSE)
+
+setMethod("fitted", "unmarkedFitDailMadsen",
+    function(object, K, na.rm = FALSE)
 {
     dynamics <- object@dynamics
     mixture <- object@mixture
@@ -2355,21 +2353,7 @@ fittedOpenN <- function(object, K, na.rm=FALSE)
         }
     N <- N[,rep(1:T, each=J)]
 
-}
 
-setMethod("fitted", "unmarkedFitPCO",
-    function(object, K, na.rm = FALSE)
-{
-    N <- fittedOpenN(object, K, na.rm)
-    p <- getP(object, na.rm)
-    N * p
-})
-
-
-setMethod("fitted", "unmarkedFitDSO",
-    function(object, K, na.rm = FALSE)
-{
-    N <- fittedOpenN(object, K, na.rm)
     p <- getP(object, na.rm)
     N * p
 })
@@ -2431,9 +2415,9 @@ setMethod("fitted", "unmarkedFitOccuMS", function(object, na.rm = FALSE)
   }
 
   guide <- matrix(NA,nrow=S,ncol=S)
-  guide <- lower.tri(guide,diag=T)
+  guide <- lower.tri(guide,diag=TRUE)
   guide[,1] <- FALSE
-  guide <- which(guide,arr.ind=T)
+  guide <- which(guide,arr.ind=TRUE)
 
   #Get predictions
   pr <- predict(object, 'psi', se.fit=F)
@@ -2932,7 +2916,7 @@ setMethod("update", "unmarkedFitGMM",
 })
 
 
-setMethod("update", "unmarkedFitPCOorDSO",
+setMethod("update", "unmarkedFitDailMadsen",
     function(object, lambdaformula., gammaformula., omegaformula.,
         pformula., iotaformula., ..., evaluate = TRUE) {
     call <- object@call
@@ -3357,13 +3341,13 @@ setMethod("getP", "unmarkedFitDS",
     umf <- object@data
     designMats <- getDesign(umf, formula, na.rm = na.rm)
     y <- designMats$y
-    V <- designMats$V
+    V <- cbind(designMats$V, designMats$Z_det)
     V.offset <- designMats$V.offset
     if (is.null(V.offset))
         V.offset <- rep(0, nrow(V))
     M <- nrow(y)
     J <- ncol(y)
-    ppars <- coef(object, type = "det")
+    ppars <- coef(object, type = "det", fixedOnly=FALSE)
     db <- umf@dist.breaks
     w <- diff(db)
     survey <- umf@survey
@@ -3628,13 +3612,13 @@ setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE)
     umf <- object@data
     designMats <- getDesign(umf, formula, na.rm = na.rm)
     y <- designMats$y
-    V <- designMats$V
+    V <- as.matrix(cbind(designMats$V, designMats$Z_det))
     V.offset <- designMats$V.offset
     if (is.null(V.offset))
         V.offset <- rep(0, nrow(V))
     M <- nrow(y)
     J <- obsNum(umf) #ncol(y)
-    ppars <- coef(object, type = "det")
+    ppars <- coef(object, type = "det", fixedOnly=FALSE)
     p <- plogis(V %*% ppars + V.offset)
     p <- matrix(p, M, J, byrow = TRUE)
     pi <- do.call(piFun, list(p = p))
@@ -3734,7 +3718,7 @@ setMethod("getP", "unmarkedFitGMM",
     p <- aperm(p, c(1,3,2))
 
     cp <- array(as.numeric(NA), c(M, T, R))
-    for(t in 1:T) cp[,t,] <- do.call(piFun, list(p[,t,]))
+    for(t in 1:T) cp[,t,] <- do.call(piFun, list(matrix(p[,t,], M, J)))
     cp <- aperm(cp, c(1,3,2))
     cp <- matrix(cp, nrow=M, ncol=numY(object@data))
 
@@ -3789,13 +3773,13 @@ setMethod("simulate", "unmarkedFitDS",
     w <- diff(db)
     designMats <- getDesign(umf, formula, na.rm = na.rm)
     y <- designMats$y
-    X <- designMats$X
+    X <- as.matrix(cbind(designMats$X, designMats$Z_state))
     X.offset <- designMats$X.offset
     if (is.null(X.offset))
         X.offset <- rep(0, nrow(X))
     M <- nrow(y)
     J <- ncol(y)
-    lamParms <- coef(object, type = "state")
+    lamParms <- coef(object, type = "state", fixedOnly=FALSE)
     lambda <- drop(exp(X %*% lamParms + X.offset))
     if(identical(object@output, "density")) {
         switch(umf@survey,
@@ -4019,9 +4003,9 @@ setMethod("simulate", "unmarkedFitPCO",
 })
 
 
-#Function used by both unmarkedFitDSO and MMO
-multinomOpenSim <- function(object, nsim, seed, na.rm){
-
+setMethod("simulate", "unmarkedFitDailMadsen",
+    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+{
   umf <- object@data
   D <- getDesign(umf, object@formula, na.rm = na.rm)
   y <- D$y
@@ -4058,19 +4042,6 @@ multinomOpenSim <- function(object, nsim, seed, na.rm){
     simList[[s]] <- y.sim
   }
   return(simList)
-}
-
-setMethod("simulate", "unmarkedFitDSO",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
-{
-  multinomOpenSim(object, nsim, seed, na.rm)
-})
-
-
-setMethod("simulate", "unmarkedFitMMO",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
-{
-  multinomOpenSim(object, nsim, seed, na.rm)
 })
 
 
@@ -4081,14 +4052,14 @@ setMethod("simulate", "unmarkedFitMPois",
     umf <- object@data
     designMats <- getDesign(umf, formula, na.rm = na.rm)
     y <- designMats$y
-    X <- designMats$X
+    X <- as.matrix(cbind(designMats$X, designMats$Z_state))
     X.offset <- designMats$X.offset
     if (is.null(X.offset)) {
         X.offset <- rep(0, nrow(X))
         }
     M <- nrow(y)
     J <- ncol(y)
-    lamParms <- coef(object, type = "state")
+    lamParms <- coef(object, type = "state", fixedOnly=FALSE)
     lam <- as.numeric(exp(X %*% lamParms + X.offset))
     lamvec <- rep(lam, each = J)
     pivec <- as.vector(t(getP(object, na.rm = na.rm)))
@@ -4232,9 +4203,9 @@ setMethod("simulate", "unmarkedFitOccuMS",
   p <- getP(object)
 
   guide <- matrix(NA,nrow=S,ncol=S)
-  guide <- lower.tri(guide,diag=T)
+  guide <- lower.tri(guide,diag=TRUE)
   guide[,1] <- FALSE
-  guide <- which(guide,arr.ind=T)
+  guide <- which(guide,arr.ind=TRUE)
 
   out <- vector("list",nsim)
 
@@ -4291,14 +4262,15 @@ setMethod("simulate", "unmarkedFitOccuMS",
   for (n in 1:N){
     yindex <- 1
     for (t in 1:T){
-      if (z[n,t] == 0) {
-        yindex <- yindex + J
-        next
-      }
       for (j in 1:J){
-
         if(prm == "multinomial"){
           probs_raw <- sapply(p, function(x) x[n,yindex])
+          # Make sure output is NA if probs have NA
+          if(any(is.na(probs_raw))){
+            y[n,yindex] <- NA
+            yindex <- yindex + 1
+            next
+          }
 
           sdp <- matrix(0, nrow=S, ncol=S)
           sdp[guide] <- probs_raw
@@ -4310,13 +4282,22 @@ setMethod("simulate", "unmarkedFitOccuMS",
           p11 <- p[[1]][n,yindex]
           p12 <- p[[2]][n,yindex]
           p22 <- p[[3]][n,yindex]
+          # Trap NAs in probability of detection
+          if(any(is.na(c(p11, p12, p22)))){
+            y[n,yindex] <- NA
+            next
+          }
           probs <- switch(z[n,t]+1,
                           c(1,0,0),
                           c(1-p11,p11,0),
                           c(1-p12,p12*(1-p22),p12*p22))
         }
-
-        y[n,yindex] <- sample(0:(S-1), 1, prob=probs)
+        # this NA trap probably isn't necessary but leaving it in just in case
+        if(all(!is.na(probs))){
+          y[n,yindex] <- sample(0:(S-1), 1, prob=probs)
+        } else {
+          y[n,yindex] <- NA
+        }
         yindex <- yindex + 1
       }
     }

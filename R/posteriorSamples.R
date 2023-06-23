@@ -57,7 +57,7 @@ print.unmarkedPostSamples <- function(x, ...){
 }
 
 setMethod("[", c("unmarkedPostSamples","ANY","ANY","ANY"), 
-          function(x, i, j, k)
+          function(x, i, j, k, drop = FALSE)
 {
-  x@samples[i,j,k]
+  x@samples[i,j,k, drop = drop]
 })

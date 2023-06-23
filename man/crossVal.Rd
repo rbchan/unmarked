@@ -18,10 +18,10 @@
 \usage{
 \S4method{crossVal}{unmarkedFit}(
   object, method=c("Kfold","holdout","leaveOneOut"),
-  folds=10, holdoutPct=0.25, statistic=RMSE_MAE, parallel=FALSE, ...)
+  folds=10, holdoutPct=0.25, statistic=RMSE_MAE, parallel=FALSE, ncores, ...)
 \S4method{crossVal}{unmarkedFitList}(
   object, method=c("Kfold","holdout","leaveOneOut"),
-  folds=10, holdoutPct=0.25, statistic=RMSE_MAE, parallel=FALSE, 
+  folds=10, holdoutPct=0.25, statistic=RMSE_MAE, parallel=FALSE, ncores, 
   sort = c("none", "increasing", "decreasing"), ...)
 }
 
@@ -42,6 +42,7 @@
   \item{parallel}{If \code{TRUE}, run folds in parallel. This may speed up 
     cross-validation if the unmarked model takes a long time to fit or you have 
     a large number of sites and are using leave-one-out cross-validation.}
+  \item{ncores}{Number of parallel cores to use.}
   \item{sort}{If doing cross-validation on a \code{fitList}, you can optionally
     sort the resulting table(s) of statistic values for each model.}
   \item{...}{Other arguments passed to the statistic function.}

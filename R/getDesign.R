@@ -23,6 +23,11 @@ setMethod("getDesign", "unmarkedFrame",
     } else {
         siteCovs <- siteCovs(umf)
     }
+    miss_vars <-all.vars(stateformula)[!all.vars(stateformula) %in% names(siteCovs)]
+    if(length(miss_vars) > 0){
+      stop(paste("Variable(s)", paste(miss_vars, collapse=", "), 
+                 "not found in siteCovs"), call.=FALSE)
+    }
     X.mf <- model.frame(stateformula, siteCovs, na.action = NULL)
     X <- model.matrix(stateformula, X.mf)
     X.offset <- as.vector(model.offset(X.mf))
@@ -49,6 +54,11 @@ setMethod("getDesign", "unmarkedFrame",
         obsCovs <- cbind(obsCovs, obsNum = as.factor(rep(1:R, M)))
     }
 
+    miss_vars <-all.vars(detformula)[!all.vars(detformula) %in% names(obsCovs)]
+    if(length(miss_vars) > 0){
+      stop(paste("Variable(s)", paste(miss_vars, collapse=", "), 
+                 "not found in obsCovs"), call.=FALSE)
+    }
     V.mf <- model.frame(detformula, obsCovs, na.action = NULL)
     V <- model.matrix(detformula, V.mf)
     V.offset <- as.vector(model.offset(V.mf))
@@ -737,9 +747,9 @@ setMethod("getDesign", "unmarkedFrameOccuMS",
       return(c('p[1]','p[2]','delta'))
     }
     inds <- matrix(NA,nrow=S,ncol=S)
-    inds <- lower.tri(inds,diag=T)
+    inds <- lower.tri(inds,diag=TRUE)
     inds[,1] <- FALSE
-    inds <- which(inds,arr.ind=T) - 1
+    inds <- which(inds,arr.ind=TRUE) - 1
     paste0('p[',inds[,2],inds[,1],']')
   }
 
@@ -930,6 +940,7 @@ setMethod("getDesign", "unmarkedFramePCO",
     M <- nrow(y)
     T <- umf@numPrimary
     J <- ncol(y) / T
+    R <- obsNum(umf) / T
     delta <- umf@primaryPeriod
 
     if(is.null(umf@yearlySiteCovs))
@@ -955,18 +966,18 @@ setMethod("getDesign", "unmarkedFramePCO",
         Xlam.offset[is.na(Xlam.offset)] <- 0
 
     if(is.null(obsCovs(umf)))
-        obsCovs <- data.frame(placeHolder = rep(1, M*J*T))
+        obsCovs <- data.frame(placeHolder = rep(1, M*R*T))
     else
         obsCovs <- obsCovs(umf)
 
     colNames <- c(colnames(obsCovs), colnames(yearlySiteCovs))
 
     # Add yearlySiteCovs, which contains siteCovs
-    obsCovs <- cbind(obsCovs, yearlySiteCovs[rep(1:(M*T), each = J),])
+    obsCovs <- cbind(obsCovs, yearlySiteCovs[rep(1:(M*T), each = R),])
     colnames(obsCovs) <- colNames
 
     if(!("obsNum" %in% names(obsCovs)))
-        obsCovs <- cbind(obsCovs, obsNum = as.factor(rep(1:(J*T), M)))
+        obsCovs <- cbind(obsCovs, obsNum = as.factor(rep(1:(R*T), M)))
 
     # Ignore last year of data
     transCovs <- yearlySiteCovs[-seq(T, M*T, by=T),,drop=FALSE]

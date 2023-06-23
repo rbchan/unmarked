@@ -98,7 +98,7 @@ setMethod("ranef", "unmarkedFitOccuMS", function(object, ...)
   N <- numSites(object@data)
   S <- object@data@numStates
 
-  psi <- predict(object, "state", se.fit=F)
+  psi <- predict(object, "psi", se.fit=F)
   psi <- sapply(psi, function(x) x$Predicted)
   z <- 0:(S-1)
 
@@ -113,14 +113,15 @@ setMethod("ranef", "unmarkedFitOccuMS", function(object, ...)
     psi <- cbind(1-rowSums(psi), psi)
 
     guide <- matrix(NA,nrow=S,ncol=S)
-    guide <- lower.tri(guide,diag=T)
+    guide <- lower.tri(guide,diag=TRUE)
     guide[,1] <- FALSE
-    guide <- which(guide,arr.ind=T)
+    guide <- which(guide,arr.ind=TRUE)
     for (i in 1:N){
       f <- psi[i,]
       g <- rep(1, S)
       p_raw <- sapply(p_all, function(x) x[i,])
       for (j in 1:nrow(p_raw)){
+        if(any(is.na(p_raw[j,])) | is.na(y[i,j])) next
         sdp <- matrix(0, nrow=S, ncol=S)
         sdp[guide] <- p_raw[j,]
         sdp[,1] <- 1 - rowSums(sdp)
@@ -142,6 +143,7 @@ setMethod("ranef", "unmarkedFitOccuMS", function(object, ...)
       p_raw <- sapply(p_all, function(x) x[i,])
       for (j in 1:nrow(p_raw)){
         probs <- p_raw[j,]
+        if(any(is.na(probs)) | is.na(y[i,j])) next
         sdp <- matrix(0, nrow=S, ncol=S)
         sdp[1,1] <- 1
         sdp[2,1:2] <- c(1-probs[1], probs[1])
@@ -247,24 +249,35 @@ setMethod("ranef", "unmarkedFitMPois",
     lam <- predict(object, type="state")[,1]
     R <- length(lam)
     cp <- getP(object)
-    cp <- cbind(cp, 1-rowSums(cp))
+    cp <- cbind(cp, 1-rowSums(cp, na.rm=TRUE))
     N <- 0:K
-    post <- array(0, c(R, K+1, 1))
+    post <- array(NA, c(R, K+1, 1))
     colnames(post) <- N
     for(i in 1:R) {
         f <- dpois(N, lam[i])
         g <- rep(1, K+1)
-        if(any(is.na(y[i,])) | any(is.na(cp[i,])))
+        yi <- y[i,]
+        cpi <- cp[i,]
+        if(any(is.na(y[i,])) | any(is.na(cp[i,]))){
+          # This only handles cases when all NAs are at the end of the count vector
+          # Not when they are interspersed. I don't know how to handle that situation
+          if(object@data@piFun == "removalPiFun"){
+            warning("NAs in counts and/or covariates for site ",i, ". Keeping only counts before the first NA", call.=FALSE)
+            notNA <- min(which(is.na(y[i,]))[1], which(is.na(cp[i,]))[1], na.rm=TRUE) - 1
+            yi <- yi[c(1:notNA)]
+            cpi <- cpi[c(1:notNA, length(cpi))]
+          } else {
             next
+          }
+        }
         for(k in 1:(K+1)) {
-            yi <- y[i,]
             ydot <- N[k] - sum(yi)
             if(ydot<0) {
                 g[k] <- 0
                 next
             }
-            yi <- c(yi, ydot)
-            g[k] <- g[k] * dmultinom(yi, size=N[k], prob=cp[i,])
+            yik <- c(yi, ydot)
+            g[k] <- g[k] * dmultinom(yik, size=N[k], prob=cpi)
         }
         fudge <- f*g
         post[i,,1] <- fudge / sum(fudge)
@@ -828,9 +841,10 @@ setMethod("ranef", "unmarkedFitOccuTTD",
 })
 
 
-#Common function for DSO and MMO
-postMultinomOpen <- function(object){
-
+# DSO and MMO
+setMethod("ranef", "unmarkedFitDailMadsen",
+    function(object, ...)
+{
     dyn <- object@dynamics
     formlist <- object@formlist
     formula <- as.formula(paste(unlist(formlist), collapse=" "))
@@ -984,23 +998,6 @@ postMultinomOpen <- function(object){
             }
           }
     }
-    post
-
-}
-
-
-setMethod("ranef", "unmarkedFitDSO",
-    function(object, ...)
-{
-    post <- postMultinomOpen(object)
-    new("unmarkedRanef", post=post)
-})
-
-
-setMethod("ranef", "unmarkedFitMMO",
-    function(object, ...)
-{
-    post <- postMultinomOpen(object)
     new("unmarkedRanef", post=post)
 })
 

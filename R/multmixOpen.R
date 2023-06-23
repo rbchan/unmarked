@@ -35,6 +35,7 @@ multmixOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
   M <- nrow(y)
   T <- data@numPrimary
   J <- ncol(getY(data)) / T
+  R <- obsNum(data) / T
 
   y <- array(y, c(M, J, T))
   yt <- apply(y, c(1,3), function(x) {
@@ -59,7 +60,7 @@ multmixOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
   if(is.null(Xlam.offset)) Xlam.offset <- rep(0, M)
   if(is.null(Xgam.offset)) Xgam.offset <- rep(0, M*(T-1))
   if(is.null(Xom.offset)) Xom.offset <- rep(0, M*(T-1))
-  if(is.null(Xp.offset)) Xp.offset <- rep(0, M*T*J)
+  if(is.null(Xp.offset)) Xp.offset <- rep(0, M*T*R)
   if(is.null(Xiota.offset)) Xiota.offset <- rep(0, M*(T-1))
 
   #K stuff
@@ -176,7 +177,7 @@ multmixOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
           parms, beta_ind - 1,
           Xlam.offset, Xgam.offset, Xom.offset, Xp.offset, Xiota.offset,
           ytna, yna,
-          lk, mixture, first - 1, last - 1, first1 - 1, M, T, J,
+          lk, mixture, first - 1, last - 1, first1 - 1, M, T, J, R,
           D$delta, dynamics, fix, D$go.dims, immigration,
           I, I1, lik_trans$Ib, lik_trans$Ip,
           piFun, lfac.k, kmyt, lfac.kmyt, fin,

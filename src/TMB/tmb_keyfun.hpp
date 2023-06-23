@@ -69,26 +69,22 @@ vector<Type> key_halfnorm(Type sigma, int survey_type, vector<Type> db,
 
   int J = db.size() - 1;
   vector<Type> p(J);
+  Type p1, p2;
 
   if(survey_type == 0){
     Type f0 = 2 * dnorm(Type(0.0), Type(0.0), sigma, false);
-    int L = db.size();
-    vector<Type> p1(L-1);
-    vector<Type> p2(L-1);
-    for(int l=1; l<L; l++){
-      p1(l-1) = pnorm(db(l), Type(0.0), sigma);
-      p2(l-1) = pnorm(db(l-1), Type(0.0), sigma);
+    for (int j=0; j<J; j++){
+      p1 = pnorm(db(j+1), Type(0.0), sigma);
+      p2 = pnorm(db(j), Type(0.0), sigma);
+      p(j) = 2 * (p1 - p2) / f0 / w(j);
     }
-    vector<Type> int_ = 2 * (p1 - p2);
-    p = int_ / f0 / w;
 
   } else if(survey_type == 1){
+    Type s2 = pow(sigma, 2);
     for (int j=0; j<J; j++){
-      Type s2 = pow(sigma,2);
-      Type p1 = 1 - exp(-pow(db(j+1),2) / (2 * s2));
-      Type p2 = 1 - exp(-pow(db(j),2) / (2 * s2)); 
-      Type int_ = s2 * p1 - s2 * p2;
-      p(j) = int_ * 2 * M_PI / a(j);
+      p1 = 1 - exp(-pow(db(j+1),2) / (2 * s2));
+      p2 = 1 - exp(-pow(db(j),2) / (2 * s2)); 
+      p(j) = (s2 * p1 - s2 * p2) * 2 * M_PI / a(j);
     }
   }
   return(p);

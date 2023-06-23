@@ -24,9 +24,9 @@ SEXP nll_distsamp( SEXP y_, SEXP lam_, SEXP sig_, SEXP scale_, SEXP a_, SEXP u_,
   double f0 = 0.0;
 
   for(int i=0; i<R; i++) {
-    if((survey=="line") & (keyfun=="halfnorm"))
+    if((survey=="line") && (keyfun=="halfnorm"))
       f0 = Rf_dnorm4(0.0, 0.0, sig[i], false);
-    if((survey=="line") & (keyfun=="exp"))
+    if((survey=="line") && (keyfun=="exp"))
       f0 = Rf_dexp(0.0, 1/sig[i], false);
     for(int j=0; j<J; j++) {
       double cp = 0.0;

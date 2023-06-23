@@ -19,7 +19,7 @@ transect names.}
   than once, this can be used to format data for \code{gdistsamp}. It is
   the name of the column in distData that contains the occasion
   numbers. The occasion column should be a factor.}
-\item{effortMatrix}{optional matrix of 1 and 0s that is M * J in size and will allow for the insertion of NAs where the matrix = 0, indicating that a survey was not completed. When not supplied a matrix of all 1s is created since it is assumed all surveys were completed.}
+\item{effortMatrix}{optional matrix of 1 and 0s that is M * T in size and will allow for the insertion of NAs where the matrix = 0, indicating that a survey was not completed. When not supplied a matrix of all 1s is created since it is assumed all surveys were completed.}
 }
 \details{This function creates a site (M) by distance interval (J) response
 matrix from a data.frame containing the detection distances for each

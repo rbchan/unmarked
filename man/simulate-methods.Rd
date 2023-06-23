@@ -16,9 +16,8 @@
 \alias{simulate,unmarkedFitGMM-method}
 \alias{simulate,unmarkedFitGDS-method}
 \alias{simulate,unmarkedFitGPC-method}
-\alias{simulate,unmarkedFitDSO-method}
-\alias{simulate,unmarkedFitMMO-method}
 \alias{simulate,unmarkedFitGDR-method}
+\alias{simulate,unmarkedFitDailMadsen-method}
 \alias{simulate,character-method}
 \title{Methods for Function simulate in Package `unmarked'}
 \description{
@@ -118,7 +117,8 @@ head(occu_umf) # note one covariate, elev
 forms2 <- list(state=~elev+landcover, det=~1)
 
 # Guide
-guide <- list(landcover=factor(levels=c("forest","grass")), # landcover is factor, you must provide the levels 
+# landcover is factor, you must provide the levels
+guide <- list(landcover=factor(levels=c("forest","grass")),  
               elev=list(dist=rnorm, mean=2, sd=0.5)) # custom distribution
 
 # Updated coefficients list

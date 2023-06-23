@@ -1,0 +1,306 @@
+---
+title: Modeling and mapping species distributions
+author: Richard Chandler
+date: Feb 5, 2019
+bibliography: unmarked.bib
+csl: ecology.csl
+output: 
+  rmarkdown::html_vignette:
+    fig_width: 5
+    fig_height: 3.5
+    number_sections: true
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Species distributions}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r,echo=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+# Abstract
+
+A species' distribution can be characterized by either
+occurrence probability or population density, defined for all
+locations in some spatial extent. Defining distribution in terms of
+these two parameters %These definitions of species distribution
+avoids the ambiguity surrounding the indices of occurrence
+or abundance produced by many presence-only algorithms. The
+`unmarked` package contains methods of fitting
+occurrence and abundance models, and can be used to
+produce distribution maps with the help of `R`'s GIS
+capabilities,
+as is demonstrated in this vignette.
+Unlike many other tools for modeling
+species distributions, the models in `unmarked` account for
+bias due to spatial and temporal heterogeneity in detection
+probability. Furthermore, `unmarked` includes models
+of population dynamics, allowing one to map quantities
+such as local colonization or extinction probability.
+
+# Mapping Occurrence Probability
+
+In this example, we use the `occu` function to fit the
+single-season occupancy model of
+@mackenzie_estimating_2002 to data on the European crossbill
+(*Loxia curvirostra*) collected in 267 1-km$^2$ sample
+quadrats in Switzerland, 1999 [@schmid_etal:2004].
+We then use the model to compute the expected probability of
+occurrence at each pixel in a raster defining the Swiss
+landscape.
+
+First we load the `crossbill` data, which contains the
+detection/non-detection data and covariates. The dataset actually
+contains data from multiple years, but we are only going to analyze
+data from the first year, 1999. A multi-year analysis of occupancy
+dynamics could be accomplished using the `colext` function, and
+in addition to mapping occurrence probability, it would be possible to
+also map colonization and extinction probabilities. The following
+commands format the data.
+
+```{r}
+library(unmarked)
+data(crossbill)
+umf <- unmarkedFrameOccu(
+    y=as.matrix(crossbill[,c("det991", "det992", "det993")]),
+    siteCovs=crossbill[,c("ele", "forest")],
+    obsCovs=list(date=crossbill[,c("date991", "date992", "date993")]))
+sc <- scale(siteCovs(umf))
+siteCovs(umf) <- sc
+head(umf)
+```
+
+Notice that the site covariates, elevation and forest, were
+standardized using the `scale` function. Standardization isn't
+always necessary, but it can make it easier to find the maximum
+likelihood estimates. When standardizing covariates and then making
+predictions, it is important to retain the original sample mean and
+standard deviation. The reason for this is explained below.
+
+Fitting a model is now straight-forward. In many cases, we would fit
+several models corresponding to competing hypotheses, but for
+simplicity, we stick with this single model.
+
+```{r}
+(fm.occu <- occu(~date ~ele + I(ele^2) + forest, umf))
+```
+
+Now that we have our fitted model, we can use it to predict occurrence
+probability at each pixel in the Swiss landscape. The `Switzerland`
+dataset contains country-wide data. There are many ways to display
+it---here is an example of mapping elevation using the
+`levelplot` function in the `lattice` package [@sarkar:2008].
+
+```{r, eval=FALSE}
+library(lattice)
+data(Switzerland)
+print(levelplot(elevation ~ x + y, Switzerland, aspect="iso",
+                xlab="Easting (m)", ylab="Northing (m)",
+                col.regions=terrain.colors(100)))
+```
+
+```{r, echo=FALSE, fig.height=4, fig.width=5, fig.cap="Figure 1. Elevation in Switzerland"}
+if(requireNamespace("lattice", quietly = TRUE)){
+  library(lattice)
+  data(Switzerland)
+  print(levelplot(elevation ~ x + y, Switzerland, aspect="iso",
+                xlab="Easting (m)", ylab="Northing (m)",
+                col.regions=terrain.colors(100)))
+} else {
+  message("lattice package is required for this vignette but is not available\n")
+  knitr::knit_exit()
+}
+```
+
+The `raster` package [@hijmans_vanEtten:2012]
+provides another alternative. Here we create two raster objects and
+specify the coordinate system.
+
+```{r,eval=FALSE}
+library(raster)
+```
+
+```{r,echo=FALSE}
+if(requireNamespace("raster", quietly = TRUE)){
+  suppressMessages(library(raster))
+} else {
+  message("raster package is required for this vignette but is not available\n")
+  knitr::knit_exit()
+}
+```
+
+```{r}
+elevation <- rasterFromXYZ(Switzerland[,c("x","y","elevation")],
+    crs="+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs")
+
+forest <- rasterFromXYZ(Switzerland[,c("x","y","forest")],
+    crs="+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=600000 +y_0=200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs")
+```
+
+Since we standardized the covariates during the model fitting process,
+we need to transform the country-wide data using the same
+values. Note, we don't want to use the mean and SD of the rasters
+themselves, we want to use the mean and SD of the original covariates
+used to fit the models, which are stored as attributes of the
+`sc` object. The following commands display the original means
+and SDs and then transform the rasters and join them in a raster
+"stack".
+
+```{r, fig.height=3, fig.width=6, fig.cap="Figure 2. Elevation and forest cover, standardized"}
+attr(sc, "scaled:center")
+attr(sc, "scaled:scale")
+ele.s <- (elevation-1189)/640
+forest.s <- (forest-34.7)/27.7
+ef <- stack(ele.s, forest.s)
+names(ef) <- c("ele", "forest")
+plot(ef, col=terrain.colors(100))
+```
+
+It is important to assign `names`
+that exactly match the covariate names used to fit the model. This
+is required by the `predict` function as demonstrated later.
+The `predict` function is useful for computing
+spatially-referenced model predictions, standard errors, and
+confidence intervals, but it is computationally demanding when
+there are many pixels in the raster. Thus, if measures of uncertainty
+are not required, the following code can be used to quickly produce
+the species distribution map shown in Fig. 3.
+
+```{r, fig.height=4, fig.width=4, fig.cap="Figure 3. A species distribution map for the European crossbill in Switzerland. The colors represent occurrence probability."}
+(beta <- coef(fm.occu, type="state"))
+logit.psi <- beta[1] + beta[2]*ele.s + beta[3]*ele.s^2 + beta[4]*forest.s
+psi <- exp(logit.psi) / (1 + exp(logit.psi))
+print(spplot(psi, col.regions=terrain.colors(100)))
+```
+
+As of version 0.9-6, the `predict` method in `unmarked`
+can make predictions using an object of class `RasterStack` from the
+\texttt{raster} package. As mentioned previously, the rasters must be
+named, perhaps by using the `names(someraster) <- somename`
+method. The object
+returned by `predict` is another raster stack with rasters for
+the expected values of the parameter of interest, the standard errors,
+and the upper and lower confidence intervals. The following example
+is very slow because there are many of pixels in the raster. The
+resulting map is shown in Fig. 4.
+
+```{r, fig.height=5, fig.width=5, fig.cap="Figure 4. Expected occurrence probability along with standard errors and the limits of the asymptotic 95% confidence interval."}
+E.psi <- predict(fm.occu, type="state", newdata=ef)
+plot(E.psi, axes=FALSE, col=terrain.colors(100))
+```
+
+Users should be cautious when predicting from models that have
+categorical predictor variables, i.e. `factor`s. The
+\texttt{raster} package does not have advanced methods for handling
+factors, and thus it is not easy to automatically create dummy
+variables from them as can typically be done using
+`model.matrix`. The safest option is to create the dummy
+variables manually before fitting the models, and to use the same
+variables as rasters for prediction.
+
+A more important consideration when creating species distribution maps
+based upon occurrence probability is that of spatial scale. Occurrence
+probability will typically depend upon the area of the "site" in
+question. Thus, in our crossbill example, it would not be appropriate
+to use our model to predict occurrence probability for 10-km$^2$
+pixels since the surveys were done in 1-km$^2$ quadrats. In some
+cases it might be possible to directly model the effect of site area
+on occurrence probability, in which case the effect could be accounted
+for in the predictions.
+
+# Mapping Population Density
+
+Although distribution is typically described in terms of
+occurrence probability, which is always better than an index of
+occurrence probability, the best parameter for modeling species
+distribution is population density because density allows for
+inference about population size in any region of
+the species' range. Furthermore, occurrence probability is simply the
+probability that abundance is greater than 0, so with density/abundance
+estimates, it is always possible to compute occurrence probability as a
+derived parameter.
+
+In this example, we create a distribution map for the Island Scrub-Jay
+(*Aphelocoma insularis*), which is restricted to Santa Cruz
+Island, California. To do so, we fit the hierarchical distance
+sampling model of @royle_modeling_2004, which allows for the
+estimation of abundance in each of the $300 \times 300$m pixels
+representing the island. The data were collected 307, 300-m radius
+point count (or "point transect") surveyed during the Fall of 2008.
+
+IMPORTANT: This analysis is for demonstration
+purposes only, and the estimates of population size should not be used
+for conservation or management purposes. Indeed, the Poisson
+assumption used here was found to be inadequate by
+@sillett_etal:2012 who conducted a rigorous analysis and
+reported reliable estimate of population size.
+
+Although we are fitting a model of population density, the steps of
+the analysis closely mirror those shown in the previous
+section. First, we format the data and fit a model, then we format the
+island-wide covariates and make predictions. The three covariates
+thought to influence jay abundance are elevation, forest cover, and
+chapararral cover. We also include include the area of the survey
+plots in the analysis so that we can make predictions for regions of
+any area. Here is the code to format the data and fit the model.
+
+```{r}
+data(issj)
+covs <- scale(issj[,c("elevation", "forest", "chaparral")])
+area <- pi*300^2 / 10000
+jayumf <- unmarkedFrameDS(y=as.matrix(issj[,1:3]),
+                          siteCovs=data.frame(covs, area),
+                          dist.breaks=c(0,100,200,300),
+                          unitsIn="m", survey="point")
+head(jayumf)
+fm1 <- distsamp(~chaparral ~chaparral + elevation + offset(log(area)),
+                jayumf, keyfun="halfnorm", output="abund",
+                starts=c(-2.8,1,0,4.5,0))
+fm1
+```
+
+Remarks. 1) The distance data were binned into 3 distance classes. 2)
+We used `output="abund"` even though, by specifying the offset,
+we effectively modeled population density. As stated previously, this
+allows us to make predictions of abundance for regions of arbitrary size.
+
+The next thing to do is to format the raster data. For details, see
+the previous section-the process is the same, except that we need a
+raster for `"area"`, the size of each pixel in the raster data. This
+is necessary because the survey plots were larger than the pixels for
+which we want predictions of abundance.
+
+```{r}
+data(cruz)
+elev <- rasterFromXYZ(cruz[,c("x","y","elevation")],
+     crs="+proj=utm +zone=11 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+forest <- rasterFromXYZ(cruz[,c("x","y","forest")],
+     crs="+proj=utm +zone=11 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+chap <- rasterFromXYZ(cruz[,c("x","y","chaparral")],
+     crs="+proj=utm +zone=11 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+area.raster <- chap
+values(area.raster) <- 300*300/10000 # area of a grid pixel
+attr(covs, "scaled:center")
+attr(covs, "scaled:scale")
+elev.s <- (elev-202)/125
+forest.s <- (forest-0.0673)/0.137
+chap.s <- (chap-0.270)/0.234
+habitat <- stack(elev.s, forest.s, chap.s, area.raster)
+names(habitat) <- c("elevation", "forest", "chaparral", "area")
+```
+
+Now, when we use `predict`, it will return the expected number of
+jays in each pixel along with the standard errors and the 95\%
+confidence intervals. We could sum these up to obtain an estimate of
+total population size. @sillett_etal:2012 did this and used the
+parametric bootstrap to estimate the variance of total population
+size.
+
+```{r, fig.height=5, fig.width=6, fig.cap="Figure 5. Expeted Island Scrub-Jay abundance, SEs, and 95% CIs."}
+E <- predict(fm1, type="state", newdata=habitat)
+plot(E, axes=FALSE, col=terrain.colors(100))
+```
+
+# References
