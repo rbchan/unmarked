@@ -1009,7 +1009,9 @@ setMethod("ranef", "unmarkedFitNmixTTD",
   M <- nrow(object@data@y)
   J <- ncol(object@data@y)
   tdist <- ifelse("shape" %in% names(object@estimates), "weibull", "exp")
-  mix <- ifelse("alpha" %in% names(object@estimates), "NB", "P")
+  mix <- "P"
+  if("alpha" %in% names(object@estimates)) mix <- "NB"
+  if("psi" %in% names(object@estimates)) mix <- "ZIP"
   K <- object@K
 
   yvec <- as.numeric(t(object@data@y))
@@ -1026,9 +1028,12 @@ setMethod("ranef", "unmarkedFitNmixTTD",
 
   if(mix == "P"){
     pK <- sapply(0:K, function(k) dpois(k, abun))
-  } else {
+  } else if(mix == "NB"){
     alpha <- exp(coef(object, "alpha"))
     pK <- sapply(0:K, function(k) dnbinom(k, mu=abun, size = alpha))
+  } else if(mix == "ZIP"){
+    psi <- plogis(coef(object, "psi"))
+    pK <- sapply(0:K, function(k) dzip(rep(k, length(abun)), abun, psi))
   }
 
   if(tdist=='weibull'){

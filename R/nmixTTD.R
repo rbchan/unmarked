@@ -1,6 +1,6 @@
 
 nmixTTD <- function(stateformula=~1, detformula=~1, data, K=100,
-                       mixture=c("P","NB"), ttdDist=c("exp", "weibull"),
+                       mixture=c("P","NB","ZIP"), ttdDist=c("exp", "weibull"),
                        starts, method = "BFGS",
                        se = TRUE, engine = c("C","R"), threads = 1, ...) {
 
@@ -51,10 +51,11 @@ nmixTTD <- function(stateformula=~1, detformula=~1, data, K=100,
   pinds[1,] <- c(1, nAP)
   pinds[2,] <- c((nAP+1),(nAP+nDP))
   pinds[3,] <- nAP+nDP+1
-  pinds[4,] <- nAP+nDP+(mixture=="NB")+1
+  pinds[4,] <- nAP+nDP+(mixture%in%c("NB","ZIP"))+1
 
   parms <- c(abunParms, detParms)
   if(mixture == "NB") parms <- c(parms, "alpha")
+  if(mixture == "ZIP") parms <- c(parms, "psi")
   if(ttdDist == "weibull") parms <- c(parms, "k")
   nP <- length(parms)
 
@@ -68,9 +69,13 @@ nmixTTD <- function(stateformula=~1, detformula=~1, data, K=100,
 
     if(mixture == "P"){
       pK <- sapply(0:K, function(k) dpois(k, lamN))
-    } else {
-      alpha <- exp(parms[pinds[3,1]])
+    } else if(mixture == "NB") {
+      alpha <- exp(params[pinds[3,1]])
       pK <- sapply(0:K, function(k) dnbinom(k, mu=lamN, size = alpha))
+    } else if(mixture == "ZIP"){
+      alpha <- plogis(params[pinds[3,1]])
+      pK <- sapply(0:K, function(k) dzip(rep(k, length(lamN)), 
+                                         lambda=lamN, psi = alpha))
     }
 
     #Simplified version of Garrard et al. 2013 eqn 5
@@ -160,6 +165,14 @@ nmixTTD <- function(stateformula=~1, detformula=~1, data, K=100,
                        short.name = "alpha", estimates = ests[pinds[3,1]],
                        covMat = as.matrix(covMat[pinds[3,1], pinds[3,1]]),
                        invlink = "exp", invlinkGrad = "exp")
+  }
+
+  if(mixture=="ZIP"){
+    estimateList@estimates$psi <-
+      unmarkedEstimate(name = "Zero-inflation",
+                       short.name = "psi", estimates = ests[pinds[3,1]],
+                       covMat = as.matrix(covMat[pinds[3,1], pinds[3,1]]),
+                       invlink = "logistic", invlinkGrad = "logistic.grad")
   }
 
   #Add Weibull shape parameter if necessary

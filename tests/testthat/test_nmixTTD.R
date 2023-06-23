@@ -174,6 +174,55 @@ test_that("nmixTTD can fit a NB/weib model",{
 
   sim <- simulate(fit, 2)
   r <- ranef(fit)
+}
+
+test.nmixTTD.ZIP <- function(){
+
+  M = 500 # Number of sites
+  set.seed(123)
+  covDet <- matrix(rnorm(M*nrep),nrow = M,ncol = nrep) #Detection covariate
+  covDens <- rnorm(M) #Abundance/density covariate
+
+  dens <- exp(log(mu.dens) + beta1 * covDens)
+  psi <- 0.3
+  N <- unmarked:::rzip(M, dens, psi) # Realized density per site
+  lambda <- exp(log(mu.lambda) + alpha1 * covDet) # per-individual detection rate
+  ttd <- NULL
+  for(i in 1:nrep){
+    ttd <- cbind(ttd,rexp(M, N*lambda[,i]))
+  }
+  ttd[N == 0,] <- 5 # Not observed where N = 0; ttd set to Tmax
+  ttd[ttd >= Tmax] <- 5 # Crop at Tmax
+  umf <- unmarkedFrameOccuTTD(y = ttd, surveyLength=5,
+                            siteCovs = data.frame(covDens=covDens,
+                                                  cdens2=rnorm(length(covDens)),
+                                                  cdens3=rnorm(length(covDens))),
+                            obsCovs = data.frame(covDet=as.vector(t(covDet)),
+                                                 cdet2=rnorm(length(covDet)),
+                                                 cdet3=rnorm(length(covDet))))
+  fit <- nmixTTD(~covDens, ~covDet, data=umf, mixture="ZIP", K=max(N)+10)
+  checkEqualsNumeric(coef(fit), c(-0.0586,0.9033,0.1039,-1.0365,-0.9251), tol=1e-4)
+  
+  # Predict
+  pr <- predict(fit, 'state')
+  checkTrue(nrow(pr) == length(dens))
+  checkException(predict(fit, 'psi'))
+  bt <- backTransform(fit, 'psi')
+  checkEquals(bt@estimate, 0.2839, tol=1e-4)
+
+  # Simulate
+  s <- simulate(fit, 2)
+  checkTrue(length(s)== 2) 
+
+  # ranef
+  r <- ranef(fit)
+  b <- bup(r)
+  checkEquals(cor(b, N), 0.9148, tol=1e-4)
+
+  fit <- nmixTTD(~covDens, ~covDet, data=umf, mixture="ZIP", K=max(N)+10, control=list(maxit=2))
+  fitR <- nmixTTD(~covDens, ~covDet, data=umf, mixture="ZIP", K=max(N)+10, engine="R",
+                  control=list(maxit=2))
+  expect_equal(coef(fit), coef(fitR))
 })
 
 test_that("R and C++ engines give identical results",{

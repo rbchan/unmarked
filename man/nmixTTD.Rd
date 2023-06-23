@@ -3,7 +3,7 @@
 \title{Fit N-mixture Time-to-detection Models}
 
 \usage{nmixTTD(stateformula= ~1, detformula = ~1, data, K=100,
-    mixture = c("P","NB"), ttdDist = c("exp", "weibull"), starts, method="BFGS", 
+    mixture = c("P","NB","ZIP"), ttdDist = c("exp", "weibull"), starts, method="BFGS", 
     se=TRUE, engine = c("C", "R"), threads = 1, ...)}
 
 \arguments{
@@ -15,8 +15,8 @@
   \item{K}{The upper summation index used to numerically integrate out the
     latent abundance. This should be set high enough so that it does not
     affect the parameter estimates. Computation time will increase with K.}
-  \item{mixture}{String specifying mixture distribution: "P" for Poisson or 
-    "NB" for negative binomial.}
+  \item{mixture}{String specifying mixture distribution: "P" for Poisson, 
+    "NB" for negative binomial, "ZIP" for zero-inflated Poisson.}
   \item{ttdDist}{Distribution to use for time-to-detection; either
     \code{"exp"} for the exponential, or \code{"weibull"} for the Weibull,
     which adds an additional shape parameter \eqn{k}.}

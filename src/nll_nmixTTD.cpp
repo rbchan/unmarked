@@ -1,4 +1,6 @@
 #include <RcppArmadillo.h>
+#include "distr.h"
+#include "utils.h"
 
 #ifdef _OPENMP
   #include <omp.h>
@@ -23,10 +25,12 @@ double nll_nmixTTD(const arma::vec beta, const arma::vec y, const arma::vec delt
   //Get detection lambda values
   const vec lamP = exp(V * beta.subvec(pinds(1,0), pinds(1,1)));
 
-  //Get alpha if negative binomial
+  //Get alpha if negative binomial or zip
   double alpha = 1.0;
   if(mixture == "NB"){
     alpha = exp(beta(pinds(2,0)));
+  } else if(mixture == "ZIP"){
+    alpha = inv_logit(beta(pinds(2,0)));
   }
 
   //Get shape if weibull
@@ -47,6 +51,10 @@ double nll_nmixTTD(const arma::vec beta, const arma::vec y, const arma::vec delt
     } else if(mixture == "NB"){
       for (int k=0; k<(K+1); k++){
         pK(k) = dnbinom_mu(k, alpha, lamN(n), false);
+      }
+    } else if(mixture == "ZIP"){
+      for (int k=0; k<(K+1); k++){
+        pK(k) = dzip(k, lamN(n), alpha);
       }
     }
 
