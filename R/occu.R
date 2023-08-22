@@ -3,13 +3,13 @@
 
 occu <- function(formula, data, knownOcc = numeric(0),
                  linkPsi = c("logit", "cloglog"), starts, method = "BFGS",
-                 se = TRUE, engine = c("C", "R", "TMB"), threads=1, ...) {
+                 se = TRUE, engine = c("C", "R", "TMB", "RTMB"), threads=1, ...) {
 
   # Check arguments------------------------------------------------------------
   if(!is(data, "unmarkedFrameOccu"))
     stop("Data is not an unmarkedFrameOccu object.")
 
-  engine <- match.arg(engine, c("C", "R", "TMB"))
+  engine <- match.arg(engine, c("C", "R", "TMB", "RTMB"))
   if(any(sapply(split_formula(formula), has_random))) engine <- "TMB"
   if(length(knownOcc)>0 & engine == "TMB"){
     stop("TMB engine does not support knownOcc argument", call.=FALSE)
@@ -126,7 +126,68 @@ occu <- function(formula, data, knownOcc = numeric(0),
     det_rand_info <- get_randvar_info(tmb_out$sdr, "det", forms[[1]],
                                       obs_all)
 
+  } else if(identical(engine, "RTMB")){
+
+    # Set up TMB input data
+    forms <- split_formula(formula)
+    obs_all <- add_covariates(obsCovs(data), siteCovs(data), length(getY(data)))
+    inps <- get_ranef_inputs(forms, list(det=obs_all, state=siteCovs(data)),
+                             list(V, X), designMats[c("Z_det","Z_state")])
+
+    tmb_dat <- c(list(y=y, no_detect=nd, link=ifelse(linkPsi=="cloglog",1,0),
+                      offset_state=X.offset, offset_det=V.offset), inps$data)
+
+    f <- function(pars){
+      beta_state <- pars$beta_state
+      beta_det <- pars$beta_det
+
+      M <- nrow(tmb_dat$y)
+      J <- ncol(tmb_dat$y)
+
+      psi <- tmb_dat$X_state %*% beta_state + tmb_dat$offset_state
+      psi <- RTMB::plogis(psi)
+      #psi <- 1/(1+exp(-psi))  
+
+      p <- tmb_dat$X_det %*% beta_det + tmb_dat$offset_det
+      #p <- 1/(1+exp(-p))
+      p <- RTMB::plogis(p)
+
+      nll <- 0
+
+      for (i in 1:M){
+        cp <- 1.0
+        pind <- (i-1) * J + 1
+        #for (j in 1:J){
+        #  cp <- cp * RTMB::dbinom(tmb_dat$y[i,j], 1, p[pind])
+        #  pind <- pind + 1
+        #}
+        cp <- prod(RTMB::dbinom(tmb_dat$y[i,], 1, p[pind:(pind+J-1)]))
+        nll <- nll - log(psi[i] * cp + (1-psi[i]) * tmb_dat$no_detect[i])
+      }
+
+      nll
     }
+
+    tmb_mod <- RTMB::MakeADFun(f, parameters=inps$pars, silent=TRUE)
+    opt <- optim(tmb_mod$par, fn=tmb_mod$fn, gr=tmb_mod$gr, method=method, ...)
+    sdr <- RTMB::sdreport(tmb_mod, getJointPrecision=TRUE)
+    sdr$par <- tmb_mod$par
+
+    fm <- opt
+    fmAIC <- 2 * opt$value + 2 * length(unlist(inps$pars)) # wrong?
+    nll <- tmb_mod$fn
+
+    # Organize fixed effect estimates
+    state_coef <- get_coef_info(sdr, "state", occParms, 1:nOP)
+    det_coef <- get_coef_info(sdr, "det", detParms, (nOP+1):nP)
+
+    # Organize random effect estimates
+    state_rand_info <- get_randvar_info(sdr, "state", forms[[2]],
+                                        siteCovs(data))
+    det_rand_info <- get_randvar_info(sdr, "det", forms[[1]],
+                                      obs_all)
+
+  }
 
   # Create unmarkedEstimates---------------------------------------------------
   state <- unmarkedEstimate(name = "Occupancy", short.name = "psi",
