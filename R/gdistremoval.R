@@ -473,7 +473,7 @@ gdistremoval <- function(lambdaformula=~1, phiformula=~1, removalformula=~1,
 
 # Methods
 
-setMethod("getP", "unmarkedFitGDR", function(object){
+setMethod("getP_internal", "unmarkedFitGDR", function(object, na.rm = TRUE){
 
   M <- numSites(object@data)
   T <- object@data@numPrimary

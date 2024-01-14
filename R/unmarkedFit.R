@@ -1476,7 +1476,15 @@ setGeneric("getFP", function(object, ...) standardGeneric("getFP"))
 setGeneric("getB", function(object, ...) standardGeneric("getB"))
 
 
-setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE)
+setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE){
+  getP_internal(object = object, na.rm = na.rm)
+})
+
+setGeneric("getP_internal", function(object, na.rm = TRUE){
+  standardGeneric("getP_internal")
+})
+
+setMethod("getP_internal", "unmarkedFit", function(object, na.rm = TRUE)
 {
     formula <- object@formula
     detformula <- as.formula(formula[[2]])
@@ -1496,7 +1504,7 @@ setMethod("getP", "unmarkedFit", function(object, na.rm = TRUE)
 })
 
 
-setMethod("getP", "unmarkedFitOccuFP", function(object, na.rm = TRUE)
+setMethod("getP_internal", "unmarkedFitOccuFP", function(object, na.rm = TRUE)
 {
   formula <- object@formula
   detformula <- object@detformula
@@ -1518,7 +1526,8 @@ setMethod("getP", "unmarkedFitOccuFP", function(object, na.rm = TRUE)
   return(p)
 })
 
-setMethod("getP", "unmarkedFitOccuMulti", function(object)
+
+setMethod("getP_internal", "unmarkedFitOccuMulti", function(object, na.rm = TRUE)
 {
 
   ylist <- object@data@ylist
@@ -1544,7 +1553,8 @@ setMethod("getP", "unmarkedFitOccuMulti", function(object)
   out
 })
 
-setMethod("getP", "unmarkedFitOccuMS", function(object)
+
+setMethod("getP_internal", "unmarkedFitOccuMS", function(object, na.rm = TRUE)
 {
   J <- ncol(object@data@y)
   N <- nrow(object@data@y)
@@ -1552,7 +1562,8 @@ setMethod("getP", "unmarkedFitOccuMS", function(object)
   lapply(pred, function(x) matrix(x$Predicted, nrow=N, ncol=J, byrow=T))
 })
 
-setMethod("getP", "unmarkedFitOccuTTD", function(object)
+
+setMethod("getP_internal", "unmarkedFitOccuTTD", function(object, na.rm = TRUE)
 {
 
   N <- nrow(object@data@y)
@@ -1572,62 +1583,8 @@ setMethod("getP", "unmarkedFitOccuTTD", function(object)
   matrix(est_p, nrow=N, byrow=TRUE)
 })
 
-setMethod("getFP", "unmarkedFitOccuFP", function(object, na.rm = TRUE)
-{
-  formula <- object@formula
-  detformula <- object@detformula
-  stateformula <- object@stateformula
-  FPformula <- object@FPformula
-  Bformula <- object@Bformula
-  umf <- object@data
-  designMats <- getDesign(umf, detformula,FPformula,Bformula,stateformula, na.rm = na.rm)
-  type = object@type
-  y <- designMats$y
-  U <- designMats$U
-  U.offset <- designMats$U.offset
-  if (is.null(U.offset))
-    U.offset <- rep(0, nrow(U))
-  M <- nrow(y)
-  J <- ncol(y)
-  fpars <- coef(object, type = "fp")
-  f <- plogis(U %*% fpars + U.offset)
-  f <- matrix(f, M, J, byrow = TRUE)
-  if (type[1]!=0){
-    f[,1:type[1]] = 0
-  }
-  return(f)
-})
 
-setMethod("getB", "unmarkedFitOccuFP", function(object, na.rm = TRUE)
-{
-  formula <- object@formula
-  detformula <- object@detformula
-  stateformula <- object@stateformula
-  FPformula <- object@FPformula
-  Bformula <- object@Bformula
-  umf <- object@data
-  designMats <- getDesign(umf, detformula,FPformula,Bformula,stateformula, na.rm = na.rm)
-  y <- designMats$y
-  W <- designMats$W
-  W.offset <- designMats$W.offset
-  if (is.null(W.offset))
-    W.offset <- rep(0, nrow(W))
-  M <- nrow(y)
-  J <- ncol(y)
-  type = object@type
-  if (type[3]!=0){
-    bpars <- coef(object, type = "b")
-  b <- plogis(W %*% bpars + W.offset)
-  b <- matrix(b, M, J, byrow = TRUE)
-  }
-  if (type[3]==0){
-    b <- matrix(0, M, J)
-  }
-  return(b)
-})
-
-
-setMethod("getP", "unmarkedFitDS",
+setMethod("getP_internal", "unmarkedFitDS",
     function(object, na.rm = TRUE)
 {
     formula <- object@formula
@@ -1731,10 +1688,8 @@ setMethod("getP", "unmarkedFitDS",
 })
 
 
-
-
 # Should this return p or pi. Right now it's pi without phi.
-setMethod("getP", "unmarkedFitGDS",
+setMethod("getP_internal", "unmarkedFitGDS",
     function(object, na.rm = TRUE)
 {
 #    browser()
@@ -1855,7 +1810,7 @@ setMethod("getP", "unmarkedFitGDS",
 })
 
 
-setMethod("getP", "unmarkedFitDSO",
+setMethod("getP_internal", "unmarkedFitDSO",
     function(object, na.rm = TRUE)
 {
     umf <- getData(object)
@@ -1898,7 +1853,7 @@ setMethod("getP", "unmarkedFitDSO",
 })
 
 
-setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE)
+setMethod("getP_internal", "unmarkedFitMPois", function(object, na.rm = TRUE)
 {
     formula <- object@formula
     detformula <- as.formula(formula[[2]])
@@ -1920,7 +1875,7 @@ setMethod("getP", "unmarkedFitMPois", function(object, na.rm = TRUE)
 })
 
 
-setMethod("getP", "unmarkedFitMMO", function(object, na.rm = TRUE)
+setMethod("getP_internal", "unmarkedFitMMO", function(object, na.rm = TRUE)
 {
 
   umf <- object@data
@@ -1946,7 +1901,7 @@ setMethod("getP", "unmarkedFitMMO", function(object, na.rm = TRUE)
 })
 
 
-setMethod("getP", "unmarkedFitPCO", function(object, na.rm = TRUE)
+setMethod("getP_internal", "unmarkedFitPCO", function(object, na.rm = TRUE)
 {
     umf <- object@data
     D <- getDesign(umf, object@formula, na.rm = na.rm)
@@ -1965,7 +1920,7 @@ setMethod("getP", "unmarkedFitPCO", function(object, na.rm = TRUE)
 
 
 
-setMethod("getP", "unmarkedFitColExt", function(object, na.rm = TRUE)
+setMethod("getP_internal", "unmarkedFitColExt", function(object, na.rm = TRUE)
 {
     data <- object@data
     detParms <- coef(object, 'det')
@@ -1986,7 +1941,7 @@ setMethod("getP", "unmarkedFitColExt", function(object, na.rm = TRUE)
 
 
 
-setMethod("getP", "unmarkedFitGMM",
+setMethod("getP_internal", "unmarkedFitGMM",
     function(object, na.rm = TRUE)
 {
     formula <- object@formula
@@ -2020,7 +1975,7 @@ setMethod("getP", "unmarkedFitGMM",
 })
 
 
-setMethod("getP", "unmarkedFitGPC",
+setMethod("getP_internal", "unmarkedFitGPC",
     function(object, na.rm = TRUE)
 {
     formula <- object@formula
@@ -2040,6 +1995,62 @@ setMethod("getP", "unmarkedFitGPC",
     p <- matrix(p, nrow=R, byrow=TRUE)
     return(p)
 })
+
+
+setMethod("getFP", "unmarkedFitOccuFP", function(object, na.rm = TRUE)
+{
+  formula <- object@formula
+  detformula <- object@detformula
+  stateformula <- object@stateformula
+  FPformula <- object@FPformula
+  Bformula <- object@Bformula
+  umf <- object@data
+  designMats <- getDesign(umf, detformula,FPformula,Bformula,stateformula, na.rm = na.rm)
+  type = object@type
+  y <- designMats$y
+  U <- designMats$U
+  U.offset <- designMats$U.offset
+  if (is.null(U.offset))
+    U.offset <- rep(0, nrow(U))
+  M <- nrow(y)
+  J <- ncol(y)
+  fpars <- coef(object, type = "fp")
+  f <- plogis(U %*% fpars + U.offset)
+  f <- matrix(f, M, J, byrow = TRUE)
+  if (type[1]!=0){
+    f[,1:type[1]] = 0
+  }
+  return(f)
+})
+
+setMethod("getB", "unmarkedFitOccuFP", function(object, na.rm = TRUE)
+{
+  formula <- object@formula
+  detformula <- object@detformula
+  stateformula <- object@stateformula
+  FPformula <- object@FPformula
+  Bformula <- object@Bformula
+  umf <- object@data
+  designMats <- getDesign(umf, detformula,FPformula,Bformula,stateformula, na.rm = na.rm)
+  y <- designMats$y
+  W <- designMats$W
+  W.offset <- designMats$W.offset
+  if (is.null(W.offset))
+    W.offset <- rep(0, nrow(W))
+  M <- nrow(y)
+  J <- ncol(y)
+  type = object@type
+  if (type[3]!=0){
+    bpars <- coef(object, type = "b")
+  b <- plogis(W %*% bpars + W.offset)
+  b <- matrix(b, M, J, byrow = TRUE)
+  }
+  if (type[3]==0){
+    b <- matrix(0, M, J)
+  }
+  return(b)
+})
+
 
 #Y extractors for unmarkedFit objects
 setMethod("getY", "unmarkedFit", function(object) object@data@y)

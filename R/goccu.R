@@ -180,12 +180,12 @@ setMethod("get_orig_data", "unmarkedFitGOccu", function(object, type, ...){
   clean_covs[[datatype]]
 })
 
-setMethod("getP", "unmarkedFitGOccu",
-  function(object, na.rm=FALSE){
+setMethod("getP_internal", "unmarkedFitGOccu",
+  function(object, na.rm=TRUE){
   gd <- getDesign(object@data, object@formula, na.rm=na.rm)
   p <- drop(plogis(gd$Xdet %*% coef(object, "det")))
-  M <- numSites(object@data)
-  p <- matrix(p, nrow=M, ncol=obsNum(object@data), 
+  M <- nrow(gd$y)
+  p <- matrix(p, nrow=M, ncol=ncol(gd$y), 
               byrow=TRUE)
   p
 })
@@ -193,9 +193,9 @@ setMethod("getP", "unmarkedFitGOccu",
 setMethod("fitted_internal", "unmarkedFitGOccu",
   function(object, na.rm= FALSE){
 
-  M <- numSites(object@data)
-  JT <- obsNum(object@data)  
   gd <- getDesign(object@data, object@formula, na.rm=na.rm)
+  M <- nrow(gd$y)
+  JT <- ncol(gd$y)  
 
   psi <- drop(plogis(gd$Xpsi %*% coef(object, "psi")))
   psi <- matrix(psi, nrow=M, ncol=JT)
@@ -204,7 +204,7 @@ setMethod("fitted_internal", "unmarkedFitGOccu",
   phi <- rep(phi, each = JT / object@data@numPrimary)
   phi <- matrix(phi, nrow=M, ncol=JT, byrow=TRUE)
 
-  p <- getP(object)
+  p <- getP(object, na.rm = na.rm)
 
   psi * phi * p
 })
@@ -224,7 +224,7 @@ setMethod("ranef", "unmarkedFitGOccu", function(object, ...){
   psi <- drop(plogis(gd$Xpsi %*% coef(object, "psi")))
   phi <- drop(plogis(gd$Xphi %*% coef(object, "phi")))
   phi <- matrix(phi, nrow=M, ncol=T, byrow=TRUE)
-  p <- getP(object)
+  p <- getP(object, na.rm=FALSE)
   p_array <- array(t(p), c(J, T, M))
   
   Z <- ZZ <- 0:1
@@ -270,7 +270,7 @@ setMethod("ranef", "unmarkedFitGOccu", function(object, ...){
 setMethod("simulate_internal", "unmarkedFitGOccu", 
           function(object, nsim = 1, na.rm = FALSE){
   
-  gd <- getDesign(object@data, object@formula, na.rm=FALSE)
+  gd <- getDesign(object@data, object@formula, na.rm=na.rm)
   M <- nrow(gd$y)
   T <- object@data@numPrimary
   JT <- ncol(gd$y)
@@ -280,7 +280,7 @@ setMethod("simulate_internal", "unmarkedFitGOccu",
   psi <- drop(plogis(gd$Xpsi %*% coef(object, "psi")))
   phi <- drop(plogis(gd$Xphi %*% coef(object, "phi")))
   phi <- matrix(phi, nrow=M, ncol=T, byrow=TRUE)
-  p <- getP(object)
+  p <- getP(object, na.rm=na.rm)
 
   sim_list <- list()
 

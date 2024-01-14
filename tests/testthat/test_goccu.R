@@ -124,12 +124,12 @@ test_that("goccu handles missing values", {
   expect_equal(nrow(pr), M-1)
 
   # Need to re-write these to use the design matrix instead of predict
-  gp <- getP(mod_na)
-  expect_equal(dim(gp), c(100, 20))
-  expect_true(is.na(gp[5,1]))
-  expect_true(all(is.na(gp[6, 1:4])))
-  s <- simulate(mod_na)
-  expect_equal(dim(s[[1]]), dim(mod_na@data@y))
+  expect_warning(gp <- getP(mod_na))
+  expect_equal(dim(gp), c(M-1, 20))
+  expect_true(is.na(gp[4,1]))
+  expect_true(all(is.na(gp[5, 1:4])))
+  expect_warning(s <- simulate(mod_na))
+  expect_equal(dim(s[[1]]), c(M-1, 20))
   ft <- fitted(mod_na)
   expect_equal(dim(ft), dim(mod_na@data@y))
   r <- ranef(mod_na)

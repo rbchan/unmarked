@@ -366,7 +366,7 @@ setMethod("get_orig_data", "unmarkedFitOccuCOP", function(object, type, ...){
 
 
 ## getP ----
-setMethod("getP", "unmarkedFitOccuCOP", function(object, na.rm = TRUE) {
+setMethod("getP_internal", "unmarkedFitOccuCOP", function(object, na.rm = TRUE) {
   data <- object@data
   M = nrow(getY(data))
   J = ncol(getY(data))
