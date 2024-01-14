@@ -380,7 +380,7 @@ setMethod("getP", "unmarkedFitOccuCOP", function(object, na.rm = TRUE) {
 
 
 ## fitted ----
-setMethod("fitted", "unmarkedFitOccuCOP", function(object, na.rm = FALSE) {
+setMethod("fitted_internal", "unmarkedFitOccuCOP", function(object, na.rm = FALSE) {
   data <- object@data
   M = nrow(getY(data))
   J = ncol(getY(data))

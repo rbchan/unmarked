@@ -190,7 +190,7 @@ setMethod("getP", "unmarkedFitGOccu",
   p
 })
 
-setMethod("fitted", "unmarkedFitGOccu",
+setMethod("fitted_internal", "unmarkedFitGOccu",
   function(object, na.rm= FALSE){
 
   M <- numSites(object@data)

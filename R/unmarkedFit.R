@@ -398,35 +398,39 @@ setMethod("confint", "unmarkedFit", function(object, parm, level = 0.95,
 })
 
 
+# Fitted-----------------------------------------------------------------------
+setMethod("fitted", "unmarkedFit", function(object, na.rm = FALSE){
+  fitted_internal(object, na.rm = na.rm)
+})
 
-setMethod("fitted", "unmarkedFit",
-    function(object, na.rm = FALSE)
-{
-    data <- object@data
-    des <- getDesign(data, object@formula, na.rm = na.rm)
-    X <- cbind(des$X, des$Z_state)
-    X.offset <- des$X.offset
-    if (is.null(X.offset)) {
-        X.offset <- rep(0, nrow(X))
-        }
-    beta_state <- coef(object, 'state', fixedOnly=FALSE)
-    state <- do.call(object['state']@invlink,
-        list(as.matrix(X %*% beta_state + X.offset)))
-    state <- as.numeric(state)  ## E(X) for most models
-    p <- getP(object, na.rm = na.rm) # P(detection | presence)
-    fitted <- state * p  # true for models with E[Y] = p * E[X]
-    fitted
+setGeneric("fitted_internal", function(object, na.rm = FALSE){
+  standardGeneric("fitted_internal")
 })
 
 
+setMethod("fitted_internal", "unmarkedFit", function(object, na.rm = FALSE){
+  data <- object@data
+  des <- getDesign(data, object@formula, na.rm = na.rm)
+  X <- cbind(des$X, des$Z_state)
+  X.offset <- des$X.offset
+  if (is.null(X.offset)) X.offset <- rep(0, nrow(X))
+  beta_state <- coef(object, 'state', fixedOnly=FALSE)
+  state <- do.call(object['state']@invlink,
+  list(as.matrix(X %*% beta_state + X.offset)))
+  state <- as.numeric(state)  ## E(X) for most models
+  p <- getP(object, na.rm = na.rm) # P(detection | presence)
+  fitted <- state * p  # true for models with E[Y] = p * E[X]
+  fitted
+})
 
-setMethod("fitted", "unmarkedFitOccuFP", function(object, na.rm = FALSE)
+
+setMethod("fitted_internal", "unmarkedFitOccuFP", function(object, na.rm = FALSE)
 {
   cat("fitted is not implemented for occuFP at this time")
 })
 
 
-setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitDS", function(object, na.rm = FALSE)
 {
     data <- object@data
     db <- data@dist.breaks
@@ -464,7 +468,7 @@ setMethod("fitted", "unmarkedFitDS", function(object, na.rm = FALSE)
 
 
 
-setMethod("fitted", "unmarkedFitOccu", function(object, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitOccu", function(object, na.rm = FALSE)
 {
     data <- object@data
     des <- getDesign(data, object@formula, na.rm = na.rm)
@@ -483,7 +487,7 @@ setMethod("fitted", "unmarkedFitOccu", function(object, na.rm = FALSE)
 
 
 
-setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitPCount", function(object, na.rm = FALSE)
 {
     data <- object@data
     des <- getDesign(data, object@formula, na.rm = na.rm)
@@ -498,8 +502,6 @@ setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
     state <- exp(X %*% coef(object, 'state', fixedOnly=FALSE) + X.offset)
     p <- getP(object, na.rm = na.rm)
     mix <- object@mixture
-##    if(!is.missing(K))
-##        warning("The K argument is ignored")
     switch(mix,
            P = {
                fitted <- as.numeric(state) * p
@@ -507,8 +509,7 @@ setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
            NB = {
                ## I don't think this sum is necessary. Could do:
                ## fitted <- as.numeric(state) * p
-               if(missing(K))
-                   K <- object@K
+               K <- object@K
                k <- 0:K
                k.ijk <- rep(k, M*J)
                state.ijk <- state[rep(1:M, each = J*(K+1))]
@@ -532,8 +533,8 @@ setMethod("fitted", "unmarkedFitPCount", function(object, K, na.rm = FALSE)
 })
 
 
-setMethod("fitted", "unmarkedFitDailMadsen",
-    function(object, K, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitDailMadsen",
+    function(object, na.rm = FALSE)
 {
     dynamics <- object@dynamics
     mixture <- object@mixture
@@ -649,7 +650,7 @@ setMethod("fitted", "unmarkedFitDailMadsen",
 })
 
 
-setMethod("fitted", "unmarkedFitOccuRN", function(object, K, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitOccuRN", function(object, na.rm = FALSE)
 {
     data <- object@data
     des <- getDesign(data, object@formula, na.rm = na.rm)
@@ -667,14 +668,12 @@ setMethod("fitted", "unmarkedFitOccuRN", function(object, K, na.rm = FALSE)
     J <- ncol(y)
     lam <- exp(X %*% coef(object, 'state') + X.offset)
     r <- plogis(V %*% coef(object, 'det') + V.offset)
-    if(missing(K))
-        K <- object@K ##max(y, na.rm = TRUE) + 20
     lam <- rep(lam, each = J)
     fitted <- 1 - exp(-lam*r) ## analytical integration.
     return(matrix(fitted, M, J, byrow = TRUE))
 })
 
-setMethod("fitted", "unmarkedFitOccuMulti", function(object)
+setMethod("fitted_internal", "unmarkedFitOccuMulti", function(object, na.rm = FALSE)
 {
 
   S <- length(object@data@ylist)
@@ -692,7 +691,7 @@ setMethod("fitted", "unmarkedFitOccuMulti", function(object)
 
 })
 
-setMethod("fitted", "unmarkedFitOccuMS", function(object, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitOccuMS", function(object, na.rm = FALSE)
 {
   data <- object@data
   T <- data@numPrimary
@@ -737,7 +736,7 @@ setMethod("fitted", "unmarkedFitOccuMS", function(object, na.rm = FALSE)
   fit_out
 })
 
-setMethod("fitted", "unmarkedFitColExt", function(object, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitColExt", function(object, na.rm = FALSE)
 {
     data <- object@data
     M <- numSites(data)
@@ -802,7 +801,7 @@ setMethod("fitted", "unmarkedFitColExt", function(object, na.rm = FALSE)
 
 
 # This covers unmarkedFitGDS too
-setMethod("fitted", "unmarkedFitGMM",
+setMethod("fitted_internal", "unmarkedFitGMM",
     function(object, na.rm = FALSE)
 {
 
@@ -845,7 +844,7 @@ setMethod("fitted", "unmarkedFitGMM",
 })
 
 
-setMethod("fitted", "unmarkedFitOccuTTD", function(object, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitOccuTTD", function(object, na.rm = FALSE)
 {
 
   N <- nrow(object@data@y)
@@ -900,7 +899,7 @@ setMethod("fitted", "unmarkedFitOccuTTD", function(object, na.rm = FALSE)
 })
 
 
-setMethod("fitted", "unmarkedFitNmixTTD", function(object, na.rm = FALSE)
+setMethod("fitted_internal", "unmarkedFitNmixTTD", function(object, na.rm = FALSE)
 {
   stop("This method is not implemented for nmixTTD at this time", call.=FALSE)
 })

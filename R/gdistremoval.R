@@ -536,7 +536,7 @@ setMethod("getP", "unmarkedFitGDR", function(object){
   out
 })
 
-setMethod("fitted", "unmarkedFitGDR", function(object){
+setMethod("fitted_internal", "unmarkedFitGDR", function(object, na.rm = FALSE){
 
   T <- object@data@numPrimary
 
