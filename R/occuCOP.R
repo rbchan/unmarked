@@ -494,7 +494,7 @@ setMethod("simulate", "unmarkedFitOccuCOP",
 
 
 ## nonparboot ----
-setMethod("nonparboot", "unmarkedFitOccuCOP",
+setMethod("nonparboot_internal", "unmarkedFitOccuCOP",
   function(object, B = 0, keepOldSamples = TRUE, ...) {
   stop("Not currently supported for unmarkedFitOccuCOP", call.=FALSE)
 })

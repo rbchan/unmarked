@@ -5,7 +5,7 @@
 \title{Fit the MacKenzie et al. (2002) Occupancy Model with the penalized likelihood methods of Hutchinson et al. (2015)}
 
 \usage{occuPEN(formula, data, knownOcc=numeric(0), starts, method="BFGS",
-    engine=c("C", "R"), lambda=0, pen.type = c("Bayes","Ridge","MPLE"), ...)}
+    engine=c("C", "R"), lambda=0, pen.type = c("Bayes","Ridge","MPLE"), se = FALSE, ...)}
 
 \arguments{
     \item{formula}{Double right-hand side formula describing covariates of
@@ -20,6 +20,8 @@
       code during the optimization.}
     \item{lambda}{Penalty weight parameter.}
     \item{pen.type}{Which form of penalty to use.}
+    \item{se}{Nonfunctional; always FALSE; for compatibility with
+              other parts of \code{unmarked} }
     \item{\dots}{Additional arguments to optim, such as lower and upper
       bounds}
   }

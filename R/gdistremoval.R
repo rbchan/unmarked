@@ -827,7 +827,7 @@ setMethod("SSE", "unmarkedFitGDR", function(fit, ...){
     return(c(SSE = sum(r)))
 })
 
-setMethod("nonparboot", "unmarkedFitGDR",
+setMethod("nonparboot_internal", "unmarkedFitGDR",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
    stop("Not currently supported for unmarkedFitGDR", call.=FALSE)

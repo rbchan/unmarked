@@ -153,11 +153,23 @@ setMethod("plot", signature(x="parboot", y="missing"),
 ##  they will be processed by vcov, confint, etc.
 
 setGeneric("nonparboot",
-    function(object, B = 0, ...) {standardGeneric("nonparboot")})
+  function(object, B = 0, keepOldSamples = TRUE, ...){
+  standardGeneric("nonparboot")
+})
+
+setMethod("nonparboot", "unmarkedFit", 
+  function(object, B = 0, keepOldSamples = TRUE, ...){
+  nonparboot_internal(object, B = B, keepOldSamples = keepOldSamples, ...)
+})
 
 
-setMethod("nonparboot", "unmarkedFit",
-          function(object, B = 0, keepOldSamples = TRUE, bsType, ...) {
+setGeneric("nonparboot_internal", function(object, B = 0, keepOldSamples = TRUE, ...){
+  standardGeneric("nonparboot_internal")
+})
+
+# "Site" method by default, other unmarkedFit types may set "both" below.
+setMethod("nonparboot_internal", "unmarkedFit",
+          function(object, B = 0, keepOldSamples = TRUE, bsType = "site", se = FALSE, ...) {
     bsType <- match.arg(bsType, c("site", "both"))
     if (identical(B, 0) && !is.null(object@bootstrapSamples)) {
         return(object)
@@ -185,7 +197,7 @@ setMethod("nonparboot", "unmarkedFit",
                           function(obs) sample(obs, replace = TRUE))
             data.b <- data.b[obs]
         }
-        fm <- update(object, data = data.b, se = FALSE)
+        fm <- update(object, data = data.b, se = se)
         return(fm)
     }
     if (!keepOldSamples) {
@@ -207,7 +219,7 @@ setMethod("nonparboot", "unmarkedFit",
 })
 
 
-setMethod("nonparboot", "unmarkedFitOccu",
+setMethod("nonparboot_internal", "unmarkedFitOccu",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
     callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
@@ -215,31 +227,7 @@ setMethod("nonparboot", "unmarkedFitOccu",
 })
 
 
-setMethod("nonparboot", "unmarkedFitPCount",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-
-setMethod("nonparboot", "unmarkedFitMPois",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-
-setMethod("nonparboot", "unmarkedFitDS",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-
-setMethod("nonparboot", "unmarkedFitOccuRN",
+setMethod("nonparboot_internal", "unmarkedFitOccuRN",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
     callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
@@ -247,36 +235,7 @@ setMethod("nonparboot", "unmarkedFitOccuRN",
 })
 
 
-
-setMethod("nonparboot", "unmarkedFitGMM",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-setMethod("nonparboot", "unmarkedFitGDS",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-
-
-
-setMethod("nonparboot", "unmarkedFitDailMadsen",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-
-
-
-
-setMethod("nonparboot", "unmarkedFitColExt",
+setMethod("nonparboot_internal", "unmarkedFitColExt",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
 #    browser()
@@ -339,63 +298,15 @@ setMethod("nonparboot", "unmarkedFitColExt",
 })
 
 
-setMethod("nonparboot", "unmarkedFitOccuPEN",
+setMethod("nonparboot_internal", "unmarkedFitOccuPEN",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
-#    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-#                   bsType="site")
-    bsType <- "site"
-    if (identical(B, 0) && !is.null(object@bootstrapSamples)) {
-        return(object)
-    }
-    if (B <= 0 && is.null(object@bootstrapSamples)) {
-        stop("B must be greater than 0 when fit has no bootstrap samples.")
-    }
-    data <- object@data
-    formula <- object@formula
-    designMats <- getDesign(data, formula) # bootstrap after removing sites
-    removed.sites <- designMats$removed.sites
-    if(length(removed.sites)>0)
-        data <- data[-removed.sites,]
-    y <- getY(data)
-    colnames(y) <- NULL
-    data@y <- y
-    M <- numSites(data)
-    boot.iter <- function() {
-        sites <- sort(sample(1:M, M, replace = TRUE))
-        data.b <- data[sites,]
-        y <- getY(data.b)
-        if (bsType == "both") {
-            obs.per.site <- lapply(1:nrow(y), function(i) which(!is.na(y[i,])))
-            obs <- lapply(obs.per.site,
-                          function(obs) sample(obs, replace = TRUE))
-            data.b <- data.b[obs]
-        }
-        fm <- update(object, data = data.b)
-        return(fm)
-    }
-    if (!keepOldSamples) {
-        object@bootstrapSamples <- NULL
-    }
-    object@bootstrapSamples <- c(object@bootstrapSamples,
-                                 replicate(B, boot.iter(),
-                                           simplify = FALSE))
-    coefs <- t(sapply(object@bootstrapSamples,
-                      function(x) coef(x)))
-    v <- cov(coefs)
-    object@covMatBS <- v
-    inds <- .estimateInds(object)
-    for (est in names(inds)) {
-        v.est <- v[inds[[est]], inds[[est]], drop = FALSE]
-        object@estimates@estimates[[est]]@covMatBS <- v.est
-    }
-    object
-
-
+    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
+                   bsType="site", se = TRUE)
 })
 
 
-setMethod("nonparboot", "unmarkedFitOccuPEN_CV",
+setMethod("nonparboot_internal", "unmarkedFitOccuPEN_CV",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
 #    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
@@ -456,16 +367,7 @@ setMethod("nonparboot", "unmarkedFitOccuPEN_CV",
 })
 
 
-setMethod("nonparboot", "unmarkedFitOccuTTD",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-
-
-setMethod("nonparboot", "unmarkedFitOccuMulti",
+setMethod("nonparboot_internal", "unmarkedFitOccuMulti",
     function(object, B = 0, keepOldSamples = TRUE, ...)
 {
     bsType <- "site"
@@ -506,23 +408,6 @@ setMethod("nonparboot", "unmarkedFitOccuMulti",
     }
     object
 })
-
-setMethod("nonparboot", "unmarkedFitNmixTTD",
-    function(object, B = 0, keepOldSamples = TRUE, ...)
-{
-    callNextMethod(object, B=B, keepOldSamples=keepOldSamples,
-                   bsType="site")
-})
-
-
-
-
-
-
-
-
-
-
 
 
 # ----------------------- Helper functions -------------------------------

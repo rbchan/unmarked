@@ -116,6 +116,11 @@ test_that("occuMulti can fit models with covariates",{
   detformulas <- c('~occ_cov1','~det_cov2')
   fm <- occuMulti(detformulas, stateformulas, data = umf, se=FALSE)
   expect_equivalent(coef(fm,'det')[2],3.355328e-05, tol=1e-4)
+
+  # nonparboot
+  set.seed(123)
+  npb <- nonparboot(fm, B=2)
+  expect_equal(vcov(npb, method="nonparboot")[1,1], 0.07733412, tol=1e-7)
 })
 
 test_that("occuMulti can handle NAs",{

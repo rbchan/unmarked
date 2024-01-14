@@ -63,6 +63,7 @@ test_that("nonparboot works with gmultmix", {
     fm1 <- gmultmix(~1, ~1, ~1, umf1, K=10)
     fm1 <- nonparboot(fm1, B=2)
     expect_equal(length(fm1@bootstrapSamples), 2)
+    expect_equal(vcov(fm1)[1,1], 0.1165165, tol=1e-7)
 
     umf2 <- unmarkedFrameGMM(y=y.ijt, siteCovs=data.frame(sc=sc1),
                              obsCovs=list(oc=oc1),

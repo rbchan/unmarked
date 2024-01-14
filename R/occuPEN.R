@@ -168,9 +168,9 @@ occuPEN_CV <- function(formula, data, knownOcc = numeric(0), starts,
 
 occuPEN <- function(formula, data, knownOcc = numeric(0), starts,
                  method = "BFGS", engine = c("C", "R"),
-#		 se = TRUE,
 		 lambda = 0,
 		 pen.type = c("Bayes","Ridge","MPLE"),
+     se = FALSE,
 		 ...)
 {
 

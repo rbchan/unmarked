@@ -120,10 +120,13 @@ test_that("occuPEN can fit models with covariates",{
   expect_error(fm <- occuPEN_CV(~ o1 + o2 ~ x, data = umf,foldAssignments=c(1,2,3,4,5),k=6))
 
   # nonparboot
+  set.seed(123)
   nbp <- nonparboot(fm, B=2)
   expect_is(nbp@covMatBS, "matrix")
+  expect_equal(nbp@covMatBS[1,1], 0.1691121, tol=1e-7)
   nbp_cv <- nonparboot(fmCV, B=2)
   expect_is(nbp_cv@covMatBS, "matrix")
+  expect_equal(nbp_cv@covMatBS[1,1], 0.5086074, tol=1e-7)
 
 })
 
