@@ -1,46 +1,27 @@
-\name{simulate-methods}
-\docType{methods}
+\name{simulate}
+\alias{simulate}
 \alias{simulate-methods}
-\alias{simulate,unmarkedFitColExt-method}
-\alias{simulate,unmarkedFitDS-method}
-\alias{simulate,unmarkedFitMPois-method}
-\alias{simulate,unmarkedFitOccu-method}
-\alias{simulate,unmarkedFitOccuRN-method}
-\alias{simulate,unmarkedFitOccuFP-method}
-\alias{simulate,unmarkedFitOccuMulti-method}
-\alias{simulate,unmarkedFitOccuMS-method}
-\alias{simulate,unmarkedFitOccuTTD-method}
-\alias{simulate,unmarkedFitNmixTTD-method}
-\alias{simulate,unmarkedFitPCount-method}
-\alias{simulate,unmarkedFitPCO-method}
-\alias{simulate,unmarkedFitGMM-method}
-\alias{simulate,unmarkedFitGDS-method}
-\alias{simulate,unmarkedFitGPC-method}
-\alias{simulate,unmarkedFitGDR-method}
-\alias{simulate,unmarkedFitDailMadsen-method}
-\alias{simulate,unmarkedFitGOccu-method}
-\alias{simulate,unmarkedFitOccuCOP-method}
+\alias{simulate,unmarkedFit-method}
 \alias{simulate,character-method}
-\title{Methods for Function simulate in Package `unmarked'}
-\description{
-Simulate data from a fitted model.
-}
+
+\title{Simulate datasets for 'unmarked' models}
+
+\description{Simulate a new dataset from a fitted model or from custom input settings.}
+
 \usage{
-\S4method{simulate}{unmarkedFitColExt}(object, nsim, seed, na.rm)
-\S4method{simulate}{unmarkedFitDS}(object, nsim, seed, na.rm)
-\S4method{simulate}{unmarkedFitMPois}(object, nsim, seed, na.rm)
-\S4method{simulate}{unmarkedFitOccu}(object, nsim, seed, na.rm)
-\S4method{simulate}{unmarkedFitOccuRN}(object, nsim, seed, na.rm)
-\S4method{simulate}{unmarkedFitPCount}(object, nsim, seed, na.rm)
-\S4method{simulate}{character}(object, nsim=1, seed=NULL, formulas, coefs=NULL,
+\S4method{simulate}{unmarkedFit}(object, nsim = 1, seed = NULL, na.rm = TRUE)
+\S4method{simulate}{character}(object, nsim = 1, seed = NULL, formulas, coefs=NULL,
   design, guide=NULL, ...)
 }
 
 \arguments{
-\item{object}{Fitted model of appropriate S4 class}
-\item{nsim}{Number of simulations}
-\item{seed}{Seed for random number generator. Not currently implemented}
-\item{na.rm}{Logical, should missing values be removed?}
+\item{object}{An \code{unmarkedFit} object (to simulate from a fitted model),
+  or a character string with the model function name (to simulate an entirely
+  new dataset).}
+\item{nsim}{Number of simulated datsets to generate.}
+\item{seed}{Seed for random number generator. This is not implemented and does nothing.}
+\item{na.rm}{Logical. When simulating from a \code{unmarkedFit} object, should 
+  missing values be removed?}
 \item{formulas}{
   A named list of formulas, one per submodel (e.g. a formula for occupancy
   \code{"state"} and a formula for detection \code{"det"}). To get the correct
@@ -75,17 +56,19 @@ Simulate data from a fitted model.
 }
 }
 
-\section{Methods}{
-\describe{
-\item{object = "unmarkedFitColExt"}{A model fit by \code{\link{colext}}}
-\item{object = "unmarkedFitDS"}{A model fit by \code{\link{distsamp}}}
-\item{object = "unmarkedFitMPois"}{A model fit by \code{\link{multinomPois}}}
-\item{object = "unmarkedFitOccu"}{A model fit by \code{\link{occu}}}
-\item{object = "unmarkedFitOccuRN"}{A model fit by \code{\link{occuRN}}}
-\item{object = "unmarkedFitPCount"}{A model fit by \code{\link{pcount}}}
-\item{object = "character"}{An \code{unmarkedFrame} of the appropriate type}
-}}
-\keyword{methods}
+\value{When simulating from a \code{unmarkedFit} model, a list of simulated
+ \code{y}-matrices. When simulating from scratch, a list of complete
+ \code{unmarkedFrame}s for the chosen model type.} 
+
+\details{This function does two different things depending on the inputs provided.
+  If you run \code{simulate} on a fitted model (an \code{unmarkedFit} object),
+  you will get a list of observed data (\code{y}-matrices) simulated based on
+  the fitted model. These are useful for e.g. bootstrapping. Alternatively,
+  if you provide the name of an \code{unmarked} fitting function as a string to
+  the first argument, such as \code{"occu"}, along with other settings described
+  above you can generate a dataset for that model type from scratch to be used
+  for examples, validation, etc.
+}
 
 \examples{
 

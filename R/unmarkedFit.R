@@ -2057,9 +2057,20 @@ setMethod("getY", "unmarkedFitOccuMulti", function(object) {
 })
 
 
+# Simulate methods-------------------------------------------------------------
 
-setMethod("simulate", "unmarkedFitDS",
-    function(object, nsim = 1, seed = NULL, na.rm=TRUE)
+setMethod("simulate", "unmarkedFit", 
+  function(object, nsim = 1, seed = NULL, na.rm= TRUE){
+  simulate_internal(object, nsim = nsim, na.rm = na.rm)
+})
+
+setGeneric("simulate_internal", function(object, nsim = 1, na.rm = TRUE){
+  standardGeneric("simulate_internal")
+})
+
+
+setMethod("simulate_internal", "unmarkedFitDS",
+    function(object, nsim = 1, na.rm=TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -2102,10 +2113,8 @@ setMethod("simulate", "unmarkedFitDS",
 })
 
 
-
-
-setMethod("simulate", "unmarkedFitPCount",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitPCount",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -2273,8 +2282,8 @@ simOpenN <- function(object, na.rm)
     N
 }
 
-setMethod("simulate", "unmarkedFitPCO",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitPCO",
+    function(object, nsim = 1, na.rm = TRUE)
 {
 
     umf <- object@data
@@ -2296,9 +2305,9 @@ setMethod("simulate", "unmarkedFitPCO",
     return(simList)
 })
 
-
-setMethod("simulate", "unmarkedFitDailMadsen",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+# Applies to unmarkedFitDSO and unmarkedFitMMO
+setMethod("simulate_internal", "unmarkedFitDailMadsen",
+    function(object, nsim = 1, na.rm = TRUE)
 {
   umf <- object@data
   D <- getDesign(umf, object@formula, na.rm = na.rm)
@@ -2339,8 +2348,8 @@ setMethod("simulate", "unmarkedFitDailMadsen",
 })
 
 
-setMethod("simulate", "unmarkedFitMPois",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitMPois",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -2366,10 +2375,8 @@ setMethod("simulate", "unmarkedFitMPois",
 })
 
 
-
-
-setMethod("simulate", "unmarkedFitOccu",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitOccu",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -2396,56 +2403,57 @@ setMethod("simulate", "unmarkedFitOccu",
 })
 
 
-setMethod("simulate", "unmarkedFitOccuFP",
-          function(object, nsim = 1, seed = NULL, na.rm = TRUE)
-          {
-            detformula <- object@detformula
-            stateformula <- object@stateformula
-            FPformula <- object@FPformula
-            Bformula <- object@Bformula
-            umf <- object@data
-            designMats <- getDesign(umf, detformula,FPformula,Bformula,stateformula, na.rm = na.rm)
-            X <- designMats$X; V <- designMats$V; U <- designMats$U; W <- designMats$W;
-            y <- designMats$y
-            X.offset <- designMats$X.offset; V.offset <- designMats$V.offset; U.offset <- designMats$U.offset; W.offset <- designMats$W.offset
-            if(is.null(X.offset)) {
-              X.offset <- rep(0, nrow(X))
-            }
-            if(is.null(V.offset)) {
-              V.offset <- rep(0, nrow(V))
-            }
-            if(is.null(U.offset)) {
-              U.offset <- rep(0, nrow(U))
-            }
-            if(is.null(W.offset)) {
-              W.offset <- rep(0, nrow(W))
-            }
-            M <- nrow(y)
-            J <- ncol(y)
-            allParms <- coef(object, altNames = FALSE)
-            psiParms <- coef(object, type = "state")
-            psi <- as.numeric(plogis(X %*% psiParms + X.offset))
-            p <- c(t(getP(object)))
-            fp <- c(t(getFP(object)))
-            b <- c(t(getB(object)))
-            simList <- list()
-            for(i in 1:nsim) {
-              Z <- rbinom(M, 1, psi)
-              Z[object@knownOcc] <- 1
-              Z <- rep(Z, each = J)
-              P <- matrix(0,M*J,3)
-              P[,1] <- Z*rbinom(M * J, 1, prob = (1-p)) + (1-Z)*rbinom(M * J, 1, prob = (1-fp))
-              P[,2] <- (1-P[,1])*(1-Z) + (1-P[,1])*rbinom(M * J, 1, prob = (1-b))*Z
-              P[,3] <- 1 - P[,1]-P[,2]
-              yvec <- sapply(1:(M*J),function(x) which(as.logical(rmultinom2(1,1,P[x,])))-1)
-              simList[[i]] <- matrix(yvec, M, J, byrow = TRUE)
-            }
-            return(simList)
-          })
+setMethod("simulate_internal", "unmarkedFitOccuFP",
+  function(object, nsim = 1, na.rm = TRUE)
+{
+  detformula <- object@detformula
+  stateformula <- object@stateformula
+  FPformula <- object@FPformula
+  Bformula <- object@Bformula
+  umf <- object@data
+  designMats <- getDesign(umf, detformula,FPformula,Bformula,stateformula, na.rm = na.rm)
+  X <- designMats$X; V <- designMats$V; U <- designMats$U; W <- designMats$W;
+  y <- designMats$y
+  X.offset <- designMats$X.offset; V.offset <- designMats$V.offset 
+  U.offset <- designMats$U.offset; W.offset <- designMats$W.offset
+  if(is.null(X.offset)) {
+    X.offset <- rep(0, nrow(X))
+  }
+  if(is.null(V.offset)) {
+    V.offset <- rep(0, nrow(V))
+  }
+  if(is.null(U.offset)) {
+    U.offset <- rep(0, nrow(U))
+  }
+  if(is.null(W.offset)) {
+    W.offset <- rep(0, nrow(W))
+  }
+  M <- nrow(y)
+  J <- ncol(y)
+  allParms <- coef(object, altNames = FALSE)
+  psiParms <- coef(object, type = "state")
+  psi <- as.numeric(plogis(X %*% psiParms + X.offset))
+  p <- c(t(getP(object)))
+  fp <- c(t(getFP(object)))
+  b <- c(t(getB(object)))
+  simList <- list()
+  for(i in 1:nsim) {
+    Z <- rbinom(M, 1, psi)
+    Z[object@knownOcc] <- 1
+    Z <- rep(Z, each = J)
+    P <- matrix(0,M*J,3)
+    P[,1] <- Z*rbinom(M * J, 1, prob = (1-p)) + (1-Z)*rbinom(M * J, 1, prob = (1-fp))
+    P[,2] <- (1-P[,1])*(1-Z) + (1-P[,1])*rbinom(M * J, 1, prob = (1-b))*Z
+    P[,3] <- 1 - P[,1]-P[,2]
+    yvec <- sapply(1:(M*J),function(x) which(as.logical(rmultinom2(1,1,P[x,])))-1)
+    simList[[i]] <- matrix(yvec, M, J, byrow = TRUE)
+  }
+  return(simList)
+})
 
 
-setMethod("simulate", "unmarkedFitOccuMulti",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitOccuMulti",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     data <- object@data
     ynames <- names(object@data@ylist)
@@ -2482,8 +2490,8 @@ setMethod("simulate", "unmarkedFitOccuMulti",
 })
 
 
-setMethod("simulate", "unmarkedFitOccuMS",
-    function(object, nsim = 1, seed = NULL, na.rm=TRUE)
+setMethod("simulate_internal", "unmarkedFitOccuMS",
+    function(object, nsim = 1, na.rm=TRUE)
 {
 
   S <- object@data@numStates
@@ -2604,8 +2612,8 @@ setMethod("simulate", "unmarkedFitOccuMS",
 })
 
 
-setMethod("simulate", "unmarkedFitOccuTTD",
-          function(object,  nsim = 1, seed = NULL, na.rm = FALSE)
+setMethod("simulate_internal", "unmarkedFitOccuTTD",
+          function(object, nsim = 1, na.rm = FALSE)
 {
 
   N <- nrow(object@data@y)
@@ -2669,8 +2677,9 @@ setMethod("simulate", "unmarkedFitOccuTTD",
   simlist
 })
 
-setMethod("simulate", "unmarkedFitNmixTTD",
-          function(object,  nsim = 1, seed = NULL, na.rm = FALSE)
+
+setMethod("simulate_internal", "unmarkedFitNmixTTD",
+          function(object,  nsim = 1, na.rm = FALSE)
 {
 
   M <- nrow(object@data@y)
@@ -2720,8 +2729,9 @@ setMethod("simulate", "unmarkedFitNmixTTD",
   simlist
 })
 
-setMethod("simulate", "unmarkedFitColExt",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+
+setMethod("simulate_internal", "unmarkedFitColExt",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     data <- object@data
     psiParms <- coef(object, 'psi')
@@ -2791,10 +2801,8 @@ setMethod("simulate", "unmarkedFitColExt",
 })
 
 
-
-
-setMethod("simulate", "unmarkedFitOccuRN",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitOccuRN",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -2825,9 +2833,8 @@ setMethod("simulate", "unmarkedFitOccuRN",
 })
 
 
-
-setMethod("simulate", "unmarkedFitGMM",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitGMM",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -2902,11 +2909,8 @@ setMethod("simulate", "unmarkedFitGMM",
 })
 
 
-
-
-
-setMethod("simulate", "unmarkedFitGPC",
-    function(object, nsim = 1, seed = NULL, na.rm = TRUE)
+setMethod("simulate_internal", "unmarkedFitGPC",
+    function(object, nsim = 1, na.rm = TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -2973,8 +2977,8 @@ setMethod("simulate", "unmarkedFitGPC",
 })
 
 
-setMethod("simulate", "unmarkedFitGDS",
-    function(object, nsim = 1, seed = NULL, na.rm=TRUE)
+setMethod("simulate_internal", "unmarkedFitGDS",
+    function(object, nsim = 1, na.rm=TRUE)
 {
     formula <- object@formula
     umf <- object@data
@@ -3061,6 +3065,3 @@ setMethod("simulate", "unmarkedFitGDS",
         }
     return(simList)
 })
-
-
-

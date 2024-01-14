@@ -267,8 +267,8 @@ setMethod("ranef", "unmarkedFitGOccu", function(object, ...){
 })
 
 
-setMethod("simulate", "unmarkedFitGOccu", 
-          function(object, nsim = 1, seed = NULL, na.rm = FALSE){
+setMethod("simulate_internal", "unmarkedFitGOccu", 
+          function(object, nsim = 1, na.rm = FALSE){
   
   gd <- getDesign(object@data, object@formula, na.rm=FALSE)
   M <- nrow(gd$y)

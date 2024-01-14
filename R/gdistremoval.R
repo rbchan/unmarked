@@ -674,7 +674,8 @@ setMethod("ranef", "unmarkedFitGDR", function(object){
   new("unmarkedRanef", post=post)
 })
 
-setMethod("simulate", "unmarkedFitGDR", function(object, nsim, seed=NULL, na.rm=FALSE){
+setMethod("simulate_internal", "unmarkedFitGDR", 
+  function(object, nsim, na.rm=FALSE){
 
   # Adjust log lambda when there is a random intercept
   #loglam <- log(predict(object, "lambda", level=NULL)$Predicted)

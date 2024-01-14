@@ -462,10 +462,9 @@ setMethod("simulate_fit", "unmarkedFitOccuCOP",
 
 
 ## simulate ----
-setMethod("simulate", "unmarkedFitOccuCOP",
-  function(object, nsim = 1, seed = NULL, na.rm = TRUE){
-  # set.seed(seed) 
-  # Purposefully not implemented
+setMethod("simulate_internal", "unmarkedFitOccuCOP",
+  function(object, nsim = 1, na.rm = TRUE){
+
   formula <- object@formula
   umf <- object@data
   designMats <- getDesign(umf = umf, formlist = object@formlist, na.rm = na.rm)
