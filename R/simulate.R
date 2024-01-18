@@ -606,7 +606,11 @@ setMethod("get_umf_components", "unmarkedFitIDS",
   # Presence/absence dataset
   sc_oc <- yblank_oc <- NULL
   if(!is.null(design$Moc) && design$Moc > 0){
-    if(is.null(formulas$oc)) form_oc <- formulas$ds
+    if(is.null(formulas$oc)){
+      form_oc <- formulas$ds
+    } else {
+      form_oc <- formulas$oc
+    }
     sc_oc_lam <- generate_data(formulas$lam, guide, design$Moc)
     sc_oc_det <- generate_data(form_oc, guide, design$Moc)
     sc_oc <- list(sc_oc_lam, sc_oc_det)

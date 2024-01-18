@@ -108,6 +108,9 @@ IDS <- function(lambdaformula = ~1,
 
   # Need to add offset support here eventually
   gd_hds <- getDesign(dataDS, form_hds)
+  if(any(is.na(gd_hds$y))){
+    stop("Missing values in only some distance bins is not supported", call.=FALSE)
+  } 
   ds_hds <- get_ds_info(dataDS@dist.breaks)
   Xavail_ds <- matrix(0,0,0)
   if(has_avail) Xavail_ds <- getDesign(dataDS, form_avail)$X
@@ -523,7 +526,7 @@ setMethod("simulate", "unmarkedFitIDS",
   temp <- lapply(dets, function(x){
     if(! x %in% names(object)) return(NULL)
     conv <- IDS_convert_class(object, type=x)
-    sims <- simulate(conv, nsim=nsim, seed=seed, na.rm=na.rm)
+    sims <- simulate(conv, nsim=nsim, na.rm=na.rm)
     # availability process
     if("phi" %in% names(object)){
       sims <- lapply(sims, function(z){
@@ -569,32 +572,32 @@ setMethod("update", "unmarkedFitIDS",
 
     if(!missing(detformulaPC)){
       call[["detformulaPC"]] <- detformulaPC
-    } else {
+    } else if(!is.null(object@dataPC) & !is.null(call$detformulaPC)){
       call[["detformulaPC"]] <- split_formula(object@formlist$pc)[[1]]
     }
 
     if(!missing(detformulaOC)){
       call[["detformulaOC"]] <- detformulaOC
-    } else {
+    } else if(!is.null(object@dataOC) & !is.null(call$detformulaOC)){
       call[["detformulaOC"]] <- split_formula(object@formlist$oc)[[1]]
     }
 
     if(!missing(dataDS)){
-      call[["dataDS"]] <- dataDS
+      call$dataDS <- dataDS
     } else {
-      call[["dataDS"]] <- object@data
+      call$dataDS <- object@data
     }
 
     if(!missing(dataPC)){
-      call[["dataPC"]] <- dataPC
+      call$dataPC <- dataPC
     } else {
-      call[["dataPC"]] <- object@dataPC
+      call$dataPC <- object@dataPC
     }
-
+    
     if(!missing(dataOC)){
-      call[["dataOC"]] <- dataOC
+      call$dataOC <- dataOC
     } else {
-      call[["dataOC"]] <- object@dataOC
+      call$dataOC <- object@dataOC
     }
 
     extras <- match.call(call=sys.call(-1),
@@ -636,11 +639,15 @@ setMethod("parboot", "unmarkedFitIDS",
     dataOC <- object@dataOC
     has_oc <- "oc" %in% names(object)
 
-    t.star <- pbapply::pbsapply(1:nsim, function(i){
+    t.star <- lapply(1:nsim, function(i){
       dataDS@y <- simList[[i]]$ds
       if(has_pc) dataPC@y <- simList[[i]]$pc
       if(has_oc) dataOC@y <- simList[[i]]$oc
-      fit <- update(object, dataDS=dataDS, dataPC=dataPC, dataOC=dataOC, starts=starts)
+      fit <- update(object, dataDS=dataDS, dataPC=dataPC, dataOC=dataOC, 
+                    durationDS = object@surveyDurations$ds,
+                    durationPC = object@surveyDurations$pc,
+                    durationOC = object@surveyDurations$oc,
+                    starts=starts)
       statistic(fit)
     })
     if(lt0 > 1){

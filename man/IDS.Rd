@@ -69,9 +69,17 @@ for the point count data, and \code{unmarkedFrameOccu} for OC/DND data.
 See the help files for these objects for guidance on how to organize the data.
 }
 
+\note{
+  Simulations indicated estimates of availability were very unreliable when
+  including detection/non-detection data, so the function will not allow you
+  to use DND data and estimate availability at the same time. 
+  In general estimation of availability can be difficult; use simulations
+  to see how well it works for your specific situation.
+}
+
 \references{
   Kery M, Royle JA, Hallman T, Robinson WD, Strebel N, Kellner KF. 2022. 
-  Integrated distance sampling models for simple point counts. 
+  Integrated distance sampling models for simple point counts. Ecology. 
 }
 \author{Ken Kellner \email{contact@kenkellner.com}}
 \seealso{\code{\link{distsamp}}}
@@ -86,7 +94,7 @@ See the help files for these objects for guidance on how to organize the data.
 formulas <- list(lam=~elev, ds=~1, phi=~1)
 
 # Sample sizes
-design <- list(Mds=2912, J=6, Mpc=506, Moc=554)
+design <- list(Mds=2912, J=6, Mpc=506)
 
 # Model parameters
 coefs <- list(lam = c(intercept=3, elev=-0.5),
@@ -94,8 +102,7 @@ coefs <- list(lam = c(intercept=3, elev=-0.5),
               phi = c(intercept=-1.3))
 
 # Survey durations
-durs <- list(ds = rep(5, design$Mds), pc=runif(design$Mpc, 3, 30), 
-             oc=runif(design$Moc, 3, 30))
+durs <- list(ds = rep(5, design$Mds), pc=runif(design$Mpc, 3, 30))
 
 set.seed(456)
 sim_umf <- simulate("IDS", # name of model we are simulating for
@@ -117,10 +124,9 @@ lapply(sim_umf, head)
 
 # Fit a model
 (mod_sim <- IDS(lambdaformula = ~elev, detformulaDS = ~1,
-                dataDS=sim_umf$ds, dataPC=sim_umf$pc, dataOC=sim_umf$oc,
+                dataDS=sim_umf$ds, dataPC=sim_umf$pc,
                 availformula = ~1, durationDS=durs$ds, durationPC=durs$pc,
-                durationOC=durs$oc,
-                maxDistPC=0.5, maxDistOC=0.5,
+                maxDistPC=0.5,
                 unitsOut="kmsq"))
 
 # Compare with known parameter values
@@ -128,7 +134,7 @@ lapply(sim_umf, head)
 # It is hard to estimate in most cases
 cbind(truth=unlist(coefs), est=coef(mod_sim))
 
-# Predict density at each site
+# Predict density at each distance sampling site
 head(predict(mod_sim, 'lam'))
 
 }
