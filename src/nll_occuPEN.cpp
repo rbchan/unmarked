@@ -1,20 +1,14 @@
-#include "nll_occuPEN.h"
+#include <RcppArmadillo.h>
+#include <float.h>
 
 using namespace Rcpp ;
 
-SEXP nll_occuPEN( SEXP yR, SEXP Xr, SEXP Vr, SEXP beta_psiR, SEXP beta_pR, SEXP ndR, SEXP knownOccR, SEXP navecR, SEXP X_offsetR, SEXP V_offsetR, SEXP penaltyR ) {
-  arma::icolvec y = as<arma::icolvec>(yR);
-  arma::mat X = as<arma::mat>(Xr);
-  arma::mat V = as<arma::mat>(Vr);
-  arma::colvec beta_psi = as<arma::colvec>(beta_psiR);
-  arma::colvec beta_p = as<arma::colvec>(beta_pR);
-  Rcpp::IntegerVector nd(ndR);
-  Rcpp::LogicalVector knownOcc(knownOccR);
-  Rcpp::LogicalVector navec(navecR);
-  arma::colvec X_offset = as<arma::colvec>(X_offsetR);
-  arma::colvec V_offset = as<arma::colvec>(V_offsetR);
-  //std::double penalty = as<std::double>(penaltyR);
-  double penalty = as<double>(penaltyR);
+// [[Rcpp::export]]
+double nll_occuPEN(arma::icolvec y, arma::mat X, arma::mat V,
+    arma::colvec beta_psi, arma::colvec beta_p, Rcpp::IntegerVector nd,
+    Rcpp::LogicalVector knownOcc, Rcpp::LogicalVector navec,
+    arma::colvec X_offset, arma::colvec V_offset, double penalty) {
+
   int R = X.n_rows;
   int J = y.n_elem / R;
   arma::colvec logit_psi = X*beta_psi + X_offset;
@@ -38,6 +32,6 @@ SEXP nll_occuPEN( SEXP yR, SEXP Xr, SEXP Vr, SEXP beta_psiR, SEXP beta_pR, SEXP 
       ll += log(cp * psi(i) + (1-psi(i)) + DBL_MIN);
   }
   ll = ll - penalty;
-  return wrap(-ll);
+  return -ll;
 }
 

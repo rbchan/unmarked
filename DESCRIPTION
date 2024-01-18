@@ -1,6 +1,6 @@
 Package: unmarked
-Version: 1.2.5.9014
-Date: 2023-04-27
+Version: 1.4.1
+Date: 2024-01-08
 Type: Package
 Title: Models for Data from Unmarked Animals
 Authors@R: c(
@@ -12,13 +12,14 @@ Authors@R: c(
     person("Jeff", "Hostetler", role="aut"),
     person("Rebecca", "Hutchinson", role="aut"),
     person("Adam", "Smith", role="aut"),
+    person("Lea", "Pautrel", role="aut"),
     person("Marc", "Kery", role="ctb"),
     person("Mike", "Meredith", role="ctb"),
     person("Auriel", "Fournier", role="ctb"),
     person("Ariel", "Muldoon", role="ctb"),
     person("Chris", "Baker", role="ctb")
     )
-Depends: R (>= 2.12.0)
+Depends: R (>= 4.0)
 Imports: 
     graphics,
     lattice,
@@ -27,13 +28,19 @@ Imports:
     Matrix,
     methods,
     parallel,
-    pbapply,
     Rcpp (>= 0.8.0),
     stats,
     TMB (>= 1.7.18),
     utils
-Suggests: knitr, rmarkdown, pkgdown, raster, shiny, terra, testthat
-Description: Fits hierarchical models of animal abundance and occurrence to data collected using survey methods such as point counts, site occupancy sampling, distance sampling, removal sampling, and double observer sampling. Parameters governing the state and observation processes can be modeled as functions of covariates. Reference: Fiske and Chandler (2011) <doi:10.18637/jss.v043.i10>.
+Suggests:
+    pbapply,
+    knitr,
+    rmarkdown,
+    raster,
+    shiny,
+    testthat,
+    terra
+Description: Fits hierarchical models of animal abundance and occurrence to data collected using survey methods such as point counts, site occupancy sampling, distance sampling, removal sampling, and double observer sampling. Parameters governing the state and observation processes can be modeled as functions of covariates. References: Kellner et al. (2023) <doi:10.1111/2041-210X.14123>, Fiske and Chandler (2011) <doi:10.18637/jss.v043.i10>.
 License: GPL (>=3)
 LazyLoad: yes
 LazyData: yes
@@ -52,6 +59,8 @@ Collate: 'classes.R' 'unmarkedEstimate.R' 'mapInfo.R' 'unmarkedFrame.R'
     'power.R' 
     'simulate.R'
     'predict.R'
+    'goccu.R'
+    'occuCOP.R'
     'RcppExports.R'
     'zzz.R'
 LinkingTo: 

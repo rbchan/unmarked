@@ -52,10 +52,10 @@ occu <- function(formula, data, knownOcc = numeric(0),
     nll <- function(params) {
       beta.psi <- params[1:nOP]
       beta.p <- params[(nOP+1):nP]
-      .Call("nll_occu",
+      nll_occu(
         yvec, X, V, beta.psi, beta.p, nd, knownOccLog, navec,
-        X.offset, V.offset, linkPsi,
-        PACKAGE = "unmarked")
+        X.offset, V.offset, linkPsi
+      )
     }
   } else if (identical(engine, "R")){
 

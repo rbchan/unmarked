@@ -881,9 +881,8 @@ setMethod("predict", "unmarkedFitOccuMS",
     out
   }
 
-  get_mlogit <- function(lp_mat){
-    .Call("get_mlogit",
-         lp_mat, type, S, guide-1)
+  get_mlogit_C <- function(lp_mat){
+    get_mlogit(lp_mat, type, S, guide-1) # via Rcpp
   }
 
   #----------------------------------------------------------------------------
@@ -919,7 +918,7 @@ setMethod("predict", "unmarkedFitOccuMS",
 
   } else if (object@parameterization == "multinomial"){
     lp <- get_lp(coef(object), dm_list, ind)
-    pred <- get_mlogit(lp)
+    pred <- get_mlogit_C(lp)
 
     M <- nrow(pred)
     upr <- lwr <- se <- matrix(NA,M,P)
@@ -933,7 +932,7 @@ setMethod("predict", "unmarkedFitOccuMS",
 
       get_pr <- function(i){
         lp <- get_lp(rparam[i,], dm_list, ind)
-        get_mlogit(lp)
+        get_mlogit_C(lp)
       }
       samp <- sapply(1:nsims, get_pr, simplify='array')
 

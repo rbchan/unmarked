@@ -1,12 +1,11 @@
-#include "get_lik_trans.h"
+#include <RcppArmadillo.h>
 
 using namespace Rcpp;
 using namespace arma;
 
-SEXP get_lik_trans(SEXP I_, SEXP I1_){
+// [[Rcpp::export]]
 
-  umat I = as<umat>(I_);
-  umat I1 = as<umat>(I1_);
+List get_lik_trans(arma::umat I, arma::umat I1){
 
   List Ib(I.n_rows);
   List Ip(I.n_rows);
@@ -16,15 +15,15 @@ SEXP get_lik_trans(SEXP I_, SEXP I1_){
 
     IntegerVector Ztmp = seq(0, minI);
     uvec Z = as<uvec>(Ztmp);
-   
+
     uvec Ib_el = find( I1.col(0) <= minI && I1.col(1) == I(i,0) );
 
-    uvec Ip_el = I(i, 1) - Z; 
+    uvec Ip_el = I(i, 1) - Z;
 
     Ib[i] = Ib_el;
     Ip[i] = Ip_el;
   }
 
   List out = List::create(Named("Ib") = Ib , _["Ip"] = Ip);
-  return(wrap(out));
+  return out;
 }

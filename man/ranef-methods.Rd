@@ -20,6 +20,8 @@
 \alias{ranef,unmarkedFitNmixTTD-method}
 \alias{ranef,unmarkedFitGDR-method}
 \alias{ranef,unmarkedFitDailMadsen-method}
+\alias{ranef,unmarkedFitGOccu-method}
+\alias{ranef,unmarkedFitOccuCOP-method}
 \title{ Methods for Function \code{ranef} in Package \pkg{unmarked} }
 \description{
 Estimate posterior distributions of the random variables (latent

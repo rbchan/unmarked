@@ -1,8 +1,30 @@
 citHeader("To cite unmarked in publications use:")
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
+  title        = "The {unmarked} {R} package: Twelve years of advances in occurrence and abundance modelling in ecology",
+  author       = c(as.person("Kenneth F. Kellner"),
+                            as.person("Adam D. Smith"),
+                            as.person("J. Andrew Royle"),
+                            as.person("Marc Kery"),
+                            as.person("Jerrold L. Belant"),
+                            as.person("Richard B. Chandler")),
+  journal      = "Methods in Ecology and Evolution",
+  year         = "2023",
+  volume       = "14",
+  number       = "6",
+  pages        = "1408--1415",
+  url          = "https://www.jstatsoft.org/v43/i10/",
+
+  textVersion  =
+  paste("Kellner KF, Smith AD, Royle JA, Kery M, Belant JL, Chandler RB (2023).",
+        "The unmarked R package: Twelve years of advances in occurrence and abundance modelling in ecology.",
+        "Methods in Ecology and Evolution, 14(6), 1408-1415.",
+        "URL https://doi.org/10.1111/2041-210X.14123")
+)
+
+bibentry(bibtype = "Article",
   title        = "{unmarked}: An {R} Package for Fitting Hierarchical Models of Wildlife Occurrence and Abundance",
-  author       = personList(as.person("Ian Fiske"),
+  author       = c(as.person("Ian Fiske"),
                    as.person("Richard Chandler")),
   journal      = "Journal of Statistical Software",
   year         = "2011",

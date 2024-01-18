@@ -1,72 +1,30 @@
-#include "nll_multmixOpen.h"
+#include <RcppArmadillo.h>
+#include <float.h>
+#include "tranprobs.h"
+#include "distr.h"
+#include "pifun.h"
+#include "utils.h"
 
 using namespace Rcpp;
 using namespace arma;
 
-SEXP nll_multmixOpen( SEXP y_, SEXP yt_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_,
-    SEXP Xp_, SEXP Xiota_,
-    SEXP beta_, SEXP beta_ind_,
-    SEXP Xlam_offset_,
-    SEXP Xgam_offset_, SEXP Xom_offset_, SEXP Xp_offset_, SEXP Xiota_offset_,
-    SEXP ytna_, SEXP yna_, SEXP lk_, SEXP mixture_,
-    SEXP first_, SEXP last_, SEXP first1_,
-    SEXP M_, SEXP T_, SEXP J_, SEXP R_, SEXP delta_, SEXP dynamics_,
-    SEXP fix_, SEXP go_dims_, SEXP immigration_,
-    SEXP I_, SEXP I1_, SEXP Ib_, SEXP Ip_, SEXP pi_fun_,
-    SEXP lfac_k_, SEXP kmyt_, SEXP lfac_kmyt_, SEXP fin_) {
+// [[Rcpp::export]]
+double nll_multmixOpen(arma::ucube y, arma::imat yt,
+    arma::mat Xlam, arma::mat Xgam, arma::mat Xom, arma::mat Xp, arma::mat Xiota,
+    arma::vec beta, arma::umat bi,
+    arma::colvec Xlam_offset, arma::colvec Xgam_offset, arma::colvec Xom_offset,
+    arma::colvec Xp_offset, arma::colvec Xiota_offset,
+    arma::imat ytna, arma::ucube yna, int lk, std::string mixture,
+    Rcpp::IntegerVector first, Rcpp::IntegerVector last, int first1,
+    int M, int T, int J, int R, arma::imat delta, std::string dynamics,
+    std::string fix, std::string go_dims, bool immigration,
+    arma::imat I, arma::imat I1, Rcpp::List Ib, Rcpp::List Ip, std::string pi_fun,
+    arma::vec lfac_k, arma::cube kmyt, arma::cube lfac_kmyt, arma::icube fin) {
 
   //Indices
-  int lk = as<int>(lk_);
   Rcpp::IntegerVector N = seq_len(lk)-1;
-  int M = as<int>(M_);
-  int T = as<int>(T_);
-  int J = as<int>(J_);
-  int R = as<int>(R_);
-  ucube y = as<ucube>(y_);
-  imat yt = as<imat>(yt_);
-  Rcpp::IntegerVector first(first_);
-  Rcpp::IntegerVector last(last_);
-  int first1 = as<int>(first1_);
-  arma::imat ytna = as<arma::imat>(ytna_); // y[i,,t] are all NA
-  ucube yna = as<ucube>(yna_);
-  arma::imat delta = as<arma::imat>(delta_);
-
-  vec lfac_k = as<vec>(lfac_k_);
-  cube lfac_kmyt = as<cube>(lfac_kmyt_);
-  cube kmyt = as<cube>(kmyt_);
-  icube fin = as<icube>(fin_);
-  imat I = as<arma::imat>(I_);
-  imat I1 = as<arma::imat>(I1_);
-  List Ib(Ib_);
-  List Ip(Ip_);
   int nrI = I.n_rows;
   int nrI1 = I1.n_rows;
-
-  //Covariate matrices
-  mat Xlam = as<mat>(Xlam_);
-  mat Xgam = as<mat>(Xgam_);
-  mat Xom = as<mat>(Xom_);
-  mat Xp = as<mat>(Xp_);
-  mat Xiota = as<mat>(Xiota_);
-
-  //Offsets
-  colvec Xlam_offset = as<colvec>(Xlam_offset_);
-  colvec Xgam_offset = as<colvec>(Xgam_offset_);
-  colvec Xom_offset = as<colvec>(Xom_offset_);
-  colvec Xp_offset = as<colvec>(Xp_offset_);
-  colvec Xiota_offset = as<colvec>(Xiota_offset_);
-
-  //Model types
-  std::string mixture = as<std::string>(mixture_);
-  std::string pi_fun = as<std::string>(pi_fun_);
-  std::string dynamics = as<std::string>(dynamics_);
-  std::string fix = as<std::string>(fix_);
-  std::string go_dims = as<std::string>(go_dims_);
-  bool immigration = as<bool>(immigration_);
-
-  //Parameters
-  vec beta = as<vec>(beta_);
-  umat bi = as<umat>(beta_ind_);
 
   //Lambda
   vec beta_lam = beta.subvec(bi(0,0), bi(0,1));
@@ -322,5 +280,5 @@ SEXP nll_multmixOpen( SEXP y_, SEXP yt_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_,
 
   }
 
-  return wrap(-ll);
+  return -ll;
 }

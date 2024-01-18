@@ -29,7 +29,7 @@ test_that("ranef predict method works",{
   expect_equivalent(dim(ps@samples), c(9,1,10))
 
   # Brackets
-  expect_equal(ps[1,1,1], ps@samples[1,1,1])
+  expect_equal(ps[1,1,1], ps@samples[1,1,1,drop=FALSE])
 
   # Method for unmarkedFit objects
   set.seed(123)

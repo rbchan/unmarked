@@ -10,6 +10,7 @@
 #include "tmb_distsamp.hpp"
 #include "tmb_gdistremoval.hpp"
 #include "tmb_IDS.hpp"
+#include "tmb_goccu.hpp"
 
 template<class Type>
 Type objective_function<Type>::operator() () {
@@ -26,6 +27,8 @@ Type objective_function<Type>::operator() () {
     return tmb_gdistremoval(this);
   } else if(model == "tmb_IDS"){
     return tmb_IDS(this);
+  } else if(model == "tmb_goccu"){
+    return tmb_goccu(this);
   } else {
     error("Unknown model.");
   }

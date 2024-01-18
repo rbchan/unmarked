@@ -135,12 +135,12 @@ occuTTD <- function(psiformula=~1, gammaformula=~1, epsilonformula=~1,
   }
 
   nll_C <- function(params){
-    .Call("nll_occuTTD",
+    nll_occuTTD(
           params, yvec, delta, W, V, X.gam, X.eps,
           range(psi_inds)-1, range(det_inds)-1,
           range(col_inds)-1, range(ext_inds)-1,
-          linkPsi, ttdDist, N, T, J, naflag,
-          PACKAGE = "unmarked")
+          linkPsi, ttdDist, N, T, J, naflag
+          )
   }
 
   nll <- nll_C

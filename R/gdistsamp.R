@@ -2,7 +2,7 @@
 gdistsamp <- function(lambdaformula, phiformula, pformula, data,
     keyfun=c("halfnorm", "exp", "hazard", "uniform"),
     output=c("abund", "density"), unitsOut=c("ha", "kmsq"),
-    mixture=c('P', 'NB'), K, starts, method = "BFGS", se = TRUE, engine=c("C","R"),
+    mixture=c("P", "NB", 'ZIP'), K, starts, method = "BFGS", se = TRUE, engine=c("C","R"),
     rel.tol=1e-4, threads=1, ...)
 {
 if(!is(data, "unmarkedFrameGDS"))
@@ -111,11 +111,13 @@ else {
 if(identical(mixture, "NB")) {
     nOP <- 1
     nbPar <- "alpha"
-    }
-else {
+} else if(identical(mixture, "ZIP")) {
+    nOP <- 1
+    nbPar <- "psi"
+} else {
     nOP <- 0
     nbPar <- character(0)
-    }
+}
 
 nLP <- ncol(Xlam)
 nP  <- nLP + nPP + nDP + nSP + nOP
@@ -163,8 +165,9 @@ halfnorm = {
 
         switch(mixture,
             P = f <- sapply(k, function(x) dpois(x, lambda)),
-            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda,
-                size=exp(pars[nP]))))
+            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda, size=exp(pars[nP]))),
+            ZIP = f <- sapply(k, function(x) dzip(rep(x, length(lambda)), lambda=lambda, psi=plogis(pars[nP])))
+        )
         for(i in 1:M) {
             mn <- matrix(0, lk, T)
             for(t in 1:T) {
@@ -231,8 +234,9 @@ exp = {
 
         switch(mixture,
             P = f <- sapply(k, function(x) dpois(x, lambda)),
-            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda,
-                size=exp(pars[nP]))))
+            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda, size=exp(pars[nP]))),
+            ZIP = f <- sapply(k, function(x) dzip(rep(x, length(lambda)), lambda=lambda, psi=plogis(pars[nP])))
+        )
         for(i in 1:M) {
             mn <- matrix(0, lk, T)
             for(t in 1:T) {
@@ -301,8 +305,9 @@ hazard = {
 
         switch(mixture,
             P = f <- sapply(k, function(x) dpois(x, lambda)),
-            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda,
-                size=exp(pars[nP]))))
+            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda, size=exp(pars[nP]))),
+            ZIP = f <- sapply(k, function(x) dzip(rep(x, length(lambda)), lambda=lambda, psi=plogis(pars[nP])))
+        )
         for(i in 1:M) {
             mn <- matrix(0, lk, T)
             for(t in 1:T) {
@@ -364,8 +369,9 @@ uniform = {
         p <- 1
         switch(mixture,
             P = f <- sapply(k, function(x) dpois(x, lambda)),
-            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda,
-                size=exp(pars[nP]))))
+            NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda, size=exp(pars[nP]))),
+            ZIP = f <- sapply(k, function(x) dzip(rep(x, length(lambda)), lambda=lambda, psi=plogis(pars[nP])))
+        )
         for(i in 1:M) {
             mn <- matrix(0, lk, T)
             for(t in 1:T) {
@@ -398,7 +404,7 @@ if(engine =="C"){
   if(output!='density'){
     A <- rep(1, M)
   }
-  mixture_code <- switch(mixture, P={1}, NB={2})
+  mixture_code <- switch(mixture, P={1}, NB={2}, ZIP={3})
   n_param <- c(nLP, nPP, nDP, nSP, nOP)
   Kmin <- apply(yt, 1, max, na.rm=TRUE)
 
@@ -452,6 +458,13 @@ if(identical(mixture, "NB"))
         short.name = "alpha", estimates = ests[nP],
         covMat = as.matrix(covMat[nP, nP]), invlink = "exp",
         invlinkGrad = "exp")
+
+if(identical(mixture,"ZIP")) {
+    estimateList@estimates$psi <- unmarkedEstimate(name="Zero-inflation",
+        short.name = "psi", estimates = ests[nP],
+        covMat=as.matrix(covMat[nP, nP]), invlink = "logistic",
+        invlinkGrad = "logistic.grad")
+}
 
 umfit <- new("unmarkedFitGDS", fitType = "gdistsamp",
     call = match.call(), formula = form, formlist = formlist,

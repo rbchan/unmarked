@@ -111,7 +111,8 @@ test_that("gdistsamp with halfnorm keyfunction works",{
     #expect_equivalent(coef(fm_R),coef(fm_C),tol=1e-4)
 
     #With covariates
-    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=covs,
+    ysc <- as.data.frame(rbind(covs, covs, covs))
+    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=ysc,
                             survey="line", unitsIn="m",
                             dist.breaks=breaks,
                             tlength=rep(transect.length, R), numPrimary=T)
@@ -149,7 +150,7 @@ test_that("gdistsamp with halfnorm keyfunction works",{
     #With missing values
     yna <- y
     yna[1,c(1,6)] <- NA
-    umf <- unmarkedFrameGDS(y = yna, siteCovs=covs, yearlySiteCovs=covs,
+    umf <- unmarkedFrameGDS(y = yna, siteCovs=covs, yearlySiteCovs=ysc,
                             survey="line", unitsIn="m",
                             dist.breaks=breaks,
                             tlength=rep(transect.length, R), numPrimary=T)
@@ -166,7 +167,7 @@ test_that("gdistsamp with halfnorm keyfunction works",{
     #With an entire session missing
     yna <- y
     yna[1,1:J] <- NA
-    umf <- unmarkedFrameGDS(y = yna, siteCovs=covs, yearlySiteCovs=covs,
+    umf <- unmarkedFrameGDS(y = yna, siteCovs=covs, yearlySiteCovs=ysc,
                             survey="line", unitsIn="m",
                             dist.breaks=breaks,
                             tlength=rep(transect.length, R), numPrimary=T)
@@ -250,7 +251,8 @@ test_that("gdistsamp with uniform keyfunction works",{
     }
     y <- matrix(y, nrow=R) # convert array to matrix
 
-    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=covs,
+    ysc <- as.data.frame(rbind(covs, covs, covs))
+    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=ysc,
                             survey="line", unitsIn="m",
                             dist.breaks=breaks,
                             tlength=rep(transect.length, R), numPrimary=T)
@@ -328,7 +330,8 @@ test_that("gdistsamp with exp keyfunction works",{
     y <- matrix(y, nrow=R) # convert array to matrix
 
     #With covariates
-    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=covs,
+    ysc <- as.data.frame(rbind(covs, covs, covs))
+    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=ysc,
                             survey="line", unitsIn="m",
                             dist.breaks=breaks,
                             tlength=rep(transect.length, R), numPrimary=T)
@@ -415,7 +418,8 @@ test_that("gdistsamp with hazard keyfunction works",{
     y <- matrix(y, nrow=R) # convert array to matrix
 
     #With covariates
-    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=covs,
+    ysc <- as.data.frame(rbind(covs, covs, covs))
+    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=ysc,
                             survey="line", unitsIn="m",
                             dist.breaks=breaks,
                             tlength=rep(transect.length, R), numPrimary=T)
@@ -625,7 +629,8 @@ test_that("gdistsamp simulate method works",{
     y <- matrix(y, nrow=R) # convert array to matrix
 
     covs$par1[2] <- NA
-    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=covs,
+    ysc <- as.data.frame(rbind(covs, covs, covs))
+    umf <- unmarkedFrameGDS(y = y, siteCovs=covs, yearlySiteCovs=ysc,
                             survey="line", unitsIn="m",
                             dist.breaks=breaks,
                             tlength=rep(transect.length, R), numPrimary=T)
@@ -644,3 +649,68 @@ test_that("gdistsamp simulate method works",{
 
 })
 
+test_that("gdistsamp with ZIP mixture works",{
+    #Line
+    set.seed(343)
+    #R <- 500 # for accuracy checks
+    #T <- 10
+    R <- 50
+    T <- 5
+    strip.width <- 50
+    transect.length <- 200 #Area != 1
+    breaks <- seq(0, 50, by=10)
+
+    covs <- as.data.frame(matrix(rnorm(R*T),ncol=T))
+    names(covs) <- paste0('par',1:3)
+
+    beta <- c(0.4,0.3)
+    x <- rnorm(R)
+    lambda <- exp(1.3 + beta[1]*x)
+    psi <- 0.3
+    phi <- plogis(as.matrix(0.4 + beta[2]*covs))
+    sigma <- exp(3)
+    J <- length(breaks)-1
+    y <- array(0, c(R, J, T))
+    M <- numeric(R)
+    for(i in 1:R) {
+        M[i] <- unmarked:::rzip(1, lambda[i], psi=psi) # Individuals within the 1-ha strip
+        for(t in 1:T) {
+            # Distances from point
+            d <- runif(M[i], 0, strip.width)
+            # Detection process
+            if(length(d)) {
+                cp <- phi[i,t]*exp(-d^2 / (2 * sigma^2)) # half-normal w/ g(0)<1
+                d <- d[rbinom(length(d), 1, cp) == 1]
+                y[i,,t] <- table(cut(d, breaks, include.lowest=TRUE))
+            }
+        }
+    }
+    y <- matrix(y, nrow=R) # convert array to matrix
+
+    umf <- unmarkedFrameGDS(y = y, survey="line", unitsIn="m",
+                            siteCovs=data.frame(par1=x),
+                            yearlySiteCovs=list(par2=covs),
+                            dist.breaks=breaks,
+                            tlength=rep(transect.length, R), numPrimary=T)
+
+    # R and C give same result
+    fm_R <- gdistsamp(~par1, ~par2, ~1, umf, mixture="ZIP", output="abund", se=FALSE, engine="R",
+                      control=list(maxit=1))
+    fm_C <- gdistsamp(~par1, ~par2, ~1, umf, mixture="ZIP", output="abund", se=FALSE, engine="C",
+                      control=list(maxit=1))
+    expect_equal(coef(fm_R), coef(fm_C))
+    
+    # Fit model
+    fm_C <- gdistsamp(~par1, ~par2, ~1, umf, mixture="ZIP", output="abund")
+    
+    expect_equivalent(coef(fm_C), c(2.4142,0.3379,-1.2809,0.25916,2.91411,-1.12557), tol=1e-4)
+    
+    # Check ZIP-specific methods
+    ft <- fitted(fm_C)
+    r <- ranef(fm_C)
+    b <- bup(r)
+    #plot(M, b)
+    #abline(a=0,b=1)
+    s <- simulate(fm_C)
+
+})

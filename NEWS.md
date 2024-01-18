@@ -1,3 +1,34 @@
+# unmarked 1.4.0
+
+* Added count-data occupancy model (occuCOP)
+* Added multi-scale occupancy model (goccu) 
+* Added ZIP support to gdistsamp, gmultmix, and gpcount
+* Fixed bug in TMB engine for occu that resulted in incorrect detection coefficient estimates when there were many interspersed NAs in the encounter history
+
+# unmarked 1.3.3
+
+* Increase required R version to 4.0
+  
+# unmarked 1.3.2
+
+* Modernize some Cpp code to pass new LTO checks
+
+# unmarked 1.3.1
+
+* Remove log.grad function to pass CRAN checks
+
+# unmarked 1.3.0
+
+* Add support for terra package rasters
+* Add plotEffects function for plotting marginal effects
+* Better default names in fitLists
+* Optional Shiny app for power analysis
+* parboot now more robust to errors
+* Add back temporarily removed occuMulti and colext vignettes
+* Remove dependency on plyr package and move methods to imports
+* Expand powerAnalysis vignette
+* Many small bugfixes
+
 # unmarked 1.2.4
 
 * Convert vignettes to use rmarkdown

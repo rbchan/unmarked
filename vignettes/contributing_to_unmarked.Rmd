@@ -1,0 +1,318 @@
+---
+title: "Contributing to unmarked: guide to adding a new model to `unmarked`"
+author:
+  - name: Ken Kellner
+  - name: Léa Pautrel
+date: "December 08, 2023"
+output: 
+  rmarkdown::html_vignette:
+    fig_width: 5
+    fig_height: 3.5
+    number_sections: true
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Contributing to unmarked}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+library(unmarked)
+```
+
+
+Follow the steps in this guide to add a new model to the `unmarked` package. Note that the order can be adjusted based on your preferences. For instance, you can start with [the likelihood function](#the-likelihood-function), as it forms the core of adding a model to unmarked, and then build the rest of the code around it. In this document, the steps are ordered as they would occur in an `unmarked` analysis workflow. 
+
+This guide uses the recently developed `gdistremoval` function for examples, mainly because most of the relevant code is in a single file instead of spread around. It also uses `occu` functions to show simpler examples that may be easier to understand.
+
+# Prerequisites and advices {-}
+
+- Before you start coding, you should use git to version your code:
+  - Fork the `unmarked` [repository](https://github.com/rbchan/unmarked) on Github
+  - Make a new branch with your new function as the name
+  - Add the new code
+
+- `unmarked` uses S4 for objects and methods - if you aren't familiar with S4 you may want to consult a book or tutorial such as [this one](https://kasperdanielhansen.github.io/genbioconductor/html/R_S4.html).
+
+- If you are unfamiliar with building a package in R, here are two tutorials that may help you: [Karl Broman's guide to building packages](https://kbroman.org/pkg_primer/) and [the official R-project guide](https://cran.r-project.org/doc/manuals/R-exts.html). If you are using RStudio, their [documentation on writing package](https://docs.posit.co/ide/user/ide/guide/pkg-devel/writing-packages.html) could also be useful, especially to understand how to use the **Build** pane.
+
+- To avoid complex debugging in the end, I suggest you to regularly install and load the package as you add new code. You can easily do so in RStudio in the Build pane, by clicking on "Install > Clean and install". This will also allow you to test your functions cleanly.
+
+- Write [tests](#write-tests) and [documentation](#write-documentation) as you add new functions, classes, and methods. This eases the task, avoiding the need to write everything at the end.
+
+# Organise the input data: design the `unmarkedFrame` object
+
+Most model types in unmarked have their own `unmarkedFrame`, a specialized kind of data frame. This is an S4 object which contains, at a minimum, the response (y). It may also include site covariates, observation covariates, primary period covariates, and other info related to study design (such as distance breaks).
+
+In some cases you may be able to use an existing `unmarkedFrame` subclass. You can list all the existing `unmarkedFrame` subclasses by running the following code:
+
+```{r unmarkedFrame-subclasses}
+showClass("unmarkedFrame")
+```
+You can have more information about each `unmarkedFrame` subclass by looking at the documentation of the function that was written to create the `unmarkedFrame` object of this subclass, for example with `?unmarkedFrameGDR`, or on the [package's website](https://rbchan.github.io/unmarked/reference/unmarkedFrameGDR.html).
+
+## Define the `unmarkedFrame` subclass for this model
+
+- All `unmarkedFrame` subclasses are children of the `umarkedFrame` class, defined [here](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFrame.R#L24-L30).
+- [Example with `occu`](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFrame.R#L65-L66)
+- [Example with `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L1-L11)
+- All `unmarkedFrame` subclasses need to pass the [validunmarkedFrame](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFrame.R#L4-L19) validity check. You may want to add complementary validity check, like, for example, the [`unmarkedFrameDS subclass](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFrame.R#L43-L62).
+
+## Write the function that creates the `unmarkedFrame` object
+
+- [Example with `occu`](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFrame.R#L232-L239)
+- [Example with `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L13-L50)
+
+## Write the S4 methods associated with the `unmarkedFrame` object {#methods-unmarkedFrame}
+
+Note that you may not have to write all of the S4 methods below. Most of them will work without having to re-write them, but you should test it to verify it. All the methods associated with `unmarkedFrame` objects are listed in the [`unmarkedFrame` class documentation](https://rbchan.github.io/unmarked/reference/unmarkedFrame-class.html) accessible with `help("unmarkedFrame-class")`.
+
+### Specific methods {-}
+
+Here are methods you probably will have to rewrite.
+
+- Subsetting the `unmarkedFrame` object: `umf[i, ]`, `umf[, j]` and `umf[i, j]`
+  - Example with `occu`: [code for `unmarkedFrame` mother class](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFrame.R#L1126-L1235), as used to subset an `unmarkedFrameOccu` object.
+  - Example with `gdistremoval`: [`umf[i, ]` when `i` is numeric](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L67-L120), [`umf[i, ]` when `i` is logical](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L122-L126), [`umf[i, j]`](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L128-L174)
+
+### Generic methods {-}
+
+Here are methods that you should test but probably will not have to rewrite. They are defined in the [`unmarkedFrame.R`](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFrame.R) file, for the `unmarkedFrame` mother class.
+
+- `coordinates`
+- `getY`
+- `numSites`
+- `numY`
+- `obsCovs`
+- `obsCovs<-`
+- `obsNum`
+- `obsToY`
+- `obsToY<-`
+- `plot`
+- `projection`
+- `show`
+- `siteCovs`
+- `siteCovs<-`
+- `summary`
+
+### Methods to access new attributes {-}
+
+You may also need to add specific methods to allow users to access an attribute you added to your `unmarkedFrame` subclass.
+
+- For example, `getL` for `unmarkedFrameOccuCOP`
+
+# Fitting the model
+
+The fitting function can be declined into three main steps: reading the `unmarkedFrame` object, maximising the likelihood, and formatting the outputs.
+
+- [Example: the `occu()` function](https://github.com/rbchan/unmarked/blob/master/R/occu.R#L4-L161)
+- [Example: the `gdistremoval()` function](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L257-L472)
+
+## Inputs of the fitting function
+
+- R formulas for each submodel (e.g. state, detection). We have found over time it is better to have separate arguments per formula (*e.g.* the way `gdistremoval` does it) instead of a combined formula (*e.g.* the way `occu` does it).
+- `data` for the `unmarkedFrame`
+- Parameters for `optim`: optimisation algorithm (`method`), initial parameters, and other parameters (`...`)
+- `engine` parameter to call one of the implemented likelihood functions
+- Other model-specific settings, such as key functions or parameterizations to use
+
+## Read the `unmarkedFrame` object: write the `getDesign` method
+
+Most models have their own `getDesign` function, an S4 method. The purpose of this method is to convert the information in the `unmarkedFrame` into a format usable by the likelihood function.
+
+- It generates **design matrices** from formulas and components of the `unmarkedFrame`.
+- It often also has code to handle **missing values**, such as by dropping sites that don't have measurements, or giving the user warnings if covariates are missing, etc.
+
+Writing the `getDesign` method is frequently the most tedious and difficult part of the work adding a new function.
+
+- [Example for `occu`](https://github.com/rbchan/unmarked/blob/master/R/getDesign.R#L10-L153), as used for `occu`
+- [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L177-L253)
+
+## The likelihood function
+
+- **Inputs**: a vector of parameter values, the response variable, design matrices, and other settings/required data
+- **Outputs**: a numeric, the negative log-likelihood
+- Should be written so it can be used with the `optim()` function
+- Models can have three likelihood functions : coded in R, in C++ and with TMB (*which is technically in C++ too*). Users can specify which likelihood function to use in the `engine` argument of the fitting function.
+
+### The R likelihood function: easily understandable
+
+If you are mainly used to coding in R, you should probably start here. If users want to dig deeper into the likelihood of a model, it may be useful for them to be able to read the R code to calculate likelihood, as they may not be familiar with other languages. This likelihood function can be used only for **fixed-effects models**.
+
+- [Example for `occu`](https://github.com/rbchan/unmarked/blob/master/R/occu.R#L65-L74)
+- `gdistremoval` doesn't have an R version of the likelihood function
+
+### The C++ likelihood function: faster
+
+The C++ likelihood function is essentially a C++ version of the R likelihood function, also designed exclusively for **fixed-effects models**. This function uses the `RcppArmadillo` R package, [presented here](https://github.com/RcppCore/RcppArmadillo). In the C++ code, you can use functions of the `Armadillo` C++ library, [documented here](https://arma.sourceforge.net/docs.html).
+
+Your C++ function should be in a `.cpp` file in the `./src/` folder of the package. You do not need to write a header file (`.hpp`), nor do you need to compile the code by yourself as it is all handled by the `RcppArmadillo` package. To test if your C++ function runs and gives you the expected result, you can compile and load the function with ` Rcpp::sourceCpp(./src/nll_yourmodel.cpp)`, and then use it like you would use a R function: `nll_yourmodel(params=params, arg1=arg1)`.
+
+- [Example for `occu`](https://github.com/rbchan/unmarked/blob/master/src/nll_occu.cpp)
+- [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/src/nll_gdistremoval.cpp)
+
+### The TMB likelihood function: for random effects
+
+> #TODO
+
+- [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/src/TMB/tmb_gdistremoval.hpp)
+
+## Organise the output data
+
+### `unmarkedEstimate` objects per submodel
+
+Outputs from `optim` should be organized unto `unmarkedEstimate` (S4) objects, with one `unmarkedEstimate` per submodel (*e.g.* state, detection). These objects include the parameter estimates and other information about link functions etc.
+
+The `unmarkedEstimate` class is defined [here](https://github.com/rbchan/unmarked/blob/master/R/unmarkedEstimate.R#L5-L26) in the `unmarkedEstimate.R` file, and the `unmarkedEstimate` function is defined [here](https://github.com/rbchan/unmarked/blob/master/R/unmarkedEstimate.R#L86-L100), and is used to create new `unmarkedEstimate` objects. You normally will not need to create `unmarkedEstimate` subclass.
+
+- [Example for the state estimate for `occu`](https://github.com/rbchan/unmarked/blob/master/R/occu.R#L132-L139)
+- [Example for the lambda estimate for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L429-L431C72)
+
+
+### Design the `unmarkedFit` object
+
+You'll need to create a new `unmarkedFit` subclass for your model. The main component of `unmarkedFit` objects is a list of the `unmarkedEstimates` described above.
+
+- [Definition of the `unmarkedFit` mother class](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFit.R#L1-L14)
+- [Example of the `unmarkedFitOccu` subclass definition](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFit.R#L68-L70)
+- [Example of the `unmarkedFitGDR` subclass definition](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L255)
+
+After you defined your `unmarkedFit` subclass, you can create the object in your fitting function.
+
+- [Example of the `unmarkedFitOccu` object creation](https://github.com/rbchan/unmarked/blob/master/R/occu.R#L153-L158)
+- [Example of the `unmarkedFitGDR` object creation](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L466-L470)
+
+The fitting function return this  `unmarkedFit` object.
+
+## Test the complete fitting function process
+
+- Simulate some data using your model
+- Construct the `unmarkedFrame`
+- Provide formulas, `unmarkedFrame`, other options to your draft fitting function
+- Process them with `getDesign`
+- Pass results from `getDesign` as inputs to your likelihood function
+- Optimize the likelihood function
+- Check the resulting parameter estimates for accuracy
+
+# Write the methods associated with the `unmarkedFit` object
+
+Develop methods specific to your `unmarkedFit` type for operating on the output of your model. Like for the methods associated with an `unmarkedFrame` object [above](#methods-unmarkedFrame), you probably will not have to re-write all of them, but you should test them to see if they work. All the methods associated with `unmarkedFit` objects are listed in the [`unmarkedFit` class documentation](https://rbchan.github.io/unmarked/reference/unmarkedFit-class.html) accessible with `help("unmarkedFit-class")`.
+
+### Specific methods {-}
+
+Those are methods you will want to rewrite, adjusting them for your model.
+
+#### `getP` {-}
+
+The `getP` method ([defined here](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFit.R#L1475-L1492)) "back-transforms" the detection parameter ($p$ the detection probability or $\lambda$ the detection rate, depending on the model). It returns a matrix of the estimated detection parameters. It is called by several other methods that are useful to extract information from the `unmarkedFit` object.
+
+- For `occu`, the generic method for `unmarkedFit` objects is called.
+- [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L476-L537)
+
+#### `simulate` {-}
+
+The generic `simulate` method ([defined here](https://github.com/rbchan/unmarked/blob/master/R/simulate.R#L62C33-L86)) calls the `simulate_fit` method that depends on the class of the `unmarkedFit` object, which depends on the model.
+
+- [Example of `simulate_fit` method for `occu`](https://github.com/rbchan/unmarked/blob/master/R/simulate.R#L158-L165)
+- [Example of `simulate_fit` method for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/R/simulate.R#L536-L558)
+
+The `simulate` method can be used in two ways:
+
+- to generate datasets from scratch ([see the "Simulating datasets" vignette](https://rbchan.github.io/unmarked/articles/simulate.html))
+- to generate datasets from a fitted model (with `simulate(object = my_unmarkedFit_object)`).
+
+You should test both ways with your model.
+
+#### `plot` {-}
+
+This method plots the results of your model. The generic `plot` method for `unmarkedFit` ([defined here](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFit.R#L1346-L1352)) plot the residuals of the model.
+
+- For `occu`, the generic method for `unmarkedFit` objects is called.
+- [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/R/gdistremoval.R#L837-L853)
+
+### Generic methods {-}
+
+Here are methods that you should test but probably will not have to rewrite. They are defined in the [`unmarkedFit.R`](https://github.com/rbchan/unmarked/blob/master/R/unmarkedFit.R) file, for the `unmarkedFit` mother class.
+
+- `[`
+- `backTransform`
+- `coef`
+- `confint`
+- `fitted`
+- `getData`
+- `hessian`
+- `linearComb`
+- `mle`
+- `names`
+- `nllFun`
+- `parboot`
+- `nonparboot`
+- `predict`
+- `profile`
+- `residuals`
+- `sampleSize`
+- `SE`
+- `show`
+- `summary`
+- `update`
+- `vcov`
+- `logLik`
+- `LRT`
+
+### Methods to access new attributes {-}
+
+You may also need to add specific methods to allow users to access an attribute you added to your `unmarkedFit` subclass.
+
+For example, some methods are relevant for some type of models only:
+
+- `getFP` for occupancy models that account for false positives
+- `getB` for occupancy models that account for false positives
+- `smoothed` for colonization-extinction models
+- `projected` for colonization-extinction models
+
+# Update the `NAMESPACE` file
+
+- Add your fitting function to the functions export [here](https://github.com/rbchan/unmarked/blob/master/NAMESPACE#L23-L27)
+- Add the new subclasses (`unmarkedFrame`, `unmarkedFit`) to the classes export [here](https://github.com/rbchan/unmarked/blob/master/NAMESPACE#L31-L43)
+- Add the function you wrote to create your `unmarkedFrame` object to the functions export [here](https://github.com/rbchan/unmarked/blob/master/NAMESPACE#L58-L64)
+- If you wrote new methods, for example to [access new attributes for objects of a subclass](#Methods-to-access-new-attributes), add them to the methods export [here](https://github.com/rbchan/unmarked/blob/master/NAMESPACE#L45-L54)
+- If required, export other functions you created that may be called by users of the package
+
+# Write tests
+
+Using `testthat` package, you need to write tests for your `unmarkedFrame` function, your fitting function, and methods described above. The tests should be fast, but cover all the key configurations.
+
+Write your tests in the `./tests/testthat/` folder, creating a R file for your model. If you are using RStudio, you can run the tests of your file easily by clicking on the "Run tests" button. You can run all the tests by clicking on the "Test" button in the Build pane.
+
+* [Example for `occu`](https://github.com/rbchan/unmarked/blob/master/tests/testthat/test_occu.R)
+* [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/tests/testthat/test_gdistremoval.R)
+
+
+# Write documentation
+
+You need to write the documentation files for the new classes and functions you added. Documentation `.Rd` files are stored in the `man` folder. [Here](https://r-pkgs.org/man.html) is a documentation on how to format your documentation.
+
+- The most important, your fitting function!
+  - [Example for `occu`](https://github.com/rbchan/unmarked/blob/master/man/occu.Rd)
+  - [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/man/gdistremoval.Rd)
+- Your `unmarkedFrame` constructor function
+  - [Example for `occu`](https://github.com/rbchan/unmarked/blob/master/man/occu.Rd)
+  - [Example for `gdistremoval`](https://github.com/rbchan/unmarked/blob/master/man/gdistremoval.Rd)
+- Add your fitting function to the reference of all functions to [_pkgdown.yml](https://github.com/rbchan/unmarked/blob/master/_pkgdown.yml)
+- Add the specific "type" for the predict methods of your `unmarkedFit` class to [predict-methods.Rd](https://github.com/rbchan/unmarked/blob/master/man/predict-methods.Rd)
+- Add your `getP` method for the signature of you `unmarkedFitList` object in [getP-methods.Rd](https://github.com/rbchan/unmarked/blob/master/man/getP-methods.Rd).
+
+Depending on how much you had to add, you may also need to update existing files:
+
+- If you added specific methods for your new `unmarkedFrame` class: add them to [unmarkedFrame-class.Rd](https://github.com/rbchan/unmarked/blob/master/man/unmarkedFrame-class.Rd)
+- If you added specific methods for your new `unmarkedFit` class: add them to [unmarkedFit-class.Rd](https://github.com/rbchan/unmarked/blob/master/man/unmarkedFit-class.Rd). The same goes for your new `unmarkedFitList` class in [unmarkedFitList-class.Rd](https://github.com/rbchan/unmarked/blob/master/man/unmarkedFitList-class.rd).
+- Add any specific function, method or class you created. For example, specific distance-sampling functions are documented in [detFuns.Rd](https://github.com/rbchan/unmarked/blob/master/man/detFuns.Rd).
+
+
+# Add to `unmarked`
+
+- Send a pull request on Github
+- Probably fix a few things
+- Merged and done!

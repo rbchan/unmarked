@@ -1,4 +1,4 @@
-#include "nll_occuMS.h"
+#include <RcppArmadillo.h>
 
 using namespace Rcpp;
 using namespace arma;
@@ -15,7 +15,7 @@ mat get_param(const List& dm_list, const vec& beta, const mat& ind){
     mat X = as<mat>(dm_list[i]);
     out.col(i) = X * beta.subvec(ind(i,0), ind(i,1));
   }
-  
+
   return(out);
 }
 
@@ -34,12 +34,12 @@ rowvec multinom_logit(const rowvec& lp){
 //calculate final psi depending on parameterization
 mat get_psi(const mat& lp, const std::string& prm){
   int R = lp.n_rows;
-  
+
   if(prm == "multinomial"){
     //[ 1 - psi_1:psi_m, psi_1:psi_m ]
     mat out(R, lp.n_cols + 1);
     for (int i=0; i<R; i++){
-     out.row(i) = multinom_logit(lp.row(i)); 
+     out.row(i) = multinom_logit(lp.row(i));
     }
     return(out);
 
@@ -60,9 +60,9 @@ mat get_psi(const mat& lp, const std::string& prm){
 
 //calculate phi matrix for a site-year depending on parameterization
 mat get_phi(int S, const rowvec& lp, const std::string& prm){
-  
+
   mat out(S,S);
-  
+
   if(prm == "multinomial"){
     int index = 0;
     for (int i=0; i<S; i++){ //row
@@ -78,7 +78,7 @@ mat get_phi(int S, const rowvec& lp, const std::string& prm){
       out.row(i) = lp_row / sum(lp_row);
     }
     return(out);
-  
+
   } else if(prm == "condbinom"){
     rowvec lp_logit = 1 / ( 1 + exp(-lp));
     for(int i=0; i<S; i++){
@@ -92,12 +92,12 @@ mat get_phi(int S, const rowvec& lp, const std::string& prm){
   }
 }
 
-mat get_sdp(int S, const rowvec& lp, const mat& guide, 
+mat get_sdp(int S, const rowvec& lp, const mat& guide,
     const std::string& prm){
 
   mat out = zeros(S,S);
 
-  if(prm == "multinomial"){  
+  if(prm == "multinomial"){
     for (unsigned int i=0; i<lp.size(); i++){
       out( guide(i,0), guide(i,1) ) = exp(lp(i));
     }
@@ -125,9 +125,9 @@ mat get_sdp(int S, const rowvec& lp, const mat& guide,
   }
 }
 
-vec get_ph(const int S, const rowvec& y, const mat& probs, 
+vec get_ph(const int S, const rowvec& y, const mat& probs,
     const rowvec& navec, const mat& guide, const std::string prm){
-  
+
   int J = probs.n_rows;
 
   vec out = ones(S);
@@ -143,42 +143,20 @@ vec get_ph(const int S, const rowvec& y, const mat& probs,
   return(out);
 }
 
-SEXP nll_occuMS( SEXP beta_, SEXP y_, 
-    SEXP dm_state_, SEXP dm_phi_, SEXP dm_det_, 
-    SEXP sind_, SEXP pind_, SEXP dind_, SEXP prm_, 
-    SEXP S_, SEXP T_, SEXP J_, SEXP N_,
-    SEXP naflag_, SEXP guide_){
-
-  //Inputs
-  const vec beta = as<vec>(beta_);
-  const mat y = as<mat>(y_);
-  const List dm_state(dm_state_);
-  const List dm_phi(dm_phi_);
-  const List dm_det(dm_det_);
-
-  const mat sind = as<mat>(sind_);
-  const mat dind = as<mat>(dind_);
-  const mat guide = as<mat>(guide_);
-
-  const std::string prm = as<std::string>(prm_);
-  
-  const mat naflag = as<mat>(naflag_);
-  
-  int N = as<int>(N_);
-  int S = as<int>(S_);
-  int T = as<int>(T_);
-  int J = as<int>(J_);
-
+// [[Rcpp::export]]
+double nll_occuMS(arma::vec beta, arma::mat y,
+    Rcpp::List dm_state, Rcpp::List dm_phi, Rcpp::List dm_det,
+    arma::mat sind, arma::mat pind, arma::mat dind, std::string prm,
+    int S, int T, int J, int N,
+    arma::mat naflag, arma::mat guide){
 
   //Get psi values
   const mat raw_psi = get_param(dm_state, beta, sind);
   const mat psi = get_psi(raw_psi, prm);
-  
+
   //Get phi values
   mat raw_phi;
-  mat pind;
   if(T>1){
-    pind = as<mat>(pind_);
     raw_phi = get_param(dm_phi, beta, pind);
   }
 
@@ -197,7 +175,7 @@ SEXP nll_occuMS( SEXP beta_, SEXP y_,
     rowvec nasub = naflag.row(n);
     ystart = 0;
     mat phi_prod = eye(S,S);
-    
+
     if(T>1){
       for(int t=0; t<(T-1); t++){
         pend = pstart + J - 1;
@@ -214,7 +192,7 @@ SEXP nll_occuMS( SEXP beta_, SEXP y_,
         phi_index += 1;
       }
     }
-    
+
     pend = pstart + J - 1;
     yend = ystart + J - 1;
 
@@ -222,12 +200,12 @@ SEXP nll_occuMS( SEXP beta_, SEXP y_,
         p.rows(span(pstart, pend)),
         nasub.subvec(ystart,yend), guide, prm);
     pstart += J;
-    
+
     rowvec psi_phi = psi.row(n) * phi_prod;
     lik(n) = dot(psi_phi, ph_T);
 
   }
 
-  return(wrap(-sum(log(lik))));
+  return -sum(log(lik));
 
 }

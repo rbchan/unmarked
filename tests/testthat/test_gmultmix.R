@@ -287,3 +287,43 @@ test_that("getP works when there is only 1 site", {
   expect_equal(dim(gp), c(1,4))
 
 })
+
+test_that("gmultmix ZIP model works",{
+  # Simulate independent double observer data
+  nSites <- 50
+  lambda <- 10
+  psi <- 0.3
+  p1 <- 0.5
+  p2 <- 0.3
+  cp <- c(p1*(1-p2), p2*(1-p1), p1*p2)
+  set.seed(9023)
+  N <- unmarked:::rzip(nSites, lambda, psi)
+  y <- matrix(NA, nSites, 3)
+  for(i in 1:nSites) {
+    y[i,] <- rmultinom(1, N[i], c(cp, 1-sum(cp)))[1:3]
+  }
+
+  # Make unmarkedFrame
+  observer <- matrix(c('A','B'), nSites, 2, byrow=TRUE)
+  expect_warning(umf <- unmarkedFrameGMM(y=y, obsCovs=list(observer=observer),
+         type="double",numPrimary=1))
+
+  # Compare R and C engines
+  fmR <- gmultmix(~1, ~1, ~observer, umf, mixture="ZIP", engine="R", se=FALSE,
+                  control=list(maxit=1))
+  fmC <- gmultmix(~1, ~1, ~observer, umf, mixture="ZIP", engine="C", se=FALSE,
+                  control=list(maxit=1))
+  expect_equal(coef(fmR), coef(fmC))
+
+  #  Fit model full
+  fm <- gmultmix(~1,~1,~observer, umf, mixture="ZIP")
+  expect_equivalent(coef(fm), c(2.2289,0.1858,-0.9285,-0.9501), tol=1e-4)
+
+  # Check methods
+  ft <- fitted(fm)
+  r <- ranef(fm)
+  b <- bup(r)
+  #plot(N, b)
+  s <- simulate(fm)
+
+})

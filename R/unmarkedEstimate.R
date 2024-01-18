@@ -294,7 +294,7 @@ setMethod("vcov", "unmarkedEstimate",
 setMethod("confint", "unmarkedEstimate",
     function(object, parm, level = 0.95)
 {
-    if(missing(parm)) parm <- 1:length(object@estimates)
+    if(missing(parm)) parm <- object@fixed
     ests <- object@estimates[parm]
     ses <- SE(object)[parm]
     z <- qnorm((1-level)/2, lower.tail = FALSE)

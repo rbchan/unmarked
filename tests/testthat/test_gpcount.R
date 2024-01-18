@@ -117,3 +117,50 @@ test_that("gpcount R and C++ engines give same results",{
   fmR <- gpcount(~x, ~yr, ~o1, data = umf, K=23, engine="R", control=list(maxit=1))
   expect_equal(coef(fm), coef(fmR))
 })
+
+test_that("gpcount ZIP mixture works", {
+  
+  set.seed(123)
+  M <- 100
+  J <- 5
+  T <- 3
+  lam <- 3
+  psi <- 0.3
+  p <- 0.5
+  phi <- 0.7
+
+  y <- array(NA, c(M, J, T))
+
+  N <- unmarked:::rzip(M, lambda=lam, psi=psi)
+
+  for (i in 1:M){
+    for (t in 1:T){
+      n <- rbinom(1, N[i], phi)
+      for (j in 1:J){
+         y[i,j,t] <- rbinom(1, n, p)
+      }
+    }
+  }
+
+  ywide <- cbind(y[,,1], y[,,2], y[,,3])
+  umf <- unmarkedFrameGPC(y=ywide, numPrimary=T)
+  
+  # check R and C engines match
+  fitC <- gpcount(~1, ~1, ~1, umf, mixture="ZIP", K=10, engine="C",
+                se=FALSE, control=list(maxit=1))
+  fitR <- gpcount(~1, ~1, ~1, umf, mixture="ZIP", K=10, engine="R",
+                se=FALSE, control=list(maxit=1))
+  expect_equal(coef(fitC), coef(fitR))
+  
+  # Properly fit model
+  fit <- gpcount(~1, ~1, ~1, umf, mixture="ZIP", K=10)
+  expect_equivalent(coef(fit), c(1.02437, 0.85104, -0.019588, -1.16139), tol=1e-4)
+
+  # Check methods
+  ft <- fitted(fit)
+  r <- ranef(fit)
+  b <- bup(r)
+  #plot(N, b)
+  #abline(a=0, b=1)
+  s <- simulate(fit)
+})

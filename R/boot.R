@@ -69,7 +69,7 @@ setMethod("parboot", "unmarkedFit",  function(object, statistic=SSE, nsim=10,
     simdata <- replaceY(object@data, x)
     tryCatch({
       #if(runif(1,0,1) < 0.5) stop("fail") # for testing error trapping
-      fit <- update(object, data=simdata, starts=starts, se=FALSE)
+      fit <- update(object, data = simdata, starts = starts, se = FALSE)
       statistic(fit, ...)
     }, error=function(e){
       t0[] <- NA
@@ -77,7 +77,8 @@ setMethod("parboot", "unmarkedFit",  function(object, statistic=SSE, nsim=10,
     })
   }
 
-  t.star <- t(pbapply::pbsapply(simList, run_sim, object=object,
+  # Uses pbapply if available, or parSapply if not (see utils.R)
+  t.star <- t(sapply2(simList, run_sim, object=object,
                               statistic=statistic, starts=starts, t0=t0,
                               cl=cl, ...))
   if(length(t0) == 1) t.star <- matrix(t.star, ncol=1)

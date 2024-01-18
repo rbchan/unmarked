@@ -820,7 +820,7 @@ It looks like only the largest tested sample size (100 sites) has power > 0.8 to
 
 # Shiny webapp
 
-`unmarked` now includes a [Shiny](https://shiny.rstudio.com/) webapp that can be used to conduct power analyses.
+`unmarked` now includes a [Shiny](https://shiny.posit.co/) webapp that can be used to conduct power analyses.
 The Shiny app is launched with the `shinyPower()` function, which takes as a template model as an input argument (see above).
 This function opens a window in your web browser.
 Once the application is loaded, you can experiment with different settings and generate summaries and figures for the resulting power estimates.

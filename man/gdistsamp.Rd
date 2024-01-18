@@ -11,7 +11,7 @@ to be modeled using the negative binomial distribution.
 \usage{
 gdistsamp(lambdaformula, phiformula, pformula, data, keyfun =
 c("halfnorm", "exp", "hazard", "uniform"), output = c("abund",
-"density"), unitsOut = c("ha", "kmsq"), mixture = c("P", "NB"), K,
+"density"), unitsOut = c("ha", "kmsq"), mixture = c("P", "NB", "ZIP"), K,
 starts, method = "BFGS", se = TRUE, engine=c("C","R"), rel.tol=1e-4, threads=1, ...)
 }
 \arguments{
@@ -39,8 +39,8 @@ starts, method = "BFGS", se = TRUE, engine=c("C","R"), rel.tol=1e-4, threads=1, 
           kilometers, respectively.
 }
   \item{mixture}{
-      Either "P" or "NB" for the Poisson and negative binomial models of
-          abundance.
+      Either "P", "NB", or "ZIP" for the Poisson, negative binomial, or
+      zero-inflated Poisson models of abundance.
 }
   \item{K}{
       An integer value specifying the upper bound used in the integration.

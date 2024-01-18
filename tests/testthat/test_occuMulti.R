@@ -536,7 +536,10 @@ test_that("occuMulti penalized likelihood works",{
   set.seed(123)
   opt_fit  <- optimizePenalty(fm, penalties=c(0,1), boot=2)
   expect_equal(opt_fit@call$penalty, 1)
-
+  
+  ll <- unmarked:::occuMultiLogLik(fm, fm@data)
+  expect_equal(length(ll), numSites(fm@data))
+  expect_equal(-sum(ll), fm@negLogLike) 
   })
 
 

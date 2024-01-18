@@ -1,44 +1,24 @@
-#include "nll_pcountOpen.h"
-#include "tranprobs.h"
+#include <RcppArmadillo.h>
+#include <float.h>
 #include "distr.h"
+#include "tranprobs.h"
 
 
 using namespace Rcpp ;
 
 
+// [[Rcpp::export]]
+double nll_pcountOpen(arma::imat ym, arma::mat Xlam, arma::mat Xgam, arma::mat Xom,
+    arma::mat Xp, arma::mat Xiota, arma::colvec beta_lam, arma::colvec beta_gam,
+    arma::colvec beta_om, arma::colvec beta_p, arma::colvec beta_iota,
+    double log_alpha, arma::colvec Xlam_offset, arma::colvec Xgam_offset,
+    arma::colvec Xom_offset, arma::colvec Xp_offset, arma::colvec Xiota_offset,
+    arma::imat ytna, arma::imat ynam, int lk, std::string mixture,
+    Rcpp::IntegerVector first, Rcpp::IntegerVector last, int M, int J, int T,
+    arma::imat delta, std::string dynamics, std::string fix, std::string go_dims,
+    bool immigration, arma::imat I, arma::imat I1, Rcpp::List Ib, Rcpp::List Ip) {
 
-SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP Xiota_, SEXP beta_lam_, SEXP beta_gam_, SEXP beta_om_, SEXP beta_p_, SEXP beta_iota_, SEXP log_alpha_, SEXP Xlam_offset_, SEXP Xgam_offset_, SEXP Xom_offset_, SEXP Xp_offset_, SEXP Xiota_offset_, SEXP ytna_, SEXP yna_, SEXP lk_, SEXP mixture_, SEXP first_, SEXP last_, SEXP M_, SEXP J_, SEXP T_, SEXP delta_, SEXP dynamics_, SEXP fix_, SEXP go_dims_, SEXP immigration_, SEXP I_, SEXP I1_, SEXP Ib_, SEXP Ip_) {
-  int lk = as<int>(lk_);
   Rcpp::IntegerVector N = seq_len(lk)-1;
-  int M = as<int>(M_);
-  int J = as<int>(J_);
-  int T = as<int>(T_);
-  arma::imat ym = as<arma::imat>(y_);
-  arma::mat Xlam = as<arma::mat>(Xlam_);
-  arma::mat Xgam = as<arma::mat>(Xgam_);
-  arma::mat Xom = as<arma::mat>(Xom_);
-  arma::mat Xp = as<arma::mat>(Xp_);
-  arma::mat Xiota = as<arma::mat>(Xiota_);
-  arma::colvec beta_lam = as<arma::colvec>(beta_lam_);
-  arma::colvec beta_gam = as<arma::colvec>(beta_gam_);
-  arma::colvec beta_om = as<arma::colvec>(beta_om_);
-  arma::colvec beta_p = as<arma::colvec>(beta_p_);
-  arma::colvec beta_iota = as<arma::colvec>(beta_iota_);
-  double log_alpha = as<double>(log_alpha_);
-  arma::colvec Xlam_offset = as<arma::colvec>(Xlam_offset_);
-  arma::colvec Xgam_offset = as<arma::colvec>(Xgam_offset_);
-  arma::colvec Xom_offset = as<arma::colvec>(Xom_offset_);
-  arma::colvec Xp_offset = as<arma::colvec>(Xp_offset_);
-  arma::colvec Xiota_offset = as<arma::colvec>(Xiota_offset_);
-  std::string mixture = as<std::string>(mixture_);
-  std::string dynamics = as<std::string>(dynamics_);
-  std::string fix = as<std::string>(fix_);
-  std::string go_dims = as<std::string>(go_dims_);
-  bool immigration = as<bool>(immigration_);
-  arma::imat I = as<arma::imat>(I_);
-  arma::imat I1 = as<arma::imat>(I1_);
-  Rcpp::List Ib(Ib_);
-  Rcpp::List Ip(Ip_);
   int nrI = I.n_rows;
   int nrI1 = I1.n_rows;
   double alpha=0.0, psi=0.0;
@@ -46,11 +26,7 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
     alpha = exp(log_alpha);
   else if(mixture=="ZIP")
     psi = 1.0/(1.0+exp(-log_alpha));
-  Rcpp::IntegerVector first(first_);
-  Rcpp::IntegerVector last(last_);
-  arma::imat ytna = as<arma::imat>(ytna_); // y[i,,t] are all NA
-  arma::imat ynam = as<arma::imat>(yna_);  // y[i,j,t] is NA
-  arma::imat delta = as<arma::imat>(delta_);
+
   // linear predictors
   arma::colvec lam = exp(Xlam*beta_lam + Xlam_offset);
   arma::mat omv = arma::ones<arma::colvec>(M*(T-1));
@@ -232,5 +208,5 @@ SEXP nll_pcountOpen( SEXP y_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_, SEXP Xp_, SEXP 
     }
     ll += log(ll_i + DBL_MIN);
   }
-  return wrap(-ll);
+  return -ll;
 }

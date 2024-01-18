@@ -56,7 +56,10 @@ Type tmb_occu(objective_function<Type>* obj) {
     int pind = i * J;
     Type cp = 1.0;
     for (int j=0; j<J; j++){
-      if(R_IsNA(asDouble(y(i,j)))) continue;
+      if(R_IsNA(asDouble(y(i,j)))){
+        pind += 1;
+        continue;
+      }
       cp *= pow(p(pind), y(i,j)) * pow(1-p(pind), 1-y(i,j));
       pind += 1;
     }

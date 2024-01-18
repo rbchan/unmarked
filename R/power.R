@@ -84,6 +84,9 @@ powerAnalysis <- function(object, coefs=NULL, design=NULL, alpha=0.05, nulls=lis
     ses <- shiny::getDefaultReactiveDomain()
     pb <- shiny::Progress$new(ses, min=0, max=1)
     pb$set(message="Running simulations")
+    if(!requireNamespace("pbapply", quietly=TRUE)){
+      stop("You need to install the pbapply package", call.=FALSE)
+    }
     fits <- pbapply::pblapply(1:nsim, function(i, sims, fit, bdata=NULL){
       if(!is.null(design)) fit@data <- bdata[[i]]
       if(inherits(fit, "unmarkedFitOccuMulti")){
@@ -99,7 +102,7 @@ powerAnalysis <- function(object, coefs=NULL, design=NULL, alpha=0.05, nulls=lis
 
   } else {
 
-    fits <- pbapply::pblapply(1:nsim, function(i, sims, fit, bdata=NULL){
+    fits <- lapply2(1:nsim, function(i, sims, fit, bdata=NULL){
       if(!is.null(design)) fit@data <- bdata[[i]]
       if(inherits(fit, "unmarkedFitOccuMulti")){
         fit@data@ylist <- sims[[i]]
@@ -428,6 +431,9 @@ shinyPower <- function(object, ...){
   }
   if(!requireNamespace("shiny")){
     stop("Install the shiny library to use this function", call.=FALSE)
+  }
+  if(!requireNamespace("pbapply")){
+    stop("Install the pbapply library to use this function", call.=FALSE)
   }
   options(unmarked_shiny=TRUE)
   on.exit(options(unmarked_shiny=FALSE))

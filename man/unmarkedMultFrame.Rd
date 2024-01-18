@@ -8,6 +8,7 @@
 \alias{unmarkedFrameGMM}
 \alias{unmarkedFrameGDS}
 \alias{unmarkedFrameGPC}
+\alias{unmarkedFrameGOccu}
 
 \title{Create an unmarkedMultFrame, unmarkedFrameGMM, unmarkedFrameGDS,
   or unmarkedFrameGPC object}
@@ -154,7 +155,7 @@ o2y
 umfGMM2 <- unmarkedFrameGMM(y=y,
     siteCovs = data.frame(site=site),
     obsCovs=list(occasion=occasions),
-    yearlySiteCovs=data.frame(year=years),
+    yearlySiteCovs=data.frame(year=c(t(years))),
     numPrimary=T, obsToY=o2y, piFun="instRemPiFun")
 
 str(umfGMM2)

@@ -1,18 +1,12 @@
-#include "nll_distsamp.h"
+#include <RcppArmadillo.h>
+#include <float.h>
+#include "detfuns.h"
 
-
-SEXP nll_distsamp( SEXP y_, SEXP lam_, SEXP sig_, SEXP scale_, SEXP a_, SEXP u_, SEXP w_, SEXP db_, SEXP keyfun_, SEXP survey_, SEXP reltol_ ) {
-
-  Rcpp::IntegerMatrix y(y_);
-  Rcpp::NumericVector lam(lam_);
-  Rcpp::NumericVector sig(sig_);
-  double scale = Rcpp::as<double>(scale_);
-  Rcpp::NumericMatrix a(a_);
-  Rcpp::NumericMatrix u(u_);
-  Rcpp::NumericVector w(w_);
-  Rcpp::NumericVector db(db_);
-  std::string keyfun = Rcpp::as<std::string>(keyfun_);
-  std::string survey = Rcpp::as<std::string>(survey_);
+// [[Rcpp::export]]
+double nll_distsamp(Rcpp::IntegerMatrix y, Rcpp::NumericVector lam,
+    Rcpp::NumericVector sig, double scale, Rcpp::NumericMatrix a,
+    Rcpp::NumericMatrix u, Rcpp::NumericVector w, Rcpp::NumericVector db,
+    std::string keyfun, std::string survey) {
 
   int R = y.nrow();   //y.n_rows;
   int J = y.ncol();   // y.n_cols;
@@ -66,5 +60,5 @@ SEXP nll_distsamp( SEXP y_, SEXP lam_, SEXP sig_, SEXP scale_, SEXP a_, SEXP u_,
       ll += std::max(Rf_dpois(y(i,j), lam[i]*cp, true), lnmin);
     }
   }
-  return Rcpp::wrap(-ll);
+  return -ll;
 }

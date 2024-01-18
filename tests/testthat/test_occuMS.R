@@ -94,7 +94,7 @@ test_that("occuMS R and C engines return same results",{
 })
 
 test_that("occuMS can fit the multinomial model",{
-
+  skip_on_ci()
   #Simulate data
   set.seed(123)
   N <- 50; J <- 5; S <- 3

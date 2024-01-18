@@ -12,3 +12,5 @@ README.Rmd
 ^\.github$
 ^_pkgdown\.yml$
 ^vignettes/colext.Rmd.orig
+^.*\.Rproj$
+^\.Rproj\.user$

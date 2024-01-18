@@ -220,11 +220,11 @@ distsamp <- function(formula, data,
             if(identical(output, "density"))
                 lambda <- lambda * A
             sigma <- drop(exp(V %*% beta.sig + V.offset))
-            .Call("nll_distsamp",
+            nll_distsamp(
                   y, lambda, sigma, scale,
                   a, u, w, db,
-                  keyfun, survey, rel.tol,
-                  PACKAGE="unmarked")
+                  keyfun, survey
+            )
         }
     }
 

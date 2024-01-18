@@ -363,7 +363,7 @@ setMethod("confint", "unmarkedFit", function(object, parm, level = 0.95,
     if(missing(type))
         stop(paste("Must specify type as one of (", paste(names(object), collapse=", "),").",sep=""))
     if(missing(parm))
-        parm <- 1:length(object[type]@estimates)
+        parm <- object[type]@fixed
     if(method == "normal") {
         callGeneric(object[type],parm = parm, level = level)
     } else {
@@ -827,6 +827,11 @@ setMethod("fitted", "unmarkedFitGMM",
     T <- data@numPrimary
     J <- ncol(y) / T
     lambda <- drop(exp(Xlam %*% coef(object, 'lambda') + Xlam.offset))
+    if(identical(object@mixture, "ZIP")) {
+        psi <- plogis(coef(object, type="psi"))
+        lambda <- (1-psi)*lambda
+    }
+
     if(T==1)
         phi <- 1
     else
@@ -2872,7 +2877,12 @@ setMethod("simulate", "unmarkedFitGMM",
         switch(mixture,
             P = M <- rpois(n=n, lambda=lam),
             NB = M <- rnbinom(n=n, mu=lam,
-                size=exp(coef(object, type="alpha"))))
+                size=exp(coef(object, type="alpha"))),
+            ZIP = {
+              psi <- plogis(coef(object['psi']))
+              M <- rzip(n, lambda=lam, psi=psi)
+            }
+        )
 
         N <- rbinom(n*T, size=M, prob=phi.mat)
         # bug fix 3/16/2010
@@ -2938,10 +2948,15 @@ setMethod("simulate", "unmarkedFitGPC",
     simList <- list()
     for(s in 1:nsim) {
         switch(mixture,
-               P = M <- rpois(n=R, lambda=lam),
+            P = M <- rpois(n=R, lambda=lam),
                #               FIXME: Add ZIP
-               NB = M <- rnbinom(n=R, mu=lam,
-               size=exp(coef(object, type="alpha"))))
+            NB = M <- rnbinom(n=R, mu=lam,
+               size=exp(coef(object, type="alpha"))),   
+            ZIP = {
+              psi <- plogis(coef(object['psi']))
+              M <- rzip(R, lambda=lam, psi=psi)
+            }
+        )
 
         N <- rbinom(R*T, size=M, prob=phi.mat)
         N <- matrix(N, nrow=R, ncol=T, byrow=FALSE)
@@ -3031,7 +3046,12 @@ setMethod("simulate", "unmarkedFitGDS",
                 NB = {
                     alpha <- exp(coef(object, type="alpha"))
                     Ns <- rnbinom(1, mu=lambda[i], size=alpha)
-                    })
+                    },
+                ZIP = {
+                    psi <- plogis(coef(object['psi']))
+                    Ns <- rzip(1, lambda[i], psi)
+                    }
+            )
             for(t in 1:T) {
                 N <- rbinom(1, Ns, phi[i,t])
                 cp.it <- cpa[i,,t]

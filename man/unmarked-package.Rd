@@ -260,6 +260,6 @@ Sillett, S. and Chandler, R.B. and Royle, J.A. and Kery, M. and
 
 
 \docType{package}
-\author{Ian Fiske, Richard Chandler, Andy Royle, Marc K\'{e}ry, David
+\author{Ian Fiske, Richard Chandler, Andy Royle, Marc Kery, David
   Miller, and Rebecca Hutchinson}
 \keyword{package}

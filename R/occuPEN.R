@@ -77,10 +77,10 @@ occuPEN_CV <- function(formula, data, knownOcc = numeric(0), starts,
     nll <- function(params) {
           beta.psi <- params[1:nOP]
           beta.p <- params[(nOP+1):nP]
-          .Call("nll_occu",
+          nll_occu(
                   yvec, X, V, beta.psi, beta.p, nd, knownOccLog, navec,
-                  X.offset, V.offset, "logit",
-                  PACKAGE = "unmarked")
+                  X.offset, V.offset, "logit"
+          )
       }
   } else {
     nll <- function(params) { # penalize this function
@@ -252,12 +252,9 @@ occuPEN <- function(formula, data, knownOcc = numeric(0), starts,
 	    } else {
 	      stop("pen.type not found")
 	    }
-
-            .Call("nll_occuPEN",
-                  yvec, X, V, beta.psi, beta.p, nd, knownOccLog, navec,
-                  X.offset, V.offset, penalty,
-                  PACKAGE = "unmarked")
-        }
+        nll_occuPEN(yvec, X, V, beta.psi, beta.p, nd, knownOccLog, navec,
+                    X.offset, V.offset, penalty)
+      }
     } else {
       nll <- function(params) { # penalize this function
           psi <- plogis(X %*% params[1 : nOP] + X.offset)

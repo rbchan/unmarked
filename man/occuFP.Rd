@@ -45,7 +45,7 @@ are specified to belong to 1 of the 3 data types and all or a subset of the data
 
 For type 1 data, the detection process is assumed to fit the assumptions of the standard MacKenzie model
 where false negative probabilities are estimated but false positive detections are assumed not to occur. If all of your
-data is of this type you should use code{occu} to analyze data. The detection parameter p, which is modeled using the
+data is of this type you should use \code{occu} to analyze data. The detection parameter p, which is modeled using the
 detformula is the only observation parameter for these data.
 
 For type 2 data, both false negative and false positive detection probabilities are estimated. If all data is of this

@@ -1,14 +1,10 @@
-#include "get_mlogit.h"
+#include <RcppArmadillo.h>
 
 using namespace Rcpp;
 using namespace arma;
 
-SEXP get_mlogit(SEXP lp_mat_, SEXP type_, SEXP S_, SEXP guide_){
-  
-  const mat lp_mat = as<mat>(lp_mat_);
-  const std::string type = as<std::string>(type_);
-  int S = as<int>(S_);
-  const mat guide = as<mat>(guide_);
+// [[Rcpp::export]]
+arma::mat get_mlogit(arma::mat lp_mat, std::string type, int S, arma::mat guide){
 
   int R = lp_mat.n_rows;
   int C = lp_mat.n_cols;
@@ -22,7 +18,7 @@ SEXP get_mlogit(SEXP lp_mat_, SEXP type_, SEXP S_, SEXP guide_){
         out(r,c) = out(r,c) / row_sum;
       }
     }
-    return(wrap(out));
+    return out;
 
   } else if(type == "phi"){
 
@@ -37,9 +33,9 @@ SEXP get_mlogit(SEXP lp_mat_, SEXP type_, SEXP S_, SEXP guide_){
         ix += (S-1);
       }
     }
-    return(wrap(out));
+    return out;
   } else if(type == "det"){
-    
+
     mat out(R,C);
     for(int r=0; r<R; r++){
       mat sdp = zeros(S,S);
@@ -52,12 +48,12 @@ SEXP get_mlogit(SEXP lp_mat_, SEXP type_, SEXP S_, SEXP guide_){
         for (int j=0; j<S; j++){
           sdp(s,j) = sdp(s,j) / row_sum;
         }
-      } 
+      }
       for(int c=0; c<C; c++){
         out(r,c) = sdp( guide(c,0), guide(c,1) );
       }
     }
-    return(wrap(out));
+    return out;
   } else {
     stop("type must be 'psi','phi',or 'det'");
   }

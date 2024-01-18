@@ -1,4 +1,4 @@
-#include "nll_occuTTD.h"
+#include <RcppArmadillo.h>
 
 using namespace Rcpp;
 using namespace arma;
@@ -30,35 +30,15 @@ using namespace arma;
 
 //}
 
-SEXP nll_occuTTD( SEXP beta_, SEXP y_, SEXP delta_,
-    SEXP W_, SEXP V_, SEXP Xgam_, SEXP Xeps_,
-    SEXP pind_, SEXP dind_, SEXP cind_, SEXP eind_,
-    SEXP lpsi_, SEXP tdist_,
-    SEXP N_, SEXP T_, SEXP J_,
-    SEXP naflag_){
+// [[Rcpp::export]]
+double nll_occuTTD( arma::vec beta, arma::vec y, arma::vec delta,
+    arma::mat W, arma::mat V, arma::mat Xgam, arma::mat Xeps,
+    arma::vec pind, arma::vec dind, arma::vec cind, arma::vec eind,
+    std::string lpsi, std::string tdist,
+    int N, int T, int J,
+    arma::vec naflag){
 
-  //Inputs
-  const vec beta = as<vec>(beta_);
-  const vec y = as<vec>(y_);
-  const vec delta = as<vec>(delta_);
-  const vec naflag = as<vec>(naflag_);
-  const mat W = as<mat>(W_);
-  const mat V = as<mat>(V_);
-  const vec pind = as<vec>(pind_);
-  const vec dind = as<vec>(dind_);
-  const std::string lpsi = as<std::string>(lpsi_);
-  const std::string tdist = as<std::string>(tdist_);
-
-  int N = as<int>(N_);
-  int T = as<int>(T_);
-  int J = as<int>(J_);
   int ys = y.size();
-
-  //Dynamic stuff
-  const mat Xgam = as<mat>(Xgam_);
-  const mat Xeps = as<mat>(Xeps_);
-  const vec cind = as<vec>(cind_);
-  const vec eind = as<vec>(eind_);
 
   //Get psi values
   colvec raw_psi = W * beta.subvec(pind(0), pind(1));
@@ -131,6 +111,6 @@ SEXP nll_occuTTD( SEXP beta_, SEXP y_, SEXP delta_,
 
   }
 
-  return(wrap(-sum(log(lik))));
+  return -sum(log(lik));
 
 }

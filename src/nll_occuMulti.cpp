@@ -1,46 +1,21 @@
-#include "nll_occuMulti.h"
+#include <RcppArmadillo.h>
 
 using namespace Rcpp;
 using namespace arma;
 
-SEXP nll_occuMulti( SEXP fStartR, SEXP fStopR, SEXP dmFr, SEXP dmOccR, 
-    SEXP betaR, SEXP dmDetR, SEXP dStartR, SEXP dStopR, SEXP yR, SEXP yStartR, 
-    SEXP yStopR, SEXP Iy0r, SEXP zR, SEXP fixed0r, SEXP penaltyR,
-    SEXP returnLLr){
-  
-  //Inputs
-  IntegerVector fStart(fStartR);
-  IntegerVector fStop(fStopR);
-  
-  //if Matrix is a dependency
-  sp_mat dmF = as<sp_mat>(dmFr); //already transposed
-  
-  //if Matrix not a dependency
-  //sp_mat dmF( as<mat>(dmFr) );
-  
-  int nF = dmF.n_rows;
-  List dmOcc(dmOccR);
+// [[Rcpp::export]]
+arma::vec nll_occuMulti_loglik(Rcpp::IntegerVector fStart, Rcpp::IntegerVector fStop,
+    arma::sp_mat dmF, Rcpp::List dmOcc,
+    arma::colvec beta, Rcpp::List dmDet,
+    Rcpp::IntegerVector dStart, Rcpp::IntegerVector dStop,
+    arma::mat y, Rcpp::IntegerVector yStart, Rcpp::IntegerVector yStop,
+    arma::mat Iy0, arma::mat z, Rcpp::LogicalVector fixed0){
 
-  colvec beta = as<colvec>(betaR);
-  LogicalVector fixed0(fixed0r);
-  
-  List dmDet(dmDetR);
-  IntegerVector dStart(dStartR);
-  IntegerVector dStop(dStopR);
-  
-  mat y = as<mat>(yR);
+  int nF = dmF.n_rows; //dmF is already transposed
   int S = y.n_cols;
   int J = y.n_rows;
-  IntegerVector yStart(yStartR);
-  IntegerVector yStop(yStopR);
   int N = yStart.size();
-  mat Iy0 = as<mat>(Iy0r);
 
-  mat z = as<mat>(zR);
-
-  double penalty = as<double>(penaltyR);
-  int returnLL = as<int>(returnLLr);
-  
   //psi calculation
   int index = 0;
   mat f(N, nF);
@@ -54,7 +29,7 @@ SEXP nll_occuMulti( SEXP fStartR, SEXP fStopR, SEXP dmFr, SEXP dmOccR,
     }
   }
 
-  mat psi = exp( f * dmF ); 
+  mat psi = exp( f * dmF );
   for(unsigned int i = 0; i < psi.n_rows; i++){
     psi.row(i) = psi.row(i) / sum( psi.row(i) );
   }
@@ -72,15 +47,15 @@ SEXP nll_occuMulti( SEXP fStartR, SEXP fStopR, SEXP dmFr, SEXP dmOccR,
   vec logLik(N);
 
   for(int i = 0; i < N; i++){
-    
+
     mat ysub = y.rows(yStart[i], yStop[i]);
     mat psub = p.rows(yStart[i], yStop[i]);
     rowvec cdp(S);
     for(int j = 0; j < S; j++){
-     cdp(j) = exp( sum( ysub.col(j) % log(psub.col(j)) ) + 
+     cdp(j) = exp( sum( ysub.col(j) % log(psub.col(j)) ) +
                    sum( (1 - ysub.col(j)) % log( 1 - psub.col(j)) ) );
     }
-    
+
     rowvec prdProbY(M);
     for(int j = 0; j < M; j++){
       prdProbY(j) = prod( z.row(j) % cdp + (1 - z.row(j)) % Iy0.row(i) );
@@ -89,11 +64,21 @@ SEXP nll_occuMulti( SEXP fStartR, SEXP fStopR, SEXP dmFr, SEXP dmOccR,
     logLik(i) = log( sum( psi.row(i) % prdProbY ) );
 
   }
-  
-  if(returnLL){
-    return(wrap(logLik));
-  }
+
+  return logLik;
+}
+
+// [[Rcpp::export]]
+double nll_occuMulti(Rcpp::IntegerVector fStart, Rcpp::IntegerVector fStop,
+    arma::sp_mat dmF, Rcpp::List dmOcc,
+    arma::colvec beta, Rcpp::List dmDet,
+    Rcpp::IntegerVector dStart, Rcpp::IntegerVector dStop,
+    arma::mat y, Rcpp::IntegerVector yStart, Rcpp::IntegerVector yStop,
+    arma::mat Iy0, arma::mat z, Rcpp::LogicalVector fixed0, double penalty){
+
+  vec logLik = nll_occuMulti_loglik(fStart, fStop, dmF, dmOcc, beta, dmDet,
+      dStart, dStop, y, yStart, yStop, Iy0, z, fixed0);
 
   double pen = penalty * 0.5 * accu(pow(beta, 2));
-  return(wrap(-1.0 * (sum(logLik) - pen)));
+  return -1.0 * (sum(logLik) - pen);
 }

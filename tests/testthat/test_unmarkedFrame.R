@@ -256,3 +256,18 @@ test_that("lists provided to obsCovs or yearlySiteCovs must be named", {
         obsCovs = oc,
         numPrimary = 3))
 })
+
+test_that("covsToDF", {
+  expect_equal(covsToDF(NULL, "obsCovs", 2, 3), NULL)
+  
+  df <- data.frame(x = rnorm(6), y = rnorm(6))
+  expect_equal(covsToDF(df, "obsCovs", 2, 3),
+               df)
+  expect_error(covsToDF(df, "obsCovs", 2, 2))
+
+  cl <- list(x = matrix(rnorm(6), 2, 3), y =matrix(rnorm(6), 2, 3))
+  df_cl <- as.data.frame(lapply(cl, function(x) as.vector(t(x))))
+  expect_equal(covsToDF(cl, "obsCovs", 3, 2),
+               df_cl)
+  expect_error(covsToDF(cl, "obsCovs", 2, 3))
+})

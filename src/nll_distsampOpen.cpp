@@ -1,77 +1,30 @@
-#include "nll_distsampOpen.h"
+#include <RcppArmadillo.h>
+#include <float.h>
+#include "tranprobs.h"
+#include "distprob.h"
+#include "distr.h"
 
 using namespace Rcpp;
 using namespace arma;
 
-SEXP nll_distsampOpen( SEXP y_, SEXP yt_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_,
-    SEXP Xsig_, SEXP Xiota_,
-    SEXP beta_, SEXP beta_ind_,
-    SEXP Xlam_offset_,
-    SEXP Xgam_offset_, SEXP Xom_offset_, SEXP Xsig_offset_, SEXP Xiota_offset_,
-    SEXP ytna_, SEXP lk_, SEXP mixture_, SEXP first_, SEXP last_, SEXP first1_,
-    SEXP M_, SEXP T_, SEXP delta_, SEXP dynamics_, SEXP survey_,
-    SEXP fix_, SEXP go_dims_, SEXP immigration_, SEXP I_, SEXP I1_, SEXP Ib_,
-    SEXP Ip_,
-    SEXP a_, SEXP u_, SEXP w_, SEXP db_, SEXP keyfun_,
-    SEXP lfac_k_, SEXP kmyt_, SEXP lfac_kmyt_, SEXP fin_, SEXP A_ ) {
+// [[Rcpp::export]]
+double nll_distsampOpen(arma::ucube y, arma::imat yt,
+    arma::mat Xlam, arma::mat Xgam, arma::mat Xom, arma::mat Xsig, arma::mat Xiota,
+    arma::vec beta, arma::umat bi,
+    arma::colvec Xlam_offset, arma::colvec Xgam_offset, arma::colvec Xom_offset,
+    arma::colvec Xsig_offset, arma::colvec Xiota_offset,
+    arma::imat ytna, int lk, std::string mixture,
+    Rcpp::IntegerVector first, Rcpp::IntegerVector last, int first1,
+    int M, int T, arma::imat delta, std::string dynamics, std::string survey,
+    std::string fix, std::string go_dims, bool immigration,
+    arma::imat I, arma::imat I1, Rcpp::List Ib, Rcpp::List Ip,
+    arma::mat a, arma::mat u, arma::vec w, arma::vec db, std::string keyfun,
+    arma::vec lfac_k, arma::cube kmyt, arma::cube lfac_kmyt, arma::icube fin, arma::vec A ) {
 
   //Indices
-  int lk = as<int>(lk_);
   Rcpp::IntegerVector N = seq_len(lk)-1;
-  int M = as<int>(M_);
-  int T = as<int>(T_);
-  ucube y = as<ucube>(y_);
-  imat yt = as<imat>(yt_);
-  Rcpp::IntegerVector first(first_);
-  Rcpp::IntegerVector last(last_);
-  int first1 = as<int>(first1_);
-  arma::imat ytna = as<arma::imat>(ytna_); // y[i,,t] are all NA
-  arma::imat delta = as<arma::imat>(delta_);
-
-  vec lfac_k = as<vec>(lfac_k_);
-  cube lfac_kmyt = as<cube>(lfac_kmyt_);
-  cube kmyt = as<cube>(kmyt_);
-  icube fin = as<icube>(fin_);
-  imat I = as<arma::imat>(I_);
-  imat I1 = as<arma::imat>(I1_);
-  List Ib(Ib_);
-  List Ip(Ip_);
   int nrI = I.n_rows;
   int nrI1 = I1.n_rows;
-
-  //Distance sampling info
-  mat a = as<mat>(a_);
-  mat u = as<mat>(u_);
-  vec w = as<vec>(w_);
-  vec db = as<vec>(db_);
-  vec A = as<vec>(A_);
-
-  //Covariate matrices
-  mat Xlam = as<mat>(Xlam_);
-  mat Xgam = as<mat>(Xgam_);
-  mat Xom = as<mat>(Xom_);
-  mat Xsig = as<mat>(Xsig_);
-  mat Xiota = as<mat>(Xiota_);
-
-  //Offsets
-  colvec Xlam_offset = as<colvec>(Xlam_offset_);
-  colvec Xgam_offset = as<colvec>(Xgam_offset_);
-  colvec Xom_offset = as<colvec>(Xom_offset_);
-  colvec Xsig_offset = as<colvec>(Xsig_offset_);
-  colvec Xiota_offset = as<colvec>(Xiota_offset_);
-
-  //Model types
-  std::string keyfun = as<std::string>(keyfun_);
-  std::string mixture = as<std::string>(mixture_);
-  std::string dynamics = as<std::string>(dynamics_);
-  std::string fix = as<std::string>(fix_);
-  std::string go_dims = as<std::string>(go_dims_);
-  bool immigration = as<bool>(immigration_);
-  std::string survey = as<std::string>(survey_);
-
-  //Parameters
-  vec beta = as<vec>(beta_);
-  umat bi = as<umat>(beta_ind_);
 
   //Lambda
   vec beta_lam = beta.subvec(bi(0,0), bi(0,1));
@@ -328,5 +281,5 @@ SEXP nll_distsampOpen( SEXP y_, SEXP yt_, SEXP Xlam_, SEXP Xgam_, SEXP Xom_,
 
   }
 
-  return wrap(-ll);
+  return -ll;
 }

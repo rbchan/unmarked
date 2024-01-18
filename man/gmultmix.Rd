@@ -9,7 +9,7 @@ The three model parameters are abundance, availability, and detection
 probability.
 }
 \usage{
-gmultmix(lambdaformula, phiformula, pformula, data, mixture = c("P", "NB"), K, 
+gmultmix(lambdaformula, phiformula, pformula, data, mixture = c("P", "NB", "ZIP"), K, 
          starts, method = "BFGS", se = TRUE, engine=c("C","R"), threads=1, ...)
 }
 \arguments{
@@ -18,8 +18,8 @@ gmultmix(lambdaformula, phiformula, pformula, data, mixture = c("P", "NB"), K,
     \item{phiformula}{RHS formula describing availability covariates}
     \item{pformula}{RHS formula describing detection covariates}
     \item{data}{An object of class unmarkedFrameGMM}
-    \item{mixture}{Either "P" or "NB" for Poisson and Negative Binomial mixing
-        distributions.}
+    \item{mixture}{Either "P", "NB", or "ZIP" for the Poisson, negative binomial, or
+      zero-inflated Poisson models of abundance}
     \item{K}{The upper bound of integration}
     \item{starts}{Starting values}
     \item{method}{Optimization method used by \code{\link{optim}}}
@@ -35,16 +35,16 @@ gmultmix(lambdaformula, phiformula, pformula, data, mixture = c("P", "NB"), K,
     }
 \details{
 The latent transect-level super-population abundance distribution
-\eqn{f(M | \mathbf{\theta})}{f(M | theta)} can be set as either a
-Poisson or
-a negative binomial random variable, depending on the setting of the
-\code{mixture} argument. \code{mixture = "P"} or \code{mixture = "NB"}
-select
-the Poisson or negative binomial distribution respectively.  The mean of
-\eqn{M_i} is \eqn{\lambda_i}{lambda_i}.  If \eqn{M_i \sim NB}{M_i ~ NB},
-then an
-additional parameter, \eqn{\alpha}{alpha}, describes dispersion (lower
-\eqn{\alpha}{alpha} implies higher variance).
+\eqn{f(M | \mathbf{\theta})}{f(M | theta)} can be set as a
+Poisson, negative binomial, or zero-inflated Poisson random variable, 
+depending on the setting of the \code{mixture} argument. 
+\code{mixture = "P"}, \code{mixture = "NB"}, and \code{mixture = "ZIP"}
+select the Poisson, negative binomial, and zero-inflated Poisson distributions 
+respectively.  The mean of \eqn{M_i} is \eqn{\lambda_i}{lambda_i}.  
+If \eqn{M_i \sim NB}{M_i ~ NB}, then an additional parameter, \eqn{\alpha}{alpha}, 
+describes dispersion (lower \eqn{\alpha}{alpha} implies higher variance). If 
+\eqn{M_i \sim ZIP}{M_i ~ ZIP}, then an additional zero-inflation parameter
+\eqn{\psi}{psi} is estimated.
 
 The number of individuals available for detection at time j
 is a modeled as binomial:

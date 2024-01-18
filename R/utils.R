@@ -47,9 +47,11 @@ logistic.grad <- function(x) {
 }
 
 
-log.grad <- function(x) { # duh! (but for clarity)
-  1/x
-}
+# This function causes check failures on CRAN because CRAN thinks it's
+# a method for the log function. I don't think it's actually used in the package?
+#log.grad <- function(x) { # duh! (but for clarity)
+#  1/x
+#}
 
 
 explink <- function(x) exp(x)
@@ -906,4 +908,22 @@ E_loglam <- function(log_lam, object, name){
   v <- sig$sigma^2
   ll <- log_lam + v/2
   ll
+}
+
+sapply2 <- function(X, FUN, ..., cl = NULL){
+  if(requireNamespace("pbapply", quietly=TRUE)){
+    return(pbapply::pbsapply(X=X, FUN=FUN, ..., cl = cl))
+  } else if(!is.null(cl)){
+    return(parallel::parSapply(cl=cl, X=X, FUN=FUN, ...))
+  }
+  sapply(X=X, FUN=FUN, ...)
+}
+
+lapply2 <- function(X, FUN, ..., cl = NULL){
+  if(requireNamespace("pbapply", quietly=TRUE)){
+    return(pbapply::pblapply(X=X, FUN=FUN, ..., cl = cl))
+  } else if(!is.null(cl)){
+    return(parallel::parLapply(cl=cl, X=X, fun=FUN, ...))
+  }
+  lapply(X=X, FUN=FUN, ...)
 }

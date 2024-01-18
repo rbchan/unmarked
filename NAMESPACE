@@ -7,7 +7,7 @@ importFrom(stats, confint, fitted, coef, vcov, predict, update, profile,
            pnorm, qchisq, qnorm, quantile, rbinom,
            reshape, rmultinom, rnbinom, rpois, runif, sd, uniroot,
            update.formula, sigma)
-importFrom(graphics, plot, hist, abline, axis, lines, points, polygon, segments)
+importFrom(graphics, plot, hist, abline, axis, lines, points, polygon, segments, title)
 importFrom(utils, head, read.csv)
 importFrom(grDevices, devAskNewPage, dev.interactive, palette.colors)
 importFrom(MASS, mvrnorm)
@@ -17,14 +17,14 @@ importFrom(methods, is, as, new, show, slot, .hasSlot, callGeneric,
            callNextMethod, setMethod)
 importFrom(lattice, xyplot, levelplot)
 importFrom(Rcpp, evalCpp)
-importFrom(pbapply, pbsapply, pblapply)
 
 
 # Fitting functions
 export(occu, occuFP, occuRN, pcount, pcountOpen, multinomPois, distsamp,
        colext, gmultmix, gdistsamp, gpcount, occuPEN, occuPEN_CV, occuMulti,
        occuMS, computeMPLElambda, pcount.spHDS, occuTTD, distsampOpen,
-       multmixOpen, nmixTTD, gdistremoval, IDS)
+       multmixOpen, nmixTTD, gdistremoval, goccu, occuCOP, IDS)
+
 export(removalPiFun, doublePiFun)
 export(makeRemPiFun, makeCrPiFun, makeCrPiFunMb, makeCrPiFunMh)
 
@@ -51,7 +51,8 @@ exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
               "siteCovs<-", summary, update, vcov, yearlySiteCovs,
               "yearlySiteCovs<-", "[", smoothed, projected, nonparboot, logLik,
               LRT, ranef, bup, crossVal, posteriorSamples, sigma, randomTerms, 
-              optimizePenalty, unmarkedPowerList, plotEffectsData, plotEffects)
+              optimizePenalty, unmarkedPowerList, plotEffectsData, plotEffects,
+              getL)
 
 S3method("print", "unmarkedPostSamples")
 
@@ -61,7 +62,8 @@ export(unmarkedEstimate, fitList, mapInfo, unmarkedFrame,
     unmarkedFrameDS, unmarkedMultFrame, unmarkedFrameGMM,
     unmarkedFramePCO, unmarkedFrameGDS, unmarkedFrameGPC, unmarkedFrameOccuMulti,
     unmarkedFrameOccuMS, unmarkedFrameOccuTTD, unmarkedFrameDSO, 
-    unmarkedFrameMMO, unmarkedFrameGDR)
+    unmarkedFrameMMO, unmarkedFrameGDR, unmarkedFrameGOccu,
+    unmarkedFrameOccuCOP)
 
 # Formatting
 export(csvToUMF, formatLong, formatWide, formatMult, formatDistData)

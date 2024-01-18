@@ -46,11 +46,11 @@ multinomPois <- function(formula, data, starts, method = "BFGS",
         }
 
     nll_C <- function(params) {
-        .Call("nll_multinomPois",
+        nll_multinomPois(
             params,piFun,
             X, X.offset, V, V.offset,
-            yC, navecC, nP,nAP,
-            PACKAGE = "unmarked")
+            yC, navecC, nP,nAP
+        )
     }
 
     if(engine=="R"){

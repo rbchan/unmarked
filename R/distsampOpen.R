@@ -212,7 +212,7 @@ distsampOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
   #finding all unique likelihood transitions
   I <- cbind(rep(k, times=lk), rep(k, each=lk))
   I1 <- I[I[,1] <= I[,2],]
-  lik_trans <- .Call("get_lik_trans", I, I1, PACKAGE="unmarked")
+  lik_trans <- get_lik_trans(I, I1)
 
   beta_ind <- matrix(NA, 7, 2)
   beta_ind[1,] <- c(1, nAP) #Abundance
@@ -229,7 +229,7 @@ distsampOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
   yperm <- aperm(y, c(1,3,2))
 
   nll <- function(parms) {
-    .Call("nll_distsampOpen",
+    nll_distsampOpen(
           yperm, yt,
           Xlam, Xgam, Xom, Xsig, Xiota,
           parms, beta_ind - 1,
@@ -239,8 +239,8 @@ distsampOpen <- function(lambdaformula, gammaformula, omegaformula, pformula,
           delta, dynamics, survey, fix, go.dims, immigration,
           I, I1, lik_trans$Ib, lik_trans$Ip,
           a, u, w, db,
-          keyfun, lfac.k, kmyt, lfac.kmyt, fin, A,
-          PACKAGE = "unmarked")
+          keyfun, lfac.k, kmyt, lfac.kmyt, fin, A
+          )
   }
 
   if(missing(starts)){

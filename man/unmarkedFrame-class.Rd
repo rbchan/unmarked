@@ -51,11 +51,13 @@
 \alias{show,unmarkedFrameOccuMulti-method}
 \alias{show,unmarkedFrameOccuTTD-method}
 \alias{show,unmarkedMultFrame-method}
+\alias{show,unmarkedFrameOccuCOP-method}
 \alias{summary,unmarkedFrame-method}
 \alias{summary,unmarkedFrameDS-method}
 \alias{summary,unmarkedMultFrame-method}
 \alias{summary,unmarkedFrameOccuMulti-method}
 \alias{summary,unmarkedFrameOccuTTD-method}
+\alias{summary,unmarkedFrameOccuCOP-method}
 \alias{[,unmarkedFrameOccuMulti,missing,numeric,missing-method}
 \alias{[,unmarkedFrameOccuTTD,missing,numeric,missing-method}
 \alias{[,unmarkedFrameGDR,missing,numeric,missing-method}
@@ -65,6 +67,9 @@
 \alias{[,unmarkedFrameDSO,numeric,missing,missing-method}
 \alias{[,unmarkedFrameGDR,numeric,missing,missing-method}
 \alias{[,unmarkedFrameGDR,logical,missing,missing-method}
+\alias{[,unmarkedFrameOccuCOP,missing,numeric,missing-method}
+\alias{[,unmarkedFrameOccuCOP,numeric,missing,missing-method}
+\alias{[,unmarkedFrameOccuCOP,numeric,numeric,missing-method}
 
 \title{Class "unmarkedFrame" }
 \description{Methods for manipulating, summarizing and viewing
@@ -120,14 +125,18 @@ argument of the fitting functions.
       modify site-level covariates }
     \item{summary}{\code{signature(object = "unmarkedFrame")}: summarize
       data }
+    \item{getL}{\code{signature(object = "unmarkedFrameOccuCOP")}: extract L }
   }
 }
-\note{ This is a superclass with child classes for each fitting function }
+\note{ This is a superclass with child classes for each fitting function.}
 
 \seealso{\code{\link{unmarkedFrame}}, \code{\linkS4class{unmarkedFit}},
 	\code{\link{unmarked-package}}
 }
 \examples{
+
+# List all the child classes of unmarkedFrame
+showClass("unmarkedFrame")
 
 # Organize data for pcount()
 data(mallard)

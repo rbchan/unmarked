@@ -148,7 +148,7 @@ nll <- function(parms) {
     log.alpha <- 1
     if(mixture %in% c("NB", "ZIP"))
         log.alpha <- parms[nP]
-    .Call("nll_pcountOpen",
+    nll_pcountOpen(
           ym,
           Xlam, Xgam, Xom, Xp, Xiota,
           beta.lam, beta.gam, beta.om, beta.p, beta.iota, log.alpha,
@@ -156,8 +156,7 @@ nll <- function(parms) {
           ytna, yna,
           lk, mixture, first, last, M, J, T,
           delta, dynamics, fix, go.dims, immigration,
-          I, I1, Ib, Ip,
-          PACKAGE = "unmarked")
+          I, I1, Ib, Ip)
 }
 if(missing(starts))
     starts <- rep(0, nP)

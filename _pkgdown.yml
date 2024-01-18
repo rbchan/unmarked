@@ -19,6 +19,7 @@ reference:
       - occuMulti
       - occuPEN
       - occuTTD
+      - occuCOP
   - title: Abundance models
     contents:
       - occuRN
@@ -48,6 +49,28 @@ reference:
       - fitList
       - modSel
       - crossVal,unmarkedFit-method
+  - title: Model data
+      - unmarkedFrame
+      - unmarkedFrame-class
+      - unmarkedMultFrame
+      - unmarkedFrameDS
+      - unmarkedFrameOccu
+      - unmarkedFrameOccuFP
+      - unmarkedFrameOccuMulti
+      - unmarkedFramePCount
+      - unmarkedFrameMPois
+      - unmarkedFrameOccuCOP
+      - unmarkedFrameOccuMS
+      - unmarkedFrameOccuTTD
+      - unmarkedFrameG3
+      - unmarkedFramePCO
+      - unmarkedFrameGDR
+      - unmarkedFrameGMM
+      - unmarkedFrameGDS
+      - unmarkedFrameGPC
+      - unmarkedFrameGOccu
+      - unmarkedFrameMMO
+      - unmarkedFrameDSO
   - title: Model results
     contents:
       - coef,unmarkedFit-method

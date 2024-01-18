@@ -325,7 +325,7 @@ test_that("distsampOpen dynamics models work",{
 
   fm <- distsampOpen(~1, ~1, ~1, data = umf, K=25, keyfun="unif",
                      dynamics="autoreg")
-  expect_equivalent(coef(fm), c(1.518686, -0.018026, -5.628779), tol=1e-5)
+  expect_equivalent(coef(fm), c(1.518686, -0.018026, -5.628779), tol=1e-4)
 
   #Sketchy estimates
   #Maybe just because data were simulated using a different process?

@@ -160,7 +160,13 @@ setClass("unmarkedFrameDSO",
 
 #Convert covs provided as list of matrices/dfs to data frame
 covsToDF <- function(covs, name, obsNum, numSites){
-  if(!inherits(covs, "list")) return(covs)
+  if(is.null(covs)) return(covs)
+  if(inherits(covs, "data.frame")){
+    if(nrow(covs) != (obsNum * numSites)){
+      stop("Incorrect number of rows in ", name, " data frame", call.=FALSE)
+    }
+    return(covs)
+  }
   
   if(is.null(names(covs)) | any(is.na(names(covs))) | any(names(covs)=="")){
     stop("All elements of list provided to ", name, " argument must be named", call.=FALSE)
@@ -178,8 +184,11 @@ covsToDF <- function(covs, name, obsNum, numSites){
 # Constructor for unmarkedFrames.
 unmarkedFrame <- function(y, siteCovs = NULL, obsCovs = NULL, mapInfo,
                           obsToY) {
-    if(!missing(obsToY))
+    if(!missing(obsToY)){
         obsNum <- nrow(obsToY)
+    } else {
+        obsNum <- ncol(y)
+    }
 
     if(is.null(obsNum) & inherits(obsCovs, "list"))
       obsNum <- ncol(obsCovs[[1]]) #??
@@ -1488,13 +1497,20 @@ setMethod("[", c("unmarkedFrameOccuTTD", "missing", "numeric", "missing"),
 
     if(any(j>x@numPrimary)) stop("Can't select primary periods that don't exist", call.=FALSE)
     if(!all(j>0)) stop("All indices must be positive", call.=FALSE)
-
-    pp_vec <- rep(1:x@numPrimary, each=ncol(getY(x))/x@numPrimary)
+    
+    R <- ncol(getY(x))/x@numPrimary
+    pp_vec <- rep(1:x@numPrimary, each=R)
     keep_cols <- which(pp_vec%in%j)
     y <- getY(x)[,keep_cols,drop=FALSE]
-    ysc <- yearlySiteCovs(x)[,j,drop=FALSE]
-    oc <- obsCovs(x)[,keep_cols,drop=FALSE]
     sl <- x@surveyLength[,keep_cols,drop=FALSE]
+
+    pp_vec2 <- rep(1:x@numPrimary, numSites(x))
+    keep_rows <- which(pp_vec2 %in% j)
+    ysc <- yearlySiteCovs(x)[keep_rows,,drop=FALSE]
+
+    obs_vec <- rep(rep(1:x@numPrimary, each = R), numSites(x))
+    keep_rows <- which(obs_vec %in% j)
+    oc <- obsCovs(x)[keep_rows,,drop=FALSE]
 
     unmarkedFrameOccuTTD(y=y, surveyLength=sl, siteCovs=siteCovs(x),
                          yearlySiteCovs=ysc, obsCovs=oc,

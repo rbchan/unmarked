@@ -10,7 +10,7 @@ population size, availability, and detection probability.
 }
 \usage{
 gpcount(lambdaformula, phiformula, pformula, data,
-mixture = c("P", "NB"), K, starts, method = "BFGS", se = TRUE,
+mixture = c("P", "NB", "ZIP"), K, starts, method = "BFGS", se = TRUE,
 engine = c("C", "R"), threads=1, ...)
 }
 \arguments{
@@ -27,7 +27,8 @@ engine = c("C", "R"), threads=1, ...)
     An object of class unmarkedFrameGPC
 }
   \item{mixture}{
-    Either "P" or "NB" for Poisson and negative binomial distributions
+    Either "P", "NB", or "ZIP" for Poisson, negative binomial, or 
+    zero-inflated Poisson distributions
 }
   \item{K}{
     The maximum possible value of M, the super-population size.
@@ -58,11 +59,13 @@ engine = c("C", "R"), threads=1, ...)
 \details{
   The latent transect-level super-population abundance distribution
   \eqn{f(M | \mathbf{\theta})}{f(M | theta)} can be set as either a
-  Poisson or a negative binomial random variable, depending on the
+  Poisson, negative binomial, or zero-inflated Poisson random variable, depending on the
   setting of the \code{mixture} argument. The expected value of
   \eqn{M_i} is \eqn{\lambda_i}{lambda_i}.  If \eqn{M_i \sim NB}{M_i ~ NB},
   then an additional parameter, \eqn{\alpha}{alpha}, describes
-  dispersion (lower \eqn{\alpha}{alpha} implies higher variance).
+  dispersion (lower \eqn{\alpha}{alpha} implies higher variance). If 
+  \eqn{M_i \sim ZIP}{M_i ~ ZIP}, then an additional zero-inflation parameter
+  \eqn{\psi}{psi} is estimated.
 
   The number of individuals available for detection at time j
   is a modeled as binomial:

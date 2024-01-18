@@ -1,7 +1,7 @@
 
 # data will need to be an unmarkedMultFrame
 gmultmix <- function(lambdaformula, phiformula, pformula, data,
-    mixture=c('P', 'NB'), K, starts, method = "BFGS", se = TRUE,
+    mixture=c("P", "NB", "ZIP"), K, starts, method = "BFGS", se = TRUE,
     engine=c("C","R"), threads=1, ...)
 {
 if(!is(data, "unmarkedFrameGMM"))
@@ -59,7 +59,7 @@ if(T==1) {
     phiPars <- colnames(Xphi)
     }
 nDP <- ncol(Xdet)
-nP <- nLP + nPP + nDP + (mixture=='NB')
+nP <- nLP + nPP + nDP + (mixture%in%c('NB','ZIP'))
 if(!missing(starts) && length(starts) != nP)
     stop(paste("The number of starting values should be", nP))
 
@@ -102,9 +102,10 @@ nll_R <- function(pars) {
     cp[,,R+1] <- 1 - apply(cp[,,1:R,drop=FALSE], 1:2, sum, na.rm=TRUE)
 
     switch(mixture,
-        P = f <- sapply(k, function(x) dpois(x, lambda)),
-        NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda,
-            size=exp(pars[nP]))))
+      P = f <- sapply(k, function(x) dpois(x, lambda)),
+      NB = f <- sapply(k, function(x) dnbinom(x, mu=lambda, size=exp(pars[nP]))),
+      ZIP = f <- sapply(k, function(x) dzip(rep(x, length(lambda)), lambda=lambda, psi=plogis(pars[nP])))
+    )
     g <- matrix(as.numeric(NA), M, lk)
     for(i in 1:M) {
         A <- matrix(0, lk, T)
@@ -134,8 +135,8 @@ if(engine=="R"){
   kmytC <- kmyt
   kmytC[which(is.na(kmyt))] <- 0
 
-  mixture_code <- switch(mixture, P={1}, NB={2})
-  n_param <- c(nLP, nPP, nDP, mixture=="NB")
+  mixture_code <- switch(mixture, P={1}, NB={2}, ZIP={3})
+  n_param <- c(nLP, nPP, nDP, mixture%in%c("NB","ZIP"))
   Kmin <- apply(yt, 1, max, na.rm=TRUE)
 
   nll <- function(params) {
@@ -157,8 +158,7 @@ covMat <- invertHessian(fm, nP, se)
 ests <- fm$par
 fmAIC <- 2 * fm$value + 2 * nP
 
-if(identical(mixture,"NB")) nbParm <- "alpha"
-	else nbParm <- character(0)
+nbParm <- switch(mixture, P={character(0)}, NB={"alpha"}, ZIP={"psi"})
 
 names(ests) <- c(lamPars, phiPars, detPars, nbParm)
 
@@ -191,6 +191,13 @@ if(identical(mixture,"NB"))
         short.name = "alpha", estimates = ests[nP],
         covMat = as.matrix(covMat[nP, nP]), invlink = "exp",
         invlinkGrad = "exp")
+
+if(identical(mixture,"ZIP")) {
+    estimateList@estimates$psi <- unmarkedEstimate(name="Zero-inflation",
+        short.name = "psi", estimates = ests[nP],
+        covMat=as.matrix(covMat[nP, nP]), invlink = "logistic",
+        invlinkGrad = "logistic.grad")
+}
 
 umfit <- new("unmarkedFitGMM", fitType = "gmn",
     call = match.call(), formula = form, formlist = formlist,

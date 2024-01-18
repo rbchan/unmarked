@@ -177,11 +177,12 @@ occuMS <- function(detformulas, psiformulas, phiformulas=NULL, data,
   #Likelihood function in C++--------------------------------------------------
   naflag <- is.na(y)
   nll_C <- function(params){
-    .Call("nll_occuMS",
+    if(!is.matrix(pind)) pind <- matrix()
+    nll_occuMS(
           params, y, gd$dm_state, gd$dm_phi, gd$dm_det,
           sind-1, pind-1, dind-1, parameterization,
-          S, T, J, N, naflag, guide-1,
-          PACKAGE = "unmarked")
+          S, T, J, N, naflag, guide-1
+          )
   }
   #----------------------------------------------------------------------------
 

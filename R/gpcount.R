@@ -1,15 +1,13 @@
 
 # data will need to be an unmarkedMultFrame
 gpcount <- function(lambdaformula, phiformula, pformula, data,
-    mixture=c('P', 'NB'), K, starts, method = "BFGS", se = TRUE,
+    mixture=c('P', 'NB', 'ZIP'), K, starts, method = "BFGS", se = TRUE,
     engine=c('C', 'R'), threads=1, ...)
 {
 if(!is(data, "unmarkedFrameGPC"))
     stop("Data is not of class unmarkedFrameGPC.")
 mixture <- match.arg(mixture)
 engine <- match.arg(engine)
-if(identical(mixture, "ZIP") & identical(engine, "R"))
-    stop("ZIP mixture not available when 'engine=R'")
 
 formlist <- list(lambdaformula = lambdaformula, phiformula = phiformula,
     pformula = pformula)
@@ -49,7 +47,7 @@ nLP <- ncol(Xlam)
 nPP <- ncol(Xphi)
 phiPars <- colnames(Xphi)
 nDP <- ncol(Xdet)
-nP <- nLP + nPP + nDP + (mixture=='NB')
+nP <- nLP + nPP + nDP + (mixture%in%c('NB','ZIP'))
 if(!missing(starts) && length(starts) != nP)
     stop("There should be", nP, "starting values, not", length(starts))
 
@@ -66,8 +64,9 @@ nll <- function(pars) {
     for(i in 1:I) {
         f <- switch(mixture,
             P = dpois(M, lam[i], log=TRUE),
-            NB = dnbinom(M, mu=lam[i], size=exp(pars[nP]), log=TRUE))
-#            ZIP = dzip())
+            NB = dnbinom(M, mu=lam[i], size=exp(pars[nP]), log=TRUE),
+            ZIP = log(dzip(M, lambda=lam[i], psi=plogis(pars[nP])))
+        )
         ghi <- rep(0, lM)
         for(t in 1:T) {
             gh <- matrix(-Inf, lM, lM)
@@ -118,8 +117,7 @@ covMat <- invertHessian(fm, nP, se)
 ests <- fm$par
 fmAIC <- 2 * fm$value + 2 * nP
 
-if(identical(mixture,"NB")) nbParm <- "alpha"
-	else nbParm <- character(0)
+nbParm <- switch(mixture, P={character(0)}, NB={"alpha"}, ZIP={"psi"})
 
 names(ests) <- c(lamPars, phiPars, detPars, nbParm)
 
@@ -149,6 +147,13 @@ if(identical(mixture,"NB"))
         short.name = "alpha", estimates = ests[nP],
         covMat = as.matrix(covMat[nP, nP]), invlink = "exp",
         invlinkGrad = "exp")
+
+if(identical(mixture,"ZIP")) {
+    estimateList@estimates$psi <- unmarkedEstimate(name="Zero-inflation",
+        short.name = "psi", estimates = ests[nP],
+        covMat=as.matrix(covMat[nP, nP]), invlink = "logistic",
+        invlinkGrad = "logistic.grad")
+}
 
 umfit <- new("unmarkedFitGPC", fitType = "gpcount",
     call = match.call(), formula = form, formlist = formlist,

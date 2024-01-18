@@ -103,7 +103,8 @@ test_that("clean_up_covs works with models where length(y) != length(p)",{
 
 test_that("predicting from raster works",{
 
-  skip_if(!require(raster), "raster package unavailable")
+  skip_if(!requireNamespace("raster", quietly=TRUE), 
+          "raster package unavailable")
 
   set.seed(123)
   # Create rasters
@@ -127,7 +128,7 @@ test_that("predicting from raster works",{
   expect_is(pr, 'RasterStack')
   expect_equal(names(pr), c("Predicted","SE","lower","upper"))
   expect_equal(pr[1,1][1], 0.3675313, tol=1e-5)
-  expect_equal(crs(pr), crs(nd_raster))
+  expect_equal(raster::crs(pr), raster::crs(nd_raster))
 
   #append data
   pr <- predict(mod, 'state', newdata=nd_raster, appendData=TRUE)
@@ -141,7 +142,8 @@ test_that("predicting from raster works",{
 
 test_that("predicting from terra::rast works",{
 
-  skip_if(!require(terra), "terra package unavailable")
+  skip_if(!requireNamespace("terra", quietly=TRUE), 
+          "terra package unavailable")
 
   set.seed(123)
   # Create rasters
@@ -165,7 +167,7 @@ test_that("predicting from terra::rast works",{
   expect_is(pr, 'SpatRaster')
   expect_equal(names(pr), c("Predicted","SE","lower","upper"))
   expect_equivalent(pr[1,1][1], 0.3675313, tol=1e-5)
-  expect_equal(crs(pr), crs(nd_raster))
+  expect_equal(terra::crs(pr), terra::crs(nd_raster))
 
   #append data
   pr <- predict(mod, 'state', newdata=nd_raster, appendData=TRUE)
