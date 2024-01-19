@@ -396,7 +396,7 @@ setMethod("fitted_internal", "unmarkedFitOccuCOP", function(object, na.rm = FALS
 
 
 ## residuals ----
-setMethod("residuals", "unmarkedFitOccuCOP", function(object) {
+setMethod("residuals_internal", "unmarkedFitOccuCOP", function(object, ...) {
   y <- getY(object@data)
   e <- fitted(object)
   r <- y - e

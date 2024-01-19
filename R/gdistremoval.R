@@ -586,7 +586,7 @@ setMethod("fitted_internal", "unmarkedFitGDR", function(object, na.rm = FALSE){
   list(dist=ft_dist, rem=ft_rem)
 })
 
-setMethod("residuals", "unmarkedFitGDR", function(object){
+setMethod("residuals_internal", "unmarkedFitGDR", function(object, ...){
   ft <- fitted(object)
   list(dist=object@data@yDistance - ft$dist, rem=object@data@yRemoval-ft$rem)
 })

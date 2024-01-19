@@ -20,14 +20,6 @@
 \alias{plot,unmarkedFitGDR,missing-method}
 \alias{plot,unmarkedFitOccuCOP,missing-method}
 \alias{profile,unmarkedFit-method}
-\alias{residuals,unmarkedFit-method}
-\alias{residuals,unmarkedFitOccu-method}
-\alias{residuals,unmarkedFitOccuFP-method}
-\alias{residuals,unmarkedFitOccuRN-method}
-\alias{residuals,unmarkedFitOccuMulti-method}
-\alias{residuals,unmarkedFitOccuTTD-method}
-\alias{residuals,unmarkedFitGDR-method}
-\alias{residuals,unmarkedFitOccuCOP-method}
 \alias{update,unmarkedFit-method}
 \alias{update,unmarkedFitColExt-method}
 \alias{update,unmarkedFitGMM-method}
@@ -136,7 +128,6 @@ extracted using the methods described below.
 		data.frame }
     \item{profile}{\code{signature(fitted = "unmarkedFit")}: used by confint
 		method='profile' }
-    \item{residuals}{\code{signature(object = "unmarkedFit")}: returns residuals }
     \item{sampleSize}{\code{signature(object = "unmarkedFit")}: returns number
 		of sites in sample }
     \item{SE}{\code{signature(obj = "unmarkedFit")}: returns standard errors }

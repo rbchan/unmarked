@@ -1300,13 +1300,21 @@ setMethod("plot", c("profile", "missing"), function(x) {
 
 
 setMethod("residuals", "unmarkedFit", function(object, ...) {
+  residuals_internal(object, ...)
+})
+
+setGeneric("residuals_internal", function(object, ...){
+  standardGeneric("residuals_internal")
+})
+
+setMethod("residuals_internal", "unmarkedFit", function(object, ...) {
     y <- getY(object@data)
     e <- fitted(object, na.rm = FALSE)
     r <- y - e
     return(r)
 })
 
-setMethod("residuals", "unmarkedFitOccu", function(object, ...) {
+setMethod("residuals_internal", "unmarkedFitOccu", function(object, ...) {
     y <- getY(object@data)
     y <- truncateToBinary(y)
     e <- fitted(object, na.rm = FALSE)
@@ -1314,12 +1322,12 @@ setMethod("residuals", "unmarkedFitOccu", function(object, ...) {
     return(r)
 })
 
-setMethod("residuals", "unmarkedFitOccuFP", function(object, ...) {
+setMethod("residuals_internal", "unmarkedFitOccuFP", function(object, ...) {
   cat("residuals is not implemented for occuFP at this time")
 })
 
 
-setMethod("residuals", "unmarkedFitOccuRN", function(object, ...) {
+setMethod("residuals_internal", "unmarkedFitOccuRN", function(object, ...) {
     y <- getY(object@data)
     y <- truncateToBinary(y)
     e <- fitted(object, na.rm = FALSE)
@@ -1327,7 +1335,7 @@ setMethod("residuals", "unmarkedFitOccuRN", function(object, ...) {
     return(r)
 })
 
-setMethod("residuals", "unmarkedFitOccuMulti", function(object, ...) {
+setMethod("residuals_internal", "unmarkedFitOccuMulti", function(object, ...) {
   res_list <- list()
   ylist <- object@data@ylist
   fitlist <- fitted(object)
@@ -1339,7 +1347,7 @@ setMethod("residuals", "unmarkedFitOccuMulti", function(object, ...) {
   res_list
 })
 
-setMethod("residuals", "unmarkedFitOccuTTD", function(object, ...) {
+setMethod("residuals_internal", "unmarkedFitOccuTTD", function(object, ...) {
   tmax <- object@data@surveyLength
   yraw <- object@data@y
   y <- ifelse(yraw<tmax,1,0)
