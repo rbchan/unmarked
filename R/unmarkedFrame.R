@@ -894,17 +894,6 @@ setGeneric("getY", function(object) standardGeneric("getY"))
 setMethod("getY", "unmarkedFrame", function(object) object@y)
 
 
-setGeneric("coordinates", function(object) standardGeneric("coordinates"))
-setMethod("coordinates", "unmarkedFrame", function(object) {
-    object@mapInfo@coordinates
-})
-
-
-setGeneric("projection", function(object) standardGeneric("projection"))
-setMethod("projection", "unmarkedFrame", function(object) {
-    object@mapInfo@projection
-})
-
 ################################### SUMMARY METHODS ######################
 
 

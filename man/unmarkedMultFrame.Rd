@@ -1,10 +1,5 @@
 \name{unmarkedMultFrame}
-
 \alias{unmarkedMultFrame}
-\alias{yearlySiteCovs}
-\alias{yearlySiteCovs,unmarkedMultFrame-method}
-\alias{yearlySiteCovs<-}
-\alias{yearlySiteCovs<-,unmarkedMultFrame-method}
 \alias{unmarkedFrameGMM}
 \alias{unmarkedFrameGDS}
 \alias{unmarkedFrameGPC}

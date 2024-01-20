@@ -42,11 +42,11 @@ exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitOccuFP, unmarkedFitDS,
               unmarkedPostSamples, unmarkedPower, unmarkedPowerList)
 
 # Methods
-exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
+exportMethods(backTransform, coef, confint, fitted, getData,
               getP, getFP, getB, getY, head, hessian, linearComb, mle,
               modSel, nllFun, numSites, numY, obsCovs, obsNum, "obsCovs<-",
               obsToY, "obsToY<-", parboot, plot, hist, predict, profile,
-              projection, residuals, sampleSize, SE, show, simulate, siteCovs,
+              residuals, sampleSize, SE, show, simulate, siteCovs,
               "siteCovs<-", summary, update, vcov, yearlySiteCovs,
               "yearlySiteCovs<-", "[", smoothed, projected, nonparboot, logLik,
               LRT, ranef, bup, crossVal, posteriorSamples, sigma, randomTerms, 
@@ -56,7 +56,7 @@ exportMethods(backTransform, coef, confint, coordinates, fitted, getData,
 S3method("print", "unmarkedPostSamples")
 
 # Constructors
-export(unmarkedEstimate, fitList, mapInfo, unmarkedFrame,
+export(unmarkedEstimate, fitList, unmarkedFrame,
     unmarkedFrameOccu, unmarkedFrameOccuFP, unmarkedFramePCount, unmarkedFrameMPois,
     unmarkedFrameDS, unmarkedMultFrame, unmarkedFrameGMM,
     unmarkedFramePCO, unmarkedFrameGDS, unmarkedFrameGPC, unmarkedFrameOccuMulti,
