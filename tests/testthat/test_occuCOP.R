@@ -79,7 +79,7 @@ test_that("unmarkedFrameOccuCOP is constructed correctly", {
   # Create subsets
   expect_no_error(umf_sub_i <- umf[1:3, ])
   expect_no_error(umf_sub_j <- umf[, 1:2])
-  expect_no_error(umf_sub_ij <- umf[1:3, 1:2])
+  expect_no_error(expect_warning(umf_sub_ij <- umf[1:3, 1:2]))
   
   # unmarkedFrameOccuCOP organisation ----------------------------------------------
   expect_true(inherits(umf, "unmarkedFrameOccuCOP"))
@@ -95,7 +95,7 @@ test_that("unmarkedFrameOccuCOP is constructed correctly", {
   expect_output(print(umf_sub_i), "Data frame representation of unmarkedFrame object")
   expect_output(print(umf[1,]), "Data frame representation of unmarkedFrame object")
   expect_output(print(umf[,1]), "Data frame representation of unmarkedFrame object")
-  expect_output(print(umf[1,1]), "Data frame representation of unmarkedFrame object")
+  expect_output(expect_warning(print(umf[1,1])), "Data frame representation of unmarkedFrame object")
   
   # summary method for unmarkedFrameOccuCOP
   expect_output(summary(umf), "unmarkedFrameOccuCOP Object")

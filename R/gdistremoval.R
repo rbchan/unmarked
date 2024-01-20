@@ -64,7 +64,7 @@ setAs("unmarkedFrameGDR", "data.frame", function(from){
   data.frame(yDistance, yRemoval, out)
 })
 
-setMethod("[", c("unmarkedFrameGDR", "numeric", "missing", "missing"),
+setMethod("select_sites_internal", "unmarkedFrameGDR",
   function(x, i) {
   M <- numSites(x)
   T <- x@numPrimary
@@ -119,14 +119,8 @@ setMethod("[", c("unmarkedFrameGDR", "numeric", "missing", "missing"),
   umf
 })
 
-setMethod("[", c("unmarkedFrameGDR", "logical", "missing", "missing"),
-  function(x, i) {
-  i <- which(i)
-  x[i, ]
-})
-
-setMethod("[", c("unmarkedFrameGDR", "missing", "numeric", "missing"),
-  function(x, i, j){
+setMethod("select_obs_internal", "unmarkedFrameGDR",
+  function(x, j){
 
   M <- numSites(x)
   T <- x@numPrimary

@@ -5,6 +5,7 @@
 \alias{names,unmarkedEstimateList-method}
 \alias{show,unmarkedEstimateList-method}
 \alias{summary,unmarkedEstimateList-method}
+\alias{[,unmarkedEstimateList,ANY,ANY,ANY-method}
 \title{Class "unmarkedEstimateList"}
 \description{Class to hold multiple unmarkedEstimates in an
   \code{\link{unmarkedFit}}

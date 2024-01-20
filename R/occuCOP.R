@@ -248,86 +248,22 @@ setMethod("summary", "unmarkedFrameOccuCOP", function(object,...) {
 })
 
 
-## umf[i, j] ----
-setMethod("[", c("unmarkedFrameOccuCOP", "numeric", "numeric", "missing"),
-          function(x, i, j) {
-            # Gey dimensions of x
-            M <- numSites(x)
-            J <- obsNum(x)
-            
-            if (length(i) == 0 & length(j) == 0) {
-              return(x)
-            }
-            
-            # Check i
-            if (any(i < 0) &&
-                any(i > 0)) {
-              stop("i must be all positive or all negative indices.")
-            }
-            if (all(i < 0)) {
-              i <- (1:M)[i]
-            }
-            
-            # Check j
-            if (any(j < 0) &&
-                any(j > 0)) {
-              stop("j must be all positive or all negative indices.")
-            }
-            if (all(j < 0)) {
-              j <- (1:J)[j]
-            }
-            
-            # y observation count data subset
-            y <- getY(x)[i, j, drop = FALSE]
-            if (min(length(i), length(j)) == 1) {
-              y <- t(y)
-            }
-            
-            # L subset
-            L <- x@L[i, j, drop = FALSE]
-            if (min(length(i), length(j)) == 1) {
-              L <- t(L)
-            }
-            
-            # siteCovs subset
-            siteCovs <- siteCovs(x)
-            if (!is.null(siteCovs)) {
-              siteCovs <- siteCovs(x)[i, , drop = FALSE]
-            }
-            
-            # obsCovs subset
-            obsCovs <- obsCovs(x)
-            if (!is.null(obsCovs)) {
-              MJ_site <- rep(1:M, each = J)
-              MJ_obs <- rep(1:J, times = M)
-              obsCovs <- obsCovs[((MJ_obs %in% j) & (MJ_site %in% i)), , drop = FALSE]
-              rownames(obsCovs) <- NULL
-            }
-            
-            # Recreate umf
-            new(
-              Class = "unmarkedFrameOccuCOP",
-              y = y,
-              L = L,
-              siteCovs = siteCovs,
-              obsCovs = obsCovs,
-              obsToY = diag(length(j)),
-              mapInfo = x@mapInfo
-            )
-          })
+## Bracket selectors ----
+setMethod("select_sites_internal", "unmarkedFrameOccuCOP",
+  function(x, i){  
+  out <- callNextMethod(x, i)  
+  L <- x@L[i,,drop=FALSE]
+  unmarkedFrameOccuCOP(y=getY(out), L = L, siteCovs=siteCovs(out),
+                       obsCovs=obsCovs(out))
+})
 
-
-## umf[i, ] ----
-setMethod("[", c("unmarkedFrameOccuCOP", "numeric", "missing", "missing"),
-          function(x, i) {
-            x[i, 1:obsNum(x)]
-          })
-
-## umf[, j] ----
-setMethod("[", c("unmarkedFrameOccuCOP", "missing", "numeric", "missing"),
-          function(x, j) {
-            x[1:numSites(x), j]
-          })
+setMethod("select_obs_internal", "unmarkedFrameOccuCOP",
+  function(x, j){  
+  out <- callNextMethod(x, j)  
+  L <- x@L[,j,drop=FALSE]
+  unmarkedFrameOccuCOP(y=getY(out), L = L, siteCovs=siteCovs(out),
+                       obsCovs=obsCovs(out))
+})
 
 
 ## fl_getY ----

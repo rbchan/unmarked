@@ -64,6 +64,7 @@
 \alias{getY,unmarkedFitColExt-method}
 \alias{getY,unmarkedFitOccuRN-method}
 \alias{getY,unmarkedFitOccuMulti-method}
+\alias{[,unmarkedFit,ANY,ANY,ANY-method}
 
 \title{Class "unmarkedFit" }
 \description{Contains fitted model information which can be manipulated or
