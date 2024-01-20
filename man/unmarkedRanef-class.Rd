@@ -6,7 +6,6 @@
 \alias{bup,unmarkedRanef-method}
 \alias{confint,unmarkedRanef-method}
 \alias{plot,unmarkedRanef,missing-method}
-\alias{show,unmarkedRanef-method}
 
 \title{Class \code{"unmarkedRanef"}}
 
@@ -36,8 +35,6 @@ Objects can be created by calls of the form \code{\link{ranef}}.
       confidence intervals.}
     \item{plot}{\code{signature(x = "unmarkedRanef", y = "missing")}:
       Plot the posteriors using \code{\link{xyplot}}}
-    \item{show}{\code{signature(object = "unmarkedRanef")}: Display the
-    modes and confidence intervals}
 }
 }
 

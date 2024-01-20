@@ -3,7 +3,6 @@
 \docType{class}
 \alias{unmarkedEstimate}
 \alias{unmarkedEstimate-class}
-\alias{show,unmarkedEstimate-method}
 \alias{summary,unmarkedEstimate-method}
 \title{Class "unmarkedEstimate"}
 \description{Contains parameter estimates, covariance matrix, and metadata}
@@ -33,7 +32,6 @@ Creating these objects is done internally not by users.
     \item{linearComb}{\code{signature(obj = "unmarkedEstimate", 
 		coefficients = "matrixOrVector")}}
     \item{SE}{\code{signature(obj = "unmarkedEstimate")}}
-    \item{show}{\code{signature(object = "unmarkedEstimate")}}
     \item{vcov}{\code{signature(object = "unmarkedEstimate")}}
 	 }
 }

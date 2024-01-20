@@ -4,7 +4,6 @@
 \alias{posteriorSamples,unmarkedRanef-method}
 \alias{posteriorSamples,unmarkedFit-method}
 \alias{unmarkedPostSamples-class}
-\alias{show,unmarkedPostSamples-method}
 \alias{[,unmarkedPostSamples,ANY,ANY,ANY-method}
 
 \title{Draw samples from the posterior predictive distribution}

@@ -4,7 +4,6 @@
 \alias{modSel}
 \alias{modSel-methods}
 \alias{unmarkedModSel-class}
-\alias{show,unmarkedModSel-method}
 \alias{summary,unmarkedModSel-method}
 \alias{coef,unmarkedModSel-method}
 \alias{SE,unmarkedModSel-method}

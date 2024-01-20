@@ -1,7 +1,6 @@
 \name{unmarkedPower-methods}
 \alias{unmarkedPower-methods}
 \alias{unmarkedPower-class}
-\alias{show,unmarkedPower-method}
 \alias{summary,unmarkedPower-method}
 \alias{update,unmarkedPower-method}
 
@@ -10,7 +9,6 @@
 \description{Various functions to summarize and update unmarkedPower objects}
 
 \usage{
-\S4method{show}{unmarkedPower}(object)
 \S4method{summary}{unmarkedPower}(object, ...)
 \S4method{update}{unmarkedPower}(object, ...)
 }
@@ -23,7 +21,7 @@
 }
 
 \value{
-  For \code{show} and \code{summary}, summary output is printed to the console.
+  For \code{summary}, summary output is printed to the console.
   For \code{update}, a new \code{powerAnalysis} object corresponding to the 
   new arguments provided.
 }

@@ -3,7 +3,6 @@
 \docType{class}
 \alias{unmarkedEstimateList-class}
 \alias{names,unmarkedEstimateList-method}
-\alias{show,unmarkedEstimateList-method}
 \alias{summary,unmarkedEstimateList-method}
 \alias{[,unmarkedEstimateList,ANY,ANY,ANY-method}
 \title{Class "unmarkedEstimateList"}

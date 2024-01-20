@@ -1,7 +1,7 @@
 \name{parboot}
 \alias{parboot}
 \alias{plot,parboot,missing-method}
-\alias{show,parboot-method}
+
 \title{Parametric bootstrap method for fitted models inheriting class.}
 \description{Simulate datasets from a fitted model, refit the model, and
   generate a sampling distribution for a user-specified fit-statistic.}

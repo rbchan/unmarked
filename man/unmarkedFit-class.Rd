@@ -48,7 +48,6 @@
 \alias{unmarkedFitDSO-class}
 \alias{unmarkedFitMMO-class}
 \alias{plot,profile,missing-method}
-\alias{show,unmarkedFit-method}
 \alias{summary,unmarkedFit-method}
 \alias{summary,unmarkedFitDS-method}
 \alias{smoothed}
@@ -132,7 +131,6 @@ extracted using the methods described below.
     \item{sampleSize}{\code{signature(object = "unmarkedFit")}: returns number
 		of sites in sample }
     \item{SE}{\code{signature(obj = "unmarkedFit")}: returns standard errors }
-    \item{show}{\code{signature(object = "unmarkedFit")}: concise results }
     \item{summary}{\code{signature(object = "unmarkedFit")}: results with more
 		details }
     \item{update}{\code{signature(object = "unmarkedFit")}: refit model with

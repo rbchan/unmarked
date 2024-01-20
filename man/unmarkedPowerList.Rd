@@ -4,7 +4,6 @@
 \alias{unmarkedPowerList,unmarkedFit-method}
 \alias{unmarkedPowerList-class}
 \alias{unmarkedPowerList-methods}
-\alias{show,unmarkedPowerList-method}
 \alias{summary,unmarkedPowerList-method}
 \alias{plot,unmarkedPowerList,ANY-method}
 
@@ -24,7 +23,6 @@
 \S4method{unmarkedPowerList}{list}(object, ...)
 \S4method{unmarkedPowerList}{unmarkedFit}(object, coefs, design, alpha=0.05,
                                           nulls=list(), nsim=100, parallel=FALSE, ...)
-\S4method{show}{unmarkedPowerList}(object)
 \S4method{summary}{unmarkedPowerList}(object, ...)
 \S4method{plot}{unmarkedPowerList,ANY}(x, power=NULL, param=NULL, ...)
 }

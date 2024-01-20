@@ -5,8 +5,6 @@
 \alias{crossVal,unmarkedFitList-method}
 \alias{unmarkedCrossVal-class}
 \alias{unmarkedCrossValList-class}
-\alias{show,unmarkedCrossVal-method}
-\alias{show,unmarkedCrossValList-method}
 
 \title{Cross-validation methods for fitted unmarked models and fit lists}
 

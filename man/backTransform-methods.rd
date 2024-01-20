@@ -5,7 +5,6 @@
 \alias{backTransform,unmarkedEstimate-method}
 \alias{backTransform,unmarkedFit-method}
 \alias{backTransform,unmarkedLinComb-method}
-\alias{show,unmarkedBackTrans-method}
 
 \title{Methods for Function backTransform in Package `unmarked'}
 \description{Methods for function \code{backTransform} in Package `unmarked'. 

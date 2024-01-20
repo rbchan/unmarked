@@ -27,11 +27,6 @@
 \alias{unmarkedFrameGPC-class}
 \alias{unmarkedFrameDSO-class}
 \alias{unmarkedFrameMMO-class}
-\alias{show,unmarkedFrame-method}
-\alias{show,unmarkedFrameOccuMulti-method}
-\alias{show,unmarkedFrameOccuTTD-method}
-\alias{show,unmarkedMultFrame-method}
-\alias{show,unmarkedFrameOccuCOP-method}
 \alias{summary,unmarkedFrame-method}
 \alias{summary,unmarkedFrameDS-method}
 \alias{summary,unmarkedMultFrame-method}
@@ -85,8 +80,6 @@ argument of the fitting functions.
       panels data should be split over.}
     \item{projection}{\code{signature(object = "unmarkedFrame")}: extract
 		projection information }
-    \item{show}{\code{signature(object = "unmarkedFrame")}: view data as
-		data.frame }
     \item{siteCovs}{\code{signature(object = "unmarkedFrame")}: extract
 		site-level covariates }
     \item{siteCovs<-}{\code{signature(object = "unmarkedFrame")}: add or
