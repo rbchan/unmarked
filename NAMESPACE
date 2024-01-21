@@ -30,15 +30,11 @@ export(makeRemPiFun, makeCrPiFun, makeCrPiFunMb, makeCrPiFunMh)
 # S4 classes
 exportClasses(unmarkedFit, unmarkedFitOccu, unmarkedFitOccuFP, unmarkedFitDS,
               unmarkedFitPCount, unmarkedFitMPois, unmarkedFitPCO,
-              unmarkedFrameDSO, unmarkedFitDSO,
-              unmarkedFrameMMO, unmarkedFitMMO,
+              unmarkedFitDSO,
+              unmarkedFitMMO,
               unmarkedFitOccuMulti,
-              unmarkedFrame, unmarkedFrameOccu, unmarkedFramePCount,
-              unmarkedFrameMPois, unmarkedFrameDS, unmarkedMultFrame,
-              unmarkedFrameGMM, unmarkedFrameGDS, unmarkedFramePCO,
-              unmarkedFrameGPC, unmarkedEstimate, unmarkedFitList,
-              unmarkedModSel, unmarkedRanef, unmarkedFrameOccuMulti,
-              unmarkedFrameOccuMS, unmarkedFrameGDR, unmarkedCrossVal,
+              unmarkedEstimate, unmarkedFitList,
+              unmarkedModSel, unmarkedRanef, unmarkedCrossVal,
               unmarkedPostSamples, unmarkedPower, unmarkedPowerList)
 
 # Methods

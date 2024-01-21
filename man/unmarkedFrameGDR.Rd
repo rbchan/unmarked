@@ -4,7 +4,6 @@
   Amundson et al. (2014) fit by \code{gdistremoval}}
 
 \alias{unmarkedFrameGDR}
-\alias{unmarkedFrameGDR-class}
 
 \usage{
   unmarkedFrameGDR(yDistance, yRemoval, numPrimary=1, siteCovs=NULL, obsCovs=NULL, 
