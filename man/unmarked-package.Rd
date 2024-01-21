@@ -75,8 +75,7 @@ and apparent survival.
 a formal S4 class called an unmarkedFrame, which has child classes
 for each model type. This allows metadata (eg as distance interval cut
 points, measurement units, etc...) to be stored with the response and
-covariate data. See \code{\link{unmarkedFrame}} for a detailed
-description of unmarkedFrames and how to create them.
+covariate data.
 
 \strong{Model Specification:}  \emph{unmarked}'s
 model-fitting functions allow specification of covariates for both the

@@ -30,8 +30,8 @@
 
 \details{
 
-See \code{\link{unmarkedFrame}} and \code{\link{unmarkedFrameOccu}} for a
-description of how to supply data to the \code{data} argument.
+See \code{\link{unmarkedFrameOccu}} for a description of how to supply data to 
+the \code{data} argument.
 
 \code{occuPEN} fits the standard occupancy model based on
 zero-inflated binomial models (MacKenzie et al. 2006, Royle and

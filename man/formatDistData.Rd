@@ -36,7 +36,8 @@ levels for all the transects surveyed, not just those with >=1
 detection. Likewise, if transects were visited more than once, the
 factor containing the occasion numbers should include levels for all
 occasions. See the example for how to add levels to a factor.}
-\seealso{\code{\link{distsamp}}, \code{\link{unmarkedFrame}}}
+\seealso{\code{\link{distsamp}}, \code{\link{gdistsamp}}, 
+  \code{\link{unmarkedFrameDS}}, \code{\link{unmarkedFrameGDS}}}
 \examples{
 # Create a data.frame containing distances of animals detected
 # along 4 transects.

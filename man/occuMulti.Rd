@@ -34,8 +34,8 @@
 
 \details{
 
-See \code{\link{unmarkedFrame}} and \code{\link{unmarkedFrameOccuMulti}} for a
-description of how to supply data to the \code{data} argument.
+See \code{\link{unmarkedFrameOccuMulti}} for a description of how to supply data 
+to the \code{data} argument.
 
 \code{occuMulti} fits the multispecies occupancy model from Rota et al. (2016),
 for two or more interacting species.

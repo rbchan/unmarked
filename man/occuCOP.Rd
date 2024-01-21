@@ -47,7 +47,7 @@ occuCOP(data,
 
 \details{
   
-  See \code{\link{unmarkedFrameOccuCOP}} for a description of how to supply data to the \code{data} argument. See \code{\link{unmarkedFrame}} for a more general documentation of \code{unmarkedFrame} objects for the different models implemented in \pkg{unmarked}.
+  See \code{\link{unmarkedFrameOccuCOP}} for a description of how to supply data to the \code{data} argument.
   
   \subsection{The COP occupancy model}{
     

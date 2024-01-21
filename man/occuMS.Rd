@@ -136,8 +136,8 @@ of staying in the same state between seasons can be obtained via subtraction.
 See \code{umf@phiOrder$multinomial} for the correct order matching the number
 of states in your dataset.
 
-See \code{\link{unmarkedFrame}} and \code{\link{unmarkedFrameOccuMS}} for a
-description of how to supply data to the \code{data} argument.
+See \code{\link{unmarkedFrameOccuMS}} for a description of how to supply data 
+to the \code{data} argument.
 }
 
 \value{unmarkedFitOccuMS object describing the model fit.}

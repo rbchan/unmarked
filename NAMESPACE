@@ -52,7 +52,7 @@ exportMethods(backTransform, coef, confint, fitted, getData,
 S3method("print", "unmarkedPostSamples")
 
 # Constructors
-export(unmarkedEstimate, fitList, unmarkedFrame,
+export(unmarkedEstimate, fitList,
     unmarkedFrameOccu, unmarkedFrameOccuFP, unmarkedFramePCount, unmarkedFrameMPois,
     unmarkedFrameDS, unmarkedMultFrame, unmarkedFrameGMM,
     unmarkedFramePCO, unmarkedFrameGDS, unmarkedFrameGPC, unmarkedFrameOccuMulti,

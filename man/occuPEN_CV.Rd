@@ -38,8 +38,8 @@ k-fold cross-validation to choose the penalty weight.}
 
 \details{
 
-See \code{\link{unmarkedFrame}} and \code{\link{unmarkedFrameOccu}} for a
-description of how to supply data to the \code{data} argument.
+See \code{\link{unmarkedFrameOccu}} for a description of how to supply data to 
+the \code{data} argument.
 
 This function wraps k-fold cross-validation around \code{occuPEN_CV}
 for the "Bayes" and "Ridge" penalties of Hutchinson et al. (2015). The

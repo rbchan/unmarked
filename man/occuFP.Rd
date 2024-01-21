@@ -32,8 +32,7 @@ false positive detections.}
 
 \details{
 
-See \code{\link{unmarkedFrame}} and \code{\link{unmarkedFrameOccuFP}} for a
-description of how to supply data to the \code{data} argument.
+See \code{\link{unmarkedFrameOccuFP}} for a description of how to supply data to the \code{data} argument.
 
 \code{occuFP} fits an extension of the standard single-season occupancy model (MacKenzie et al. 2002), which allows
 false positive detections. The occupancy status of a site is the same way as with the \code{\link{occu}} function, where stateformula
