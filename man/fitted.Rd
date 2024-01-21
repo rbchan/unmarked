@@ -9,13 +9,14 @@
 on the model type but is usually the product of the state and detection parameters.}
 
 \usage{
-\S4method{fitted}{unmarkedFit}(object, na.rm = FALSE)
+\S4method{fitted}{unmarkedFit}(object, na.rm = FALSE, ...)
 }
 
 \arguments{
   \item{object}{A \code{unmarkedFit} object}
   \item{na.rm}{Logical. Should missing values be removed from data? Not all model
                types support this.}
+  \item{...}{Other arguments, currently ignored.}
 }
 
 \value{In most cases, \code{fitted} returns a matrix of expected values with the 

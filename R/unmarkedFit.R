@@ -399,7 +399,7 @@ setMethod("confint", "unmarkedFit", function(object, parm, level = 0.95,
 
 
 # Fitted-----------------------------------------------------------------------
-setMethod("fitted", "unmarkedFit", function(object, na.rm = FALSE){
+setMethod("fitted", "unmarkedFit", function(object, na.rm = FALSE, ...){
   fitted_internal(object, na.rm = na.rm)
 })
 
