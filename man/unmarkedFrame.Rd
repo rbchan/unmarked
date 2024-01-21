@@ -53,9 +53,7 @@
 
 \value{an unmarkedFrame object}
 
-\seealso{\code{\link{unmarkedFrame-class}},
-  \code{\link{unmarkedFrameOccu}}, \code{\link{unmarkedFramePCount}},
-  \code{\link{unmarkedFrameDS}}}
+\seealso{\code{\link{unmarkedFrame-methods}}}
 
 \examples{
 

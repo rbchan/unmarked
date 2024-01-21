@@ -30,8 +30,7 @@
 
 \value{an object of class unmarkedFrameOccu}
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}}, 
-    \code{\link{occu}}, \code{\link{occuRN}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{occu}}}
 
 \examples{
 

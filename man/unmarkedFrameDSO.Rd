@@ -46,8 +46,7 @@
 }
 
 \value{an object of class unmarkedFrameDSO}
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}},
-    \code{\link{distsampOpen}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{distsampOpen}}}
 
 \examples{
 

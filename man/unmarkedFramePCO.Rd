@@ -30,8 +30,7 @@ that it contains the dates for each survey, which needs to be supplied .
 }
 
 \value{an object of class unmarkedFramePCO}
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}},
-    \code{\link{pcountOpen}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{pcountOpen}}}
 \examples{
 
 # Repeated count data with 5 primary periods and

@@ -24,8 +24,7 @@
 
 \value{an object of class unmarkedFramePCount}
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}}, 
-    \code{\link{pcount}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{pcount}}}
 
 \examples{
 

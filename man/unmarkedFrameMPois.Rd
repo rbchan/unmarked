@@ -52,8 +52,8 @@ count survey data. Animal Biodiversity and Conservation, 27(1), 375-386.
 }
 
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}}, 
-    \code{\link{multinomPois}}, \code{\link{piFuns}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{multinomPois}}, 
+  \code{\link{piFuns}}}
 
 \examples{
 

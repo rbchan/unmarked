@@ -7,7 +7,7 @@
 
 \usage{unmarkedFrameOccuCOP(y, L, siteCovs = NULL, obsCovs = NULL)}
 
-\description{Organizes count data along with the covariates. The \linkS4class{unmarkedFrame} S4 class required by the \code{data} argument of \code{\link{occuCOP}}.}
+\description{Organizes count data along with the covariates. An \code{unmarkedFrameOccuCOP} object is required by the \code{data} argument of \code{\link{occuCOP}}.}
 
 \arguments{
   
@@ -23,14 +23,13 @@
 }
 
 \details{
-    unmarkedFrameOccuCOP is the \linkS4class{unmarkedFrame} S4 class that holds data to be passed to the \code{\link{occuCOP}} model-fitting function.
+    unmarkedFrameOccuCOP is the S4 class that holds data to be passed to the \code{\link{occuCOP}} model-fitting function.
 }
 
 \value{an object of class \code{unmarkedFrameOccuCOP}}
 
 \seealso{
-  \code{\link{unmarkedFrame-class}}, 
-  \code{\link{unmarkedFrame}}, 
+  \code{\link{unmarkedFrame-methods}}, 
   \code{\link{occuCOP}}
 }
 

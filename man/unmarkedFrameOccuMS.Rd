@@ -44,8 +44,7 @@
 
 \author{Ken Kellner \email{contact@kenkellner.com}}
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}}, 
-    \code{\link{occuMS}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{occuMS}}}
 
 \examples{
 

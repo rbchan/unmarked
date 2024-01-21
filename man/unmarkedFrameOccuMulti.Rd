@@ -38,8 +38,7 @@
 
 \author{Ken Kellner \email{contact@kenkellner.com}}
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}}, 
-    \code{\link{occuMulti}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{occuMulti}}}
 
 \examples{
 

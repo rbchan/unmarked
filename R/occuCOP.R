@@ -217,7 +217,7 @@ setMethod("show", "unmarkedFrameOccuCOP", function(object) {
 
 
 ## summary method ----
-setMethod("summary", "unmarkedFrameOccuCOP", function(object,...) {
+setMethod("summary_internal", "unmarkedFrameOccuCOP", function(object,...) {
   cat("unmarkedFrameOccuCOP Object\n\n")
   
   cat(nrow(object@y), "sites\n")

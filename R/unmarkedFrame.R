@@ -897,7 +897,15 @@ setMethod("getY", "unmarkedFrame", function(object) object@y)
 ################################### SUMMARY METHODS ######################
 
 
-setMethod("summary", "unmarkedFrame", function(object,...) {
+setMethod("summary", "unmarkedFrame", function(object, ...){
+  summary_internal(object, ...)
+})
+
+setGeneric("summary_internal", function(object, ...){
+  standardGeneric("summary_internal")
+})
+
+setMethod("summary_internal", "unmarkedFrame", function(object,...) {
     cat("unmarkedFrame Object\n\n")
     cat(nrow(object@y), "sites\n")
     cat("Maximum number of observations per site:",obsNum(object),"\n")
@@ -919,8 +927,7 @@ setMethod("summary", "unmarkedFrame", function(object,...) {
 })
 
 
-
-setMethod("summary", "unmarkedFrameDS", function(object, ...)
+setMethod("summary_internal", "unmarkedFrameDS", function(object, ...)
 {
     cat("unmarkedFrameDS Object\n\n")
     cat(object@survey, "-transect survey design", "\n", sep="")
@@ -944,10 +951,8 @@ setMethod("summary", "unmarkedFrameDS", function(object, ...)
 })
 
 
-
-
-setMethod("summary", "unmarkedMultFrame", function(object,...) {
-    cat("unmarkedFrame Object\n\n")
+setMethod("summary_internal", "unmarkedMultFrame", function(object,...) {
+    cat("unmarkedMultFrame Object\n\n")
     cat(nrow(object@y), "sites\n")
     cat("Maximum number of observations per site:",ncol(object@y),"\n")
     mean.obs <- mean(rowSums(!is.na(getY(object))))
@@ -975,8 +980,8 @@ setMethod("summary", "unmarkedMultFrame", function(object,...) {
 })
 
 
-setMethod("summary", "unmarkedFrameOccuMulti", function(object,...) {
-    cat("unmarkedFrame Object\n\n")
+setMethod("summary_internal", "unmarkedFrameOccuMulti", function(object,...) {
+    cat("unmarkedFrameOccuMulti Object\n\n")
     cat(nrow(object@y), "sites\n")
     cat(length(object@ylist), "species:", names(object@ylist),"\n")
     cat("Maximum number of observations per site:",obsNum(object),"\n")
@@ -1003,9 +1008,9 @@ setMethod("summary", "unmarkedFrameOccuMulti", function(object,...) {
     }
 })
 
-setMethod("summary", "unmarkedFrameOccuTTD", function(object,...) {
+setMethod("summary_internal", "unmarkedFrameOccuTTD", function(object,...) {
 
-    cat("unmarkedFrame Object\n\n")
+    cat("unmarkedFrameOccuTTD Object\n\n")
     cat(nrow(object@y), "sites\n")
     cat("Maximum number of surveys per site:",ncol(object@y),"\n")
     mean.obs <- mean(rowSums(!is.na(getY(object))))
@@ -1040,8 +1045,19 @@ setMethod("summary", "unmarkedFrameOccuTTD", function(object,...) {
 ################################# PLOT METHODS ###########################
 # TODO:  come up with nice show/summary/plot methods for each data types.
 
-setMethod("plot", c(x="unmarkedFrame", y="missing"),
-	function (x, y, panels = 1, colorkey, strip=FALSE,
+setMethod("plot", c(x = "unmarkedFrame", y = "missing"),
+  function(x, y, panels = 1, colorkey, strip = FALSE, 
+           ylab = "Site", xlab="Observation", ...){
+  plot_internal(x=x, panels=panels, colorkey=colorkey, strip=strip, 
+                ylab=ylab, xlab=xlab, ...)
+})
+
+setGeneric("plot_internal", function(x, ...){
+  standardGeneric("plot_internal")
+})
+
+setMethod("plot_internal", "unmarkedFrame",
+	function (x, panels = 1, colorkey, strip=FALSE,
     ylab="Site", xlab="Observation", ...)
 {
     y <- getY(x)
@@ -1064,8 +1080,8 @@ setMethod("plot", c(x="unmarkedFrame", y="missing"),
         colorkey=colorkey, strip=strip, xlab=xlab, ylab=ylab, ...)
 })
 
-setMethod("plot", c(x="unmarkedFrameOccuMulti", y="missing"),
-	function (x, y, colorkey, ylab="Site", xlab="Observation", ...)
+setMethod("plot_internal", "unmarkedFrameOccuMulti",
+	function (x, colorkey, strip, ylab="Site", xlab="Observation", ...)
 {
     y <- getY(x)
     ym <- max(y, na.rm=TRUE)
@@ -1088,8 +1104,8 @@ setMethod("plot", c(x="unmarkedFrameOccuMulti", y="missing"),
         labels=names(x@ylist), ...)
 })
 
-setMethod("plot", c("unmarkedFrameOccuTTD", y="missing"),
-  function(x, y, ...){
+setMethod("plot_internal", "unmarkedFrameOccuTTD",
+  function(x, panels, colorkey, strip, xlab, ylab, ...){
 
   y <- getY(x)
   y <- y[y<x@surveyLength]

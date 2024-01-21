@@ -47,8 +47,7 @@
 }
 
 \value{an object of class unmarkedFrameMMO}
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}},
-    \code{\link{multmixOpen}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{multmixOpen}}}
 
 \examples{
 

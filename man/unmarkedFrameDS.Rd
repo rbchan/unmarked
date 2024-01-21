@@ -1,9 +1,9 @@
 \name{unmarkedFrameDS}
+\alias{unmarkedFrameDS}
+\alias{hist,unmarkedFrameDS-method}
 
 \title{Organize data for the distance sampling model of Royle et al. (2004)
     fit by distsamp}
-
-\alias{unmarkedFrameDS}
 
 \usage{unmarkedFrameDS(y, siteCovs=NULL, dist.breaks, tlength, survey,
     unitsIn, mapInfo)}
@@ -43,8 +43,7 @@ abundance effects in distance sampling. \emph{Ecology} 85, pp. 1591-1597.
 }
 
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}},
-    \code{\link{distsamp}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{distsamp}}}
 
 \examples{
 
@@ -67,6 +66,7 @@ site.covs
 umf <- unmarkedFrameDS(y=y, siteCovs=site.covs, dist.breaks=db, survey="point",
     unitsIn="m")            # organize data
 umf                         # look at data
+hist(umf)                   # histogram of observation distances
 summary(umf)                # summarize
 fm <- distsamp(~1 ~1, umf)  # fit a model
 

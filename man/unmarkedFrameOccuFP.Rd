@@ -32,8 +32,7 @@
 
 \value{an object of class unmarkedFrameOccuFP}
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}},
-    \code{\link{occuFP}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{occuFP}}}
 
 \examples{
 

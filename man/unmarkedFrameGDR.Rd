@@ -56,5 +56,4 @@
 
 \author{Ken Kellner \email{contact@kenkellner.com}}
 
-\seealso{\code{\link{unmarkedFrame-class}}, \code{\link{unmarkedFrame}},
-  \code{\link{gdistremoval}}}
+\seealso{\code{\link{unmarkedFrame-methods}}, \code{\link{gdistremoval}}}

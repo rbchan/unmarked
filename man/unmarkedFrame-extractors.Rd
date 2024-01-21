@@ -1,4 +1,5 @@
 \name{unmarkedFrame-extractors}
+\alias{unmarkedFrame-extractors}
 \alias{getY}
 \alias{siteCovs}
 \alias{siteCovs<-}

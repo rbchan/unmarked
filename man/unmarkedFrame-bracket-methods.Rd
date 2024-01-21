@@ -1,9 +1,11 @@
 \name{[-methods for unmarkedFrames}
+\alias{unmarkedFrame-[-methods}
 \alias{[,unmarkedFrame,numeric,missing,missing-method}
 \alias{[,unmarkedFrame,missing,numeric,missing-method}
 \alias{[,unmarkedFrame,numeric,numeric,missing-method}
 \alias{[,unmarkedFrame,list,missing,missing-method}
 \alias{[,unmarkedFrame,logical,missing,missing-method}
+\alias{head,unmarkedFrame-method}
 
 \title{Methods for bracket extraction [ of unmarkedFrames}
 
@@ -19,6 +21,7 @@
 \S4method{[}{unmarkedFrame,numeric,numeric,missing}(x, i, j)
 \S4method{[}{unmarkedFrame,list,missing,missing}(x, i, j)
 \S4method{[}{unmarkedFrame,logical,missing,missing}(x, i, j)
+\S4method{head}{unmarkedFrame}(x, n)
 }
 
 \arguments{
@@ -27,6 +30,7 @@
 	\item{j}{Observation numbers (eg occasions, distance classes, etc.) to so select
     for single-season models, and primary periods to select for multi-season and 
     temporary emigration models}
+  \item{n}{Number of sites to include starting from the first site}
 }
 
 \value{
@@ -43,5 +47,6 @@ summary(mallardUMF)
 mallardUMF[1:5,]
 mallardUMF[,1:2]
 mallardUMF[1:5, 1:2]
+head(mallardUMF)
 
 }
