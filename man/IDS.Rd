@@ -78,7 +78,7 @@ See the help files for these objects for guidance on how to organize the data.
 }
 
 \references{
-  Kery M, Royle JA, Hallman T, Robinson WD, Strebel N, Kellner KF. 2022. 
+  Kery M, Royle JA, Hallman T, Robinson WD, Strebel N, Kellner KF. 2024. 
   Integrated distance sampling models for simple point counts. Ecology. 
 }
 \author{Ken Kellner \email{contact@kenkellner.com}}

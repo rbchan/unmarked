@@ -27,11 +27,11 @@ test_that("IDS can fit models with covariates", {
                     maxDistPC=0.5, maxDistOC=0.5,
                     unitsOut="kmsq") 
   set.seed(123)
-  (mod_sim <- IDS(lambdaformula = ~elev, detformulaDS = ~1,
+  mod_sim <- IDS(lambdaformula = ~elev, detformulaDS = ~1,
                 dataDS=sim_umf$ds, dataPC=sim_umf$pc,
                 availformula = ~1, durationDS=durs$ds, durationPC=durs$pc,
                 maxDistPC=0.5, maxDistOC=0.5,
-                unitsOut="kmsq"))
+                unitsOut="kmsq")
 
   expect_equivalent(coef(mod_sim), c(3.0271179,-0.4858101,-2.5050244,-1.3729505), tol=1e-5)
 
@@ -60,6 +60,18 @@ test_that("IDS can fit models with covariates", {
   plot(mod_sim)
   hist(mod_sim)
   dev.off()
+
+  expect_error(nonparboot(mod_sim))
+  expect_error(ranef(mod_sim))
+
+  # Separate detection models
+  mod_sep <- IDS(lambdaformula = ~elev, detformulaDS = ~1, detformulaPC = ~1,
+                dataDS=sim_umf$ds[1:100,], dataPC=sim_umf$pc[1:100,],
+                availformula = ~1, durationDS=durs$ds[1:100], durationPC=durs$pc[1:100],
+                maxDistPC=0.5, maxDistOC=0.5,
+                unitsOut="kmsq")
+  expect_equal(length(coef(mod_sim)), 4)
+  expect_equal(length(coef(mod_sep)), 5)
 })
 
 test_that("IDS can fit models with occupancy data", {
@@ -111,6 +123,14 @@ test_that("IDS can fit models with occupancy data", {
                 durationDS=durs$ds, durationPC=durs$pc, durationOC=durs$pc,
                 unitsOut="kmsq")
   )
+
+  # Just occupancy data
+  mod_oc <- IDS(lambdaformula = ~elev, detformulaDS = ~1, detformulaOC = ~1,
+                dataDS=sim_umf$ds, dataOC=sim_umf$oc,
+                maxDistOC=0.5,
+                unitsOut="kmsq")
+  
+  expect_equal(names(mod_oc), c("lam","ds","oc"))
 
 })
 
