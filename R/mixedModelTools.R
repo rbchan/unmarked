@@ -1,50 +1,219 @@
-get_xlev <- function(data, model_frame){
-  fac_col <- data[, sapply(data, is.factor), drop=FALSE]
-  xlevs <- lapply(fac_col, levels)
-  xlevs[names(xlevs) %in% names(model_frame)]
+# Generate required random effects info----------------------------------------
+# Sort-of drop-in replacement for lme4::mkReTrms
+get_reTrms <- function(formula, data){
+  if(!has_random(formula)){
+    stop("No random effect terms in formula", call.=FALSE)
+  }
+  cnms <- get_cnms(formula)
+  # TODO: check these are factors
+  flist <- lapply(unique(names(cnms)), function(x){
+             out <- data[[x]]
+             if(!is.factor(out)) out <- factor(out)
+             out
+           })
+  names(flist) <- unique(names(cnms))
+  list(Z = get_Z(formula, data), cnms = cnms, flist=flist)
 }
 
-get_reTrms <- function(formula, data, newdata=NULL){
-  fb <- lme4::findbars(formula)
-  mf <- model.frame(lme4::subbars(formula), data, na.action=stats::na.pass)
-  if(is.null(newdata)) return(lme4::mkReTrms(fb, mf))
-  new_mf <- model.frame(stats::terms(mf), newdata, na.action=stats::na.pass,
-                        xlev=get_xlev(data, mf))
-  lme4::mkReTrms(fb, new_mf, drop.unused.levels=FALSE)
-}
-
+#Create Z random effects matrix from a formula, possibly using newdata---------
 get_Z <- function(formula, data, newdata=NULL){
-  if(is.null(lme4::findbars(formula))){
+  # If no random effects in formula, return an empty Matrix
+  if(!has_random(formula)){
     if(is.null(newdata)){
       return(Matrix::Matrix(matrix(0, nrow=nrow(data), ncol=0),sparse=TRUE))
     } else{
       return(Matrix::Matrix(matrix(0, nrow=nrow(newdata), ncol=0),sparse=TRUE))
     }
   }
-  check_formula(formula, data)
-  Zt <- get_reTrms(formula, data, newdata)$Zt
-  Z <- t(as.matrix(Zt))
+  
+  # Get new formula
+  bars <- find_bars(formula)
+  check_duplicate_terms(bars)
+  
+  # Get partial Z for each bar expression
+  Z_parts <- lapply(bars, get_partial_Z, data=data, newdata=newdata)
+
+  # Create model frame
+  #mf <- model.frame(new_form, data, na.action=stats::na.pass)
+  #if(!is.null(newdata)){
+  #  mf <- model.frame(stats::terms(mf), newdata, na.action=stats::na.pass,
+  #                    xlev=get_xlev(data, mf))
+  #}
+
+  # Create sparse Z matrix
+  #Z <- model.matrix(new_form, mf, contrasts.arg=cont)
+  Z <- do.call(cbind, Z_parts)
+  colnames(Z) <- Z_colnames(formula, data)
   Matrix::Matrix(Z, sparse=TRUE)
 }
 
-get_group_vars <- function(formula){
-  rand <- lme4::findbars(formula)
-  ifelse(is.null(rand), 0, length(rand))
+# Determine if formula has random effects specified----------------------------
+has_random <- function(form){
+  length(find_bars(form)) > 0
 }
 
-get_nrandom <- function(formula, data){
-  rand <- lme4::findbars(formula)
-  if(length(rand)==0) return(as.array(0))
+# Find 'bar' random effect parts of formula (i.e., the (x|y) structures)-------
+# Operates recursively
+find_bars <- function(form){
+  if(is.null(form)) return(NULL)
+  if(is.name(form)) return(NULL)
+  if(form[[1]] == as.name("(")) return(form)
+  if(is.call(form)){
+    out <- return(unlist(lapply(form, find_bars)))
+  }
+  NULL
+}
 
-  out <- sapply(rand, function(x){
-    col_nm <- as.character(x[[3]])
-    length(unique(data[[col_nm]]))
+# Convert bar components into new formula--------------------------------------
+# E.g. (1|g) becomes ~g - 1
+bar_to_formula <- function(bar){
+  bar_terms <- bar_to_terms(bar)
+  as.formula(str2lang(paste("~", paste(bar_terms, collapse = " + "), "- 1")))
+}
+
+# Translate bar components into standard formula terms-------------------------
+bar_to_terms <- function(bar){
+  info <- get_bar_info(bar)
+  new_terms <- sapply(info$LHS, function(x){
+    if(x == "1") return(info$RHS)
+    paste0(x, ":", info$RHS)
+  })
+  paste(new_terms, collapse=" + ")
+}
+
+# Organize information in a bar expression into a list-------------------------
+get_bar_info <- function(bar){
+  out <- list(
+    operator = deparse(bar[[2]][[1]]),
+    LHS = terms_in_bar(bar, RHS=FALSE),
+    RHS = terms_in_bar(bar, RHS=TRUE)
+  )
+  check_bar_info(out)
+}
+
+terms_in_bar <- function(bars, RHS=FALSE){
+  bars_sub <- bars[[2]][[2]]
+  if(RHS) bars_sub <- bars[[2]][[3]]
+  form <- formula(substitute(~X, list(X=bars_sub)))
+  trms <- attr(stats::terms(form), "term.labels")
+  int <- attr(stats::terms(form), "intercept")
+  if(int == 1 & !RHS) trms <- c("1", trms)
+  trms
+}
+
+# Check bar info to make sure the expression are allowed-----------------------
+# For example unmarked doesn't support correlated random effects with |
+check_bar_info <- function(info){
+  if(info$operator == "|" & length(info$LHS) > 1){
+    stop("Correlated random effects not supported, use || instead of |", call.=FALSE)
+  }
+  if(any(grepl(":", info$RHS)) | any(grepl("/", info$RHS))){
+    stop("Nested random effects notation (: or /) not supported", call.=FALSE)
+  }
+  stopifnot(length(info$RHS) == 1)
+  info
+}
+
+# Check terms to make sure there aren't any duplicates-------------------------
+# E.g. as a result of a formula like ~ (1|g) + (x||) where the intercept
+# is also implied in the second bar expression
+check_duplicate_terms <- function(bars){
+  bar_terms <- lapply(bars, bar_to_terms)
+  all_terms <- lapply(bar_terms, function(x){
+    unlist(strsplit(x, " + ", fixed=TRUE))
+  })
+  all_terms <- unlist(all_terms)
+  dups <- duplicated(all_terms)
+  if(any(dups)){
+    stop("Formula implies duplicate terms: ", paste0(all_terms[dups], collapse=", "),
+         call.=FALSE)
+  }
+  invisible()
+}
+
+
+# Get partial Z for a given bar expression-------------------------------------
+get_partial_Z <- function(bar, data, newdata){
+  info <- get_bar_info(bar)
+  formula <- bar_to_formula(bar)
+  mf <- model.frame(formula, data, na.action=stats::na.pass)
+  if(!is.null(newdata)){
+    mf <- model.frame(stats::terms(mf), newdata, na.action=stats::na.pass,
+                      xlev=get_xlev(data, mf))
+  }
+  has_fac <- any(sapply(info$LHS[info$LHS != "1"], function(x) is.factor(data[[x]])))
+  if(has_fac){
+    stop("unmarked does not support random slopes for R factors.\n",
+         "Try converting the variable to a series of indicator variables instead.", call.=FALSE)
+  }
+  out <- model.matrix(formula, mf)
+}
+
+# Get levels of factor---------------------------------------------------------
+# For use in specifying model frame
+get_xlev <- function(data, model_frame){
+  fac_col <- data[, sapply(data, is.factor), drop=FALSE]
+  xlevs <- lapply(fac_col, levels)
+  xlevs[names(xlevs) %in% names(model_frame)]
+}
+
+# Generate colnames for Z to match what lme4::mkReTrms does--------------------
+Z_colnames <- function(formula, data){
+  bars <- find_bars(formula)
+  info <- lapply(bars, get_bar_info)
+  groups <- sapply(info, function(x) x$RHS)
+  nreps <- sapply(info, function(x) length(x$LHS))
+  lvls <- lapply(1:length(groups), function(i){
+    group_dat <- data[[groups[i]]]
+    if(!is.factor(group_dat)) group_dat <- as.factor(group_dat)
+    rep(levels(group_dat), nreps[i])
+  })
+  unlist(lvls)
+}
+
+# Get 'cnms' - random effect names - as with lme4::mkReTrms--------------------
+get_cnms <- function(formula){
+  bars <- find_bars(formula)
+  info <- lapply(bars, get_bar_info)
+  cnms <- lapply(info, function(x){
+    out <- lapply(x$LHS, function(y) ifelse(y == "1", "(Intercept)", y))
+    names(out) <- rep(x$RHS, length(out))
+    out
+  })
+  do.call(c, cnms)
+}
+
+# Get number of random effect SDs/variances------------------------------------
+get_nrandom <- function(formula, data){
+  if(!has_random(formula)) return(as.array(0))
+  cnms <- get_cnms(formula)
+  out <- sapply(names(cnms), function(x){
+          length(unique(data[[x]]))
   })
   as.array(out)
 }
 
-has_random <- function(formula){
-  length(lme4::findbars(formula)) > 0
+# Get number of grouping variables---------------------------------------------
+get_group_vars <- function(formula){
+  if(!has_random(formula)) return(0)
+  cnms <- get_cnms(formula)
+  length(cnms)
+}
+
+# Check if function has no support for random effects--------------------------
+check_no_support <- function(formula_list){
+  has_bars <- any(sapply(formula_list, has_random))
+  if(has_bars){
+    stop("This function does not support random effects", call.=FALSE)
+  }
+}
+
+# Remove all bar components from a formula-------------------------------------
+remove_bars <- function(formula){
+  s1 <- gsub("\\([^)]+\\|[^)]+\\) ?\\+?", "", deparse1(formula))
+  s2 <- gsub(" \\+ {0,}$", "", s1)
+  if(s2 == "~") return(~1)
+  as.formula(str2lang(s2))
 }
 
 sigma_names <- function(formula, data){
@@ -54,22 +223,6 @@ sigma_names <- function(formula, data){
   nms <- gsub("(Intercept)", "1", nms, fixed=TRUE)
   #paste0("sigma [", nms, "]")
   nms
-}
-
-check_formula <- function(formula, data){
-  rand <- lme4::findbars(formula)
-  if(is.null(rand)) return(invisible())
-
-  char <- paste(formula, collapse=" ")
-  if(grepl(":|/", char)){
-    stop("Nested random effects (using / and :) are not supported",
-         call.=FALSE)
-  }
-  theta <- get_reTrms(formula, data)$theta
-  if(0 %in% theta){
-    stop("Correlated slopes and intercepts are not supported. Use || instead of |.",
-         call.=FALSE)
-  }
 }
 
 split_formula <- function(formula){
@@ -135,7 +288,7 @@ get_randvar_info <- function(tmb_report, type, formula, data){
   list(names=sigma_names(formula, data), estimates=sigma_est, covMat=sigma_cov,
        invlink="exp", invlinkGrad="exp", n_obs=nrow(data),
        n_levels=lapply(re$flist, function(x) length(levels(x))), cnms=re$cnms,
-       levels=rownames(re$Zt))
+       levels=colnames(re$Z))
 }
 
 get_fixed_names <- function(tmb_report){
@@ -156,13 +309,6 @@ print_randvar_info <- function(object){
   print(disp, row.names=FALSE)
   #below needs to be corrected for missing values at some point
   #cat(paste0("Number of obs: ",object$n_obs,", groups: ",group_info,"\n"))
-}
-
-check_no_support <- function(formula_list){
-  has_bars <- any(sapply(formula_list, function(x) !is.null(lme4::findbars(x))))
-  if(has_bars){
-    stop("This function does not support random effects", call.=FALSE)
-  }
 }
 
 fit_TMB <- function(model, data, params, random,

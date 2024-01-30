@@ -73,6 +73,8 @@ IDS <- function(lambdaformula = ~1,
   formlist <- list(lam=lambdaformula, ds=form_hds, pc=form_pc, oc=form_oc,
                    phi=availformula)
 
+  check_no_support(formlist)
+
   stopifnot(inherits(dataDS, "unmarkedFrameDS"))
   stopifnot(inherits(dataPC, c("unmarkedFramePCount", "NULL")))
   stopifnot(inherits(dataOC, c("unmarkedFrameOccu", "NULL")))

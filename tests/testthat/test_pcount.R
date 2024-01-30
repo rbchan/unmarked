@@ -93,7 +93,7 @@ test_that("pcount predict works",{
 
 test_that("pcount can fit models with random effects",{
 
-set.seed(35)
+set.seed(12)
 nSites <- 300
 nVisits <- 3
 x <- rnorm(nSites)               # a covariate
@@ -101,7 +101,7 @@ beta0 <- 0
 beta1 <- 0.4
 
 ran <- rnorm(100, 0, 1)
-group <- factor(as.character(rep(1:100, each=3)))
+group <- factor(as.character(rep(1:100, each=3)), levels=1:100)
 ran_ind <- as.numeric(group)
 
 lambda <- exp(beta0 + beta1*x +
@@ -124,19 +124,19 @@ expect_is(fm, "unmarkedFitPCount")
 
 fmr <- pcount(~visit~x+(1|group), umf, K=25)
 
-expect_equivalent(coef(fmr), c(0.05397,0.3197,-0.8760,1.3668,2.078),
-                   tol=1e-3)
+expect_equivalent(coef(fmr), c(-0.13648,0.3355,-0.9202,1.4680,2.47077),
+                   tol=1e-4)
 
 expect_true(inherits(sigma(fmr), 'data.frame'))
-expect_equal(sigma(fmr)$sigma, 1.05945, tol=1e-5)
+expect_equal(sigma(fmr)$sigma, 1.038204, tol=1e-5)
 
 pr <- predict(fmr, "state")
 expect_equivalent(as.numeric(pr[1,]),
-                   c(1.037050,0.58179,0.3453,3.1140), tol=1e-3)
+                   c(0.31838, 0.20989, 0.087458,1.15905), tol=1e-3)
 
 pr2 <- predict(fmr, "state", re.form=NA)
 expect_equivalent(as.numeric(pr2[1,]),
-                   c(1.48366,0.2011,1.1374,1.93255), tol=1e-3)
+                   c(0.53086,0.090768,0.37970,0.74220), tol=1e-3)
 
 pr3 <- predict(fmr, "det")
 expect_true(inherits(pr3, "data.frame"))

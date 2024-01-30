@@ -104,7 +104,7 @@ setMethod("simulate", "character",
 #replace_sigma <- function(coefs, fit){
 #  required_subs <- names(fit@estimates@estimates)
 #  formulas <- sapply(names(fit), function(x) get_formula(fit, x))
-#  rand <- lapply(formulas, lme4::findbars)
+#  rand <- lapply(formulas, find_bars)
 #  if(!all(sapply(rand, is.null))){
 #    rvar <- lapply(rand, function(x) unlist(lapply(x, all.vars)))
 #    for (i in required_subs){
@@ -121,7 +121,7 @@ setMethod("simulate", "character",
 generate_random_effects <- function(coefs, fit){
   required_subs <- names(fit@estimates@estimates)
   formulas <- sapply(names(fit), function(x) get_formula(fit, x))
-  rand <- lapply(formulas, lme4::findbars)
+  rand <- lapply(formulas, find_bars)
   if(!all(sapply(rand, is.null))){
     rvar <- lapply(rand, function(x) unlist(lapply(x, all.vars)))
     for (i in required_subs){

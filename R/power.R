@@ -163,7 +163,7 @@ check_coefs <- function(coefs, fit, template=FALSE){
 
   # If there are random effects, adjust the expected coefficient names
   # to remove the b vector and add the grouping covariate name
-  rand <- lapply(formulas, lme4::findbars)
+  rand <- lapply(formulas, find_bars)
   if(!all(sapply(rand, is.null))){
     stopifnot(all(required_subs %in% names(formulas)))
     rvar <- lapply(rand, function(x) unlist(lapply(x, all.vars)))

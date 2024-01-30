@@ -55,7 +55,7 @@ setMethod("predict", "unmarkedFit",
 # This function makes sure factor levels in newdata match, and that
 # any functions in the formula are handled properly (e.g. scale)
 make_mod_matrix <- function(formula, data, newdata, re.form=NULL){
-  form_nobars <- lme4::nobars(formula)
+  form_nobars <- remove_bars(formula)
   mf <- model.frame(form_nobars, data, na.action=stats::na.pass)
   X.terms <- stats::terms(mf)
   fac_cols <- data[, sapply(data, is.factor), drop=FALSE]
@@ -65,7 +65,7 @@ make_mod_matrix <- function(formula, data, newdata, re.form=NULL){
   #X <- model.matrix(X.terms, newdata, xlev=xlevs)
   X <- model.matrix(form_nobars, nmf)
   offset <- model.offset(nmf)
-  if(is.null(re.form) & !is.null(lme4::findbars(formula))){
+  if(is.null(re.form) & has_random(formula)){
     Z <- get_Z(formula, data, newdata)
     X <- cbind(X, Z)
   }

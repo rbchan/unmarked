@@ -72,6 +72,9 @@ test_that("IDS can fit models with covariates", {
                 unitsOut="kmsq")
   expect_equal(length(coef(mod_sim)), 4)
   expect_equal(length(coef(mod_sep)), 5)
+
+  # Doesn't support random effects
+  expect_error(update(mod_sep, lambdaformula = ~elev + (1|group)))
 })
 
 test_that("IDS can fit models with occupancy data", {

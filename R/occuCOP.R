@@ -79,7 +79,7 @@ setMethod(
     
     # Occupancy submodel -------------------------------------------------------
     # Retrieve the fixed-effects part of the formula
-    psiformula <- lme4::nobars(as.formula(formlist$psiformula))
+    psiformula <- remove_bars(as.formula(formlist$psiformula))
     psiVars <- all.vars(psiformula)
     
     # Retrieve the site covariates
@@ -109,7 +109,7 @@ setMethod(
     # Detection submodel -------------------------------------------------------
     
     # Retrieve the fixed-effects part of the formula
-    lambdaformula <- lme4::nobars(as.formula(formlist$lambdaformula))
+    lambdaformula <- remove_bars(as.formula(formlist$lambdaformula))
     lambdaVars <- all.vars(lambdaformula)
     
     # Retrieve the observation covariates

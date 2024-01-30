@@ -1,6 +1,6 @@
 Package: unmarked
-Version: 1.4.1.9001
-Date: 2024-01-23
+Version: 1.4.1.9002
+Date: 2024-01-30
 Type: Package
 Title: Models for Data from Unmarked Animals
 Authors@R: c(
@@ -23,7 +23,6 @@ Depends: R (>= 4.0)
 Imports: 
     graphics,
     lattice,
-    lme4,
     MASS,
     Matrix,
     methods,
