@@ -411,7 +411,7 @@ if(engine =="C"){
   nll <- function(params){
     nll_gdistsamp(params, n_param, y_long, mixture_code, keyfun, survey,
                   Xlam, Xlam.offset, A, Xphi, Xphi.offset, Xdet, Xdet.offset,
-                  db, a, t(u), w, k, lfac.k, lfac.kmyt, kmyt, Kmin, threads)
+                  db, a, t(u), w, K, Kmin, threads)
   }
 
 } else {
