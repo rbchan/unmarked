@@ -5,6 +5,7 @@
 \alias{SSE,unmarkedFitOccuMulti-method}
 \alias{SSE,unmarkedFitGDR-method}
 \alias{SSE,unmarkedFitIDS-method}
+\alias{SSE,unmarkedFitOccuRNMulti-method}
 \title{Compute Sum of Squared Residuals for a Model Fit.}
 \description{
 Compute the sum of squared residuals for an unmarked fit object.  This

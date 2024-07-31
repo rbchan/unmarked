@@ -20,6 +20,7 @@
 \alias{getP,unmarkedFitIDS-method}
 \alias{getP,unmarkedFitGOccu-method}
 \alias{getP,unmarkedFitOccuCOP-method}
+\alias{getP,unmarkedFitOccuRNMulti-method}
 
 \title{Methods for Function getP in Package `unmarked'}
 \description{

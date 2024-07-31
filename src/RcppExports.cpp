@@ -470,6 +470,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// nll_occuRNMulti
+double nll_occuRNMulti(arma::vec beta, arma::mat state_ind, arma::mat det_ind, int S, arma::ivec modOcc, Rcpp::List ylist, Rcpp::List Xlist, Rcpp::List Vlist, arma::imat dep, arma::ivec K, arma::imat Kmin, arma::imat miss, arma::ivec site_miss, int threads);
+RcppExport SEXP _unmarked_nll_occuRNMulti(SEXP betaSEXP, SEXP state_indSEXP, SEXP det_indSEXP, SEXP SSEXP, SEXP modOccSEXP, SEXP ylistSEXP, SEXP XlistSEXP, SEXP VlistSEXP, SEXP depSEXP, SEXP KSEXP, SEXP KminSEXP, SEXP missSEXP, SEXP site_missSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type state_ind(state_indSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type det_ind(det_indSEXP);
+    Rcpp::traits::input_parameter< int >::type S(SSEXP);
+    Rcpp::traits::input_parameter< arma::ivec >::type modOcc(modOccSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type ylist(ylistSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Xlist(XlistSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type Vlist(VlistSEXP);
+    Rcpp::traits::input_parameter< arma::imat >::type dep(depSEXP);
+    Rcpp::traits::input_parameter< arma::ivec >::type K(KSEXP);
+    Rcpp::traits::input_parameter< arma::imat >::type Kmin(KminSEXP);
+    Rcpp::traits::input_parameter< arma::imat >::type miss(missSEXP);
+    Rcpp::traits::input_parameter< arma::ivec >::type site_miss(site_missSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(nll_occuRNMulti(beta, state_ind, det_ind, S, modOcc, ylist, Xlist, Vlist, dep, K, Kmin, miss, site_miss, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // nll_occuTTD
 double nll_occuTTD(arma::vec beta, arma::vec y, arma::vec delta, arma::mat W, arma::mat V, arma::mat Xgam, arma::mat Xeps, arma::vec pind, arma::vec dind, arma::vec cind, arma::vec eind, std::string lpsi, std::string tdist, int N, int T, int J, arma::vec naflag);
 RcppExport SEXP _unmarked_nll_occuTTD(SEXP betaSEXP, SEXP ySEXP, SEXP deltaSEXP, SEXP WSEXP, SEXP VSEXP, SEXP XgamSEXP, SEXP XepsSEXP, SEXP pindSEXP, SEXP dindSEXP, SEXP cindSEXP, SEXP eindSEXP, SEXP lpsiSEXP, SEXP tdistSEXP, SEXP NSEXP, SEXP TSEXP, SEXP JSEXP, SEXP naflagSEXP) {
@@ -564,8 +588,8 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP getDetVecs(void *, void *, void *, void *, void *);
-RcppExport SEXP getSingleDetVec(void *, void *, void *);
+RcppExport SEXP getDetVecs(SEXP, SEXP, SEXP, SEXP, SEXP);
+RcppExport SEXP getSingleDetVec(SEXP, SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
     {"_unmarked_get_lik_trans", (DL_FUNC) &_unmarked_get_lik_trans, 2},
@@ -586,6 +610,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_unmarked_nll_occuMulti", (DL_FUNC) &_unmarked_nll_occuMulti, 15},
     {"_unmarked_nll_occuPEN", (DL_FUNC) &_unmarked_nll_occuPEN, 11},
     {"_unmarked_nll_occuRN", (DL_FUNC) &_unmarked_nll_occuRN, 10},
+    {"_unmarked_nll_occuRNMulti", (DL_FUNC) &_unmarked_nll_occuRNMulti, 14},
     {"_unmarked_nll_occuTTD", (DL_FUNC) &_unmarked_nll_occuTTD, 17},
     {"_unmarked_nll_pcount", (DL_FUNC) &_unmarked_nll_pcount, 11},
     {"_unmarked_nll_pcountOpen", (DL_FUNC) &_unmarked_nll_pcountOpen, 35},
