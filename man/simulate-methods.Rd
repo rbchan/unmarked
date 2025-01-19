@@ -23,6 +23,7 @@
 \alias{simulate,unmarkedFitDailMadsen-method}
 \alias{simulate,unmarkedFitGOccu-method}
 \alias{simulate,unmarkedFitOccuCOP-method}
+\alias{simulate,unmarkedFitOccuRNMulti-method}
 \alias{simulate,character-method}
 
 \title{Methods for Function simulate in Package `unmarked'}

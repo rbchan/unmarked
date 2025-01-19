@@ -30,6 +30,7 @@
 \alias{residuals,unmarkedFitGDR-method}
 \alias{residuals,unmarkedFitIDS-method}
 \alias{residuals,unmarkedFitOccuCOP-method}
+\alias{residuals,unmarkedFitOccuRNMulti-method}
 \alias{update,unmarkedFit-method}
 \alias{update,unmarkedFitColExt-method}
 \alias{update,unmarkedFitGMM-method}
@@ -41,6 +42,7 @@
 \alias{update,unmarkedFitIDS-method}
 \alias{update,unmarkedFitDailMadsen-method}
 \alias{update,unmarkedFitGOccu-method}
+\alias{update,unmarkedFitOccuRNMulti-method}
 \alias{sampleSize}
 \alias{sampleSize,unmarkedFit-method}
 \alias{unmarkedFitOccu-class}

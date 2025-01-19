@@ -4,6 +4,7 @@
 \alias{linearComb-methods}
 \alias{linearComb,unmarkedEstimate,matrixOrVector-method}
 \alias{linearComb,unmarkedFit,matrixOrVector-method}
+\alias{linearComb,unmarkedFitOccuRNMulti,matrixOrVector-method}
 \alias{show,unmarkedLinComb-method}
 \title{Methods for Function linearComb in Package `unmarked'}
 \description{

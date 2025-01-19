@@ -20,7 +20,7 @@
 \alias{nonparboot,unmarkedFitIDS-method}
 \alias{nonparboot,unmarkedFitDailMadsen-method}
 \alias{nonparboot,unmarkedFitOccuCOP-method}
-
+\alias{nonparboot,unmarkedFitOccuRNMulti-method}
 
 \title{ Nonparametric bootstrapping in unmarked }
 \description{

@@ -73,6 +73,10 @@ nll_occuRN <- function(beta, n_param, y, X, V, X_offset, V_offset, K, Kmin, thre
     .Call(`_unmarked_nll_occuRN`, beta, n_param, y, X, V, X_offset, V_offset, K, Kmin, threads)
 }
 
+nll_occuRNMulti <- function(beta, state_ind, det_ind, S, modOcc, ylist, Xlist, Vlist, dep, K, Kmin, miss, site_miss, threads) {
+    .Call(`_unmarked_nll_occuRNMulti`, beta, state_ind, det_ind, S, modOcc, ylist, Xlist, Vlist, dep, K, Kmin, miss, site_miss, threads)
+}
+
 nll_occuTTD <- function(beta, y, delta, W, V, Xgam, Xeps, pind, dind, cind, eind, lpsi, tdist, N, T, J, naflag) {
     .Call(`_unmarked_nll_occuTTD`, beta, y, delta, W, V, Xgam, Xeps, pind, dind, cind, eind, lpsi, tdist, N, T, J, naflag)
 }
